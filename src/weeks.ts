@@ -7,6 +7,7 @@ export type Week = {
 };
 
 export type MonthSpan = { month: number; startIndex: number; span: number };
+export type DayRange = { startDay: number; endDay: number }; // inclusive, days since DAY0
 
 function addDays(d: Date, days: number): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + days);
@@ -30,6 +31,10 @@ function buildWeeks(): Week[] {
 
 export const WEEKS = buildWeeks();
 export const WEEK_COUNT = WEEKS.length;
+export const DAY0 = WEEKS[0].start;
+export const TOTAL_DAYS = WEEK_COUNT * 7;
+// The timeline is laid out in half-week slots; stays keep exact dates and snap to slots for display.
+export const SLOTS = WEEK_COUNT * 2;
 
 export const MONTHS: MonthSpan[] = WEEKS.reduce<MonthSpan[]>((acc, w) => {
   const last = acc[acc.length - 1];
@@ -38,14 +43,47 @@ export const MONTHS: MonthSpan[] = WEEKS.reduce<MonthSpan[]>((acc, w) => {
   return acc;
 }, []);
 
+const pad = (n: number) => String(n).padStart(2, '0');
 const fmt = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;
 
-export function weekLabel(index: number): string {
-  return fmt(WEEKS[index].start);
+export function isoOfDay(day: number): string {
+  const d = addDays(DAY0, day);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-export function rangeLabel(startWeek: number, endWeek: number): string {
-  return `${fmt(WEEKS[startWeek].start)} – ${fmt(addDays(WEEKS[endWeek].start, 6))}`;
+export function dayOfIso(iso: unknown): number | null {
+  const m = typeof iso === 'string' ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso) : null;
+  if (!m) return null;
+  // UTC arithmetic so DST shifts can't move a date by a day.
+  const t0 = Date.UTC(DAY0.getFullYear(), DAY0.getMonth(), DAY0.getDate());
+  const day = Math.round((Date.UTC(+m[1], +m[2] - 1, +m[3]) - t0) / 86_400_000);
+  return day >= 0 && day < TOTAL_DAYS ? day : null;
+}
+
+// Slot boundary k sits at Monday (even k) or Friday (odd k) of its week.
+export function dayOfBoundary(k: number): number {
+  return Math.floor(k / 2) * 7 + (k % 2 ? 4 : 0);
+}
+
+// Display span [s, e) in slots: each end snaps to the nearest half-week boundary, at least one slot wide.
+export function slotsOf(r: DayRange): { s: number; e: number } {
+  let s = Math.round(r.startDay / 3.5);
+  let e = Math.round((r.endDay + 1) / 3.5);
+  if (e <= s) {
+    s = Math.min(s, SLOTS - 1);
+    e = s + 1;
+  }
+  return { s, e };
+}
+
+export function rangeLabel(r: DayRange): string {
+  return `${fmt(addDays(DAY0, r.startDay))} – ${fmt(addDays(DAY0, r.endDay))}`;
+}
+
+export const daysOf = (r: DayRange) => r.endDay - r.startDay + 1;
+
+export function weeksLabel(days: number): string {
+  return `${days <= 0 ? 0 : Math.max(0.5, Math.round(days / 3.5) / 2)} 週`;
 }
 
 export function currentWeekIndex(now = new Date()): number | null {

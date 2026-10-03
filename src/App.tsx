@@ -1,20 +1,37 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, FormEvent, PointerEvent as ReactPointerEvent } from 'react';
-import { colorFor, load, overlaps, sanitize, save, type Stay } from './storage';
-import { MONTHS, WEEKS, WEEK_COUNT, YEAR, currentWeekIndex, rangeLabel } from './weeks';
+import { renderPng } from './exportPng';
+import { colorFor, load, overlaps, sanitize, save, serialize, type Stay } from './storage';
+import {
+  MONTHS,
+  SLOTS,
+  TOTAL_DAYS,
+  WEEKS,
+  YEAR,
+  currentWeekIndex,
+  dayOfBoundary,
+  dayOfIso,
+  daysOf,
+  isoOfDay,
+  rangeLabel,
+  slotsOf,
+  weeksLabel,
+  type DayRange,
+} from './weeks';
 
 type Drag =
-  | { kind: 'select'; anchor: number; startWeek: number; endWeek: number }
-  | { kind: 'move'; id: string; grabWeek: number; origStart: number; startWeek: number; endWeek: number; moved: boolean }
-  | { kind: 'resize'; id: string; edge: 'l' | 'r'; startWeek: number; endWeek: number; moved: boolean };
+  | { kind: 'select'; anchor: number; lo: number; hi: number } // slots, inclusive
+  | (DayRange & { kind: 'move'; id: string; grabSlot: number; orig: DayRange; moved: boolean })
+  | (DayRange & { kind: 'resize'; id: string; edge: 'l' | 'r'; grabSlot: number; moved: boolean });
 
-type Editing = { id: string | null; startWeek: number; endWeek: number };
+type Editing = DayRange & { id: string | null };
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
-const span = (s: { startWeek: number; endWeek: number }) => s.endWeek - s.startWeek + 1;
-const col = (s: { startWeek: number; endWeek: number }): CSSProperties => ({
-  gridColumn: `${s.startWeek + 1} / ${s.endWeek + 2}`,
-});
+const slotCol = (s: number, e: number): CSSProperties => ({ gridColumn: `${s + 1} / ${e + 1}` });
+const stayCol = (r: DayRange) => {
+  const { s, e } = slotsOf(r);
+  return slotCol(s, e);
+};
 
 export default function App() {
   const [stays, setStays] = useState<Stay[]>(load);
@@ -26,36 +43,52 @@ export default function App() {
 
   useEffect(() => save(stays), [stays]);
 
-  const sorted = useMemo(() => [...stays].sort((a, b) => a.startWeek - b.startWeek), [stays]);
+  const sorted = useMemo(() => [...stays].sort((a, b) => a.startDay - b.startDay), [stays]);
   const locations = useMemo(() => [...new Set(stays.map((s) => s.location))], [stays]);
   const totals = useMemo(() => {
     const m = new Map<string, number>();
-    for (const s of stays) m.set(s.location, (m.get(s.location) ?? 0) + span(s));
+    for (const s of stays) m.set(s.location, (m.get(s.location) ?? 0) + daysOf(s));
     return [...m.entries()].sort((a, b) => b[1] - a[1]);
   }, [stays]);
-  const planned = stays.reduce((n, s) => n + span(s), 0);
+  const plannedDays = stays.reduce((n, s) => n + daysOf(s), 0);
 
-  const weekAt = (clientX: number) => {
+  const slotAt = (clientX: number) => {
     const rect = trackRef.current!.getBoundingClientRect();
-    return clamp(Math.floor(((clientX - rect.left) / rect.width) * WEEK_COUNT), 0, WEEK_COUNT - 1);
+    return clamp(Math.floor(((clientX - rect.left) / rect.width) * SLOTS), 0, SLOTS - 1);
   };
-  const isFree = (week: number, exceptId?: string) =>
-    !stays.some((s) => s.id !== exceptId && week >= s.startWeek && week <= s.endWeek);
+  const slotFree = (slot: number) =>
+    slot >= 0 &&
+    slot < SLOTS &&
+    !stays.some((st) => {
+      const { s, e } = slotsOf(st);
+      return slot >= s && slot < e;
+    });
+  // Trims a day range so it doesn't run into neighbouring stays; null if nothing is left.
+  const fit = (range: DayRange): DayRange | null => {
+    let { startDay, endDay } = range;
+    for (const o of sorted) {
+      if (o.endDay < startDay || o.startDay > endDay) continue;
+      if (o.startDay <= startDay) startDay = o.endDay + 1;
+      else endDay = Math.min(endDay, o.startDay - 1);
+    }
+    return startDay <= endDay ? { startDay, endDay } : null;
+  };
 
   function onPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
     if (e.button !== 0) return;
-    const week = weekAt(e.clientX);
+    const slot = slotAt(e.clientX);
     const target = e.target as HTMLElement;
     const stayEl = target.closest<HTMLElement>('[data-stay]');
     if (stayEl) {
       const stay = stays.find((s) => s.id === stayEl.dataset.stay);
       if (!stay) return;
       const edge = target.dataset.edge as 'l' | 'r' | undefined;
-      const base = { id: stay.id, startWeek: stay.startWeek, endWeek: stay.endWeek, moved: false };
-      setDrag(edge ? { kind: 'resize', edge, ...base } : { kind: 'move', grabWeek: week, origStart: stay.startWeek, ...base });
+      const range = { startDay: stay.startDay, endDay: stay.endDay };
+      const base = { id: stay.id, grabSlot: slot, moved: false, ...range };
+      setDrag(edge ? { kind: 'resize', edge, ...base } : { kind: 'move', orig: range, ...base });
     } else {
-      if (!isFree(week)) return;
-      setDrag({ kind: 'select', anchor: week, startWeek: week, endWeek: week });
+      if (!slotFree(slot)) return;
+      setDrag({ kind: 'select', anchor: slot, lo: slot, hi: slot });
     }
     e.currentTarget.setPointerCapture(e.pointerId);
     e.preventDefault();
@@ -63,32 +96,41 @@ export default function App() {
 
   function onPointerMove(e: ReactPointerEvent<HTMLDivElement>) {
     if (!drag) return;
-    const week = weekAt(e.clientX);
+    const slot = slotAt(e.clientX);
     if (drag.kind === 'select') {
-      // Extend from the anchor toward the pointer, stopping at the first occupied week.
-      const dir = week >= drag.anchor ? 1 : -1;
+      // Extend from the anchor toward the pointer, stopping at the first occupied slot.
+      const dir = slot >= drag.anchor ? 1 : -1;
       let reach = drag.anchor;
-      while (reach !== week && isFree(reach + dir)) reach += dir;
-      setDrag({ ...drag, startWeek: Math.min(drag.anchor, reach), endWeek: Math.max(drag.anchor, reach) });
-    } else if (drag.kind === 'move') {
-      const len = span(drag);
-      const startWeek = clamp(drag.origStart + week - drag.grabWeek, 0, WEEK_COUNT - len);
-      const next = { startWeek, endWeek: startWeek + len - 1 };
-      if (startWeek === drag.startWeek) return;
-      if (stays.some((s) => s.id !== drag.id && overlaps(s, next))) return;
+      while (reach !== slot && slotFree(reach + dir)) reach += dir;
+      setDrag({ ...drag, lo: Math.min(drag.anchor, reach), hi: Math.max(drag.anchor, reach) });
+      return;
+    }
+    const others = stays.filter((s) => s.id !== drag.id);
+    if (drag.kind === 'move') {
+      const delta = slot - drag.grabSlot;
+      const len = daysOf(drag.orig);
+      // Whole-week moves keep the exact dates; half-week moves snap the start to a slot boundary.
+      const raw =
+        delta % 2 === 0
+          ? drag.orig.startDay + (delta / 2) * 7
+          : dayOfBoundary(clamp(slotsOf(drag.orig).s + delta, 0, SLOTS - 1));
+      const startDay = clamp(raw, 0, TOTAL_DAYS - len);
+      const next = { startDay, endDay: startDay + len - 1 };
+      if (startDay === drag.startDay) return;
+      if (others.some((s) => overlaps(s, next))) return;
       setDrag({ ...drag, ...next, moved: true });
     } else {
-      const others = stays.filter((s) => s.id !== drag.id);
-      let { startWeek, endWeek } = drag;
+      if (!drag.moved && slot === drag.grabSlot) return;
+      let { startDay, endDay } = drag;
       if (drag.edge === 'l') {
-        const min = Math.max(0, ...others.filter((s) => s.endWeek < endWeek).map((s) => s.endWeek + 1));
-        startWeek = clamp(week, min, endWeek);
+        const prevEnd = Math.max(-1, ...others.filter((s) => s.endDay < endDay).map((s) => s.endDay));
+        startDay = Math.max(Math.min(dayOfBoundary(slot), endDay), prevEnd + 1);
       } else {
-        const max = Math.min(WEEK_COUNT - 1, ...others.filter((s) => s.startWeek > startWeek).map((s) => s.startWeek - 1));
-        endWeek = clamp(week, startWeek, max);
+        const nextStart = Math.min(TOTAL_DAYS, ...others.filter((s) => s.startDay > startDay).map((s) => s.startDay));
+        endDay = Math.min(Math.max(dayOfBoundary(slot + 1) - 1, startDay), nextStart - 1);
       }
-      if (startWeek === drag.startWeek && endWeek === drag.endWeek) return;
-      setDrag({ ...drag, startWeek, endWeek, moved: true });
+      if (startDay === drag.startDay && endDay === drag.endDay) return;
+      setDrag({ ...drag, startDay, endDay, moved: true });
     }
   }
 
@@ -96,23 +138,22 @@ export default function App() {
     if (!drag) return;
     setDrag(null);
     if (drag.kind === 'select') {
-      setEditing({ id: null, startWeek: drag.startWeek, endWeek: drag.endWeek });
+      const range = fit({ startDay: dayOfBoundary(drag.lo), endDay: dayOfBoundary(drag.hi + 1) - 1 });
+      if (range) setEditing({ id: null, ...range });
     } else if (drag.moved) {
-      setStays((prev) =>
-        prev.map((s) => (s.id === drag.id ? { ...s, startWeek: drag.startWeek, endWeek: drag.endWeek } : s)),
-      );
+      setStays((prev) => prev.map((s) => (s.id === drag.id ? { ...s, startDay: drag.startDay, endDay: drag.endDay } : s)));
     } else if (drag.kind === 'move') {
-      setEditing({ id: drag.id, startWeek: drag.startWeek, endWeek: drag.endWeek });
+      setEditing({ id: drag.id, startDay: drag.startDay, endDay: drag.endDay });
     }
   }
 
-  function saveEditing(location: string, note: string) {
+  function saveEditing(location: string, note: string, range: DayRange) {
     if (!editing) return;
-    const fields = { location, note: note || undefined };
+    const fields = { location, note: note || undefined, ...range };
     setStays((prev) =>
       editing.id
         ? prev.map((s) => (s.id === editing.id ? { ...s, ...fields } : s))
-        : [...prev, { id: crypto.randomUUID(), startWeek: editing.startWeek, endWeek: editing.endWeek, ...fields }],
+        : [...prev, { id: crypto.randomUUID(), ...fields }],
     );
     setEditing(null);
   }
@@ -123,13 +164,24 @@ export default function App() {
     setEditing(null);
   }
 
-  function exportJson() {
-    const blob = new Blob([JSON.stringify({ year: YEAR, stays: sorted }, null, 2)], { type: 'application/json' });
+  function download(blob: Blob, ext: string) {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `nomad-plan-${YEAR}.json`;
+    a.download = `nomad-plan-${YEAR}.${ext}`;
     a.click();
     URL.revokeObjectURL(a.href);
+  }
+
+  function exportJson() {
+    download(new Blob([JSON.stringify(serialize(sorted), null, 2)], { type: 'application/json' }), 'json');
+  }
+
+  async function savePng() {
+    try {
+      download(await renderPng(stays), 'png');
+    } catch {
+      alert('無法產生 PNG，請再試一次。');
+    }
   }
 
   async function importJson(file: File) {
@@ -147,7 +199,8 @@ export default function App() {
     if (confirm('確定清空全部行程？這個動作無法復原。')) setStays([]);
   }
 
-  const shown = (s: Stay) => (drag && drag.kind !== 'select' && drag.id === s.id ? { ...s, ...drag } : s);
+  const shown = (s: Stay): Stay =>
+    drag && drag.kind !== 'select' && drag.id === s.id ? { ...s, startDay: drag.startDay, endDay: drag.endDay } : s;
   const editingStay = editing?.id ? stays.find((s) => s.id === editing.id) : undefined;
 
   return (
@@ -155,9 +208,10 @@ export default function App() {
       <header className="topbar">
         <div>
           <h1>{YEAR} 游牧年曆</h1>
-          <p className="hint">在空格上拖拉選週數，輸入地點。拖色塊可搬移，拉兩端可伸縮，點一下可編輯。</p>
+          <p className="hint">在空格上拖拉（以半週為單位）選時段，輸入地點。拖色塊可搬移，拉兩端可伸縮，點一下可編輯並設定確切日期。</p>
         </div>
         <div className="actions">
+          <button onClick={() => void savePng()} disabled={stays.length === 0}>保存 PNG</button>
           <button onClick={exportJson} disabled={stays.length === 0}>匯出</button>
           <button onClick={() => fileRef.current?.click()}>匯入</button>
           <button onClick={clearAll} disabled={stays.length === 0}>清空</button>
@@ -176,10 +230,10 @@ export default function App() {
       </header>
 
       <div className="scroll">
-        <div className="timeline" style={{ '--n': WEEK_COUNT } as CSSProperties}>
+        <div className="timeline" style={{ '--n': SLOTS } as CSSProperties}>
           <div className="row months">
             {MONTHS.map((m) => (
-              <div key={m.month} className="month" style={{ gridColumn: `${m.startIndex + 1} / span ${m.span}` }}>
+              <div key={m.month} className="month" style={{ gridColumn: `${m.startIndex * 2 + 1} / span ${m.span * 2}` }}>
                 {m.month + 1} 月
               </div>
             ))}
@@ -196,38 +250,38 @@ export default function App() {
               <div
                 key={w.index}
                 className={`cell${w.index === thisWeek ? ' today' : ''}${MONTHS.some((m) => m.startIndex === w.index) ? ' month-start' : ''}`}
-                style={{ gridColumn: w.index + 1 }}
-                title={rangeLabel(w.index, w.index)}
+                style={{ gridColumn: `${w.index * 2 + 1} / span 2` }}
+                title={rangeLabel({ startDay: w.index * 7, endDay: w.index * 7 + 6 })}
               >
                 <span>{w.start.getDate()}</span>
               </div>
             ))}
             {stays.map((stay) => {
               const s = shown(stay);
-              const weeks = span(s);
+              const weeks = weeksLabel(daysOf(s));
               return (
                 <div
                   key={s.id}
                   data-stay={s.id}
                   className={`stay${s !== stay ? ' active' : ''}`}
-                  style={{ ...col(s), background: colorFor(s.location) }}
-                  title={`${s.location}｜${rangeLabel(s.startWeek, s.endWeek)}｜${weeks} 週${s.note ? `\n${s.note}` : ''}`}
+                  style={{ ...stayCol(s), background: colorFor(s.location) }}
+                  title={`${s.location}｜${rangeLabel(s)}｜${weeks}${s.note ? `\n${s.note}` : ''}`}
                 >
                   <span className="handle" data-edge="l" />
                   <span className="label">
                     <strong>{s.location}</strong>
-                    <small>{weeks} 週{s.note ? ' ・📝' : ''}</small>
+                    <small>{s !== stay ? rangeLabel(s) : `${weeks}${s.note ? ' ・📝' : ''}`}</small>
                   </span>
                   <span className="handle" data-edge="r" />
                 </div>
               );
             })}
             {drag?.kind === 'select' && (
-              <div className="selection" style={col(drag)}>
-                {span(drag)} 週
+              <div className="selection" style={slotCol(drag.lo, drag.hi + 1)}>
+                {(drag.hi - drag.lo + 1) / 2} 週
               </div>
             )}
-            {editing && !editing.id && <div className="selection" style={col(editing)} />}
+            {editing && !editing.id && <div className="selection" style={stayCol(editing)} />}
           </div>
         </div>
       </div>
@@ -236,14 +290,14 @@ export default function App() {
         <div className="panel">
           <h2>摘要</h2>
           <p className="stat">
-            已安排 <b>{planned}</b> 週・未安排 <b>{WEEK_COUNT - planned}</b> 週
+            已安排 <b>{weeksLabel(plannedDays)}</b>・未安排 <b>{weeksLabel(TOTAL_DAYS - plannedDays)}</b>
           </p>
           <ul className="totals">
-            {totals.map(([location, weeks]) => (
+            {totals.map(([location, days]) => (
               <li key={location}>
                 <i style={{ background: colorFor(location) }} />
                 {location}
-                <span>{weeks} 週</span>
+                <span>{weeksLabel(days)}</span>
               </li>
             ))}
           </ul>
@@ -255,11 +309,11 @@ export default function App() {
           ) : (
             <ol className="stays">
               {sorted.map((s) => (
-                <li key={s.id} onClick={() => setEditing({ id: s.id, startWeek: s.startWeek, endWeek: s.endWeek })}>
+                <li key={s.id} onClick={() => setEditing({ id: s.id, startDay: s.startDay, endDay: s.endDay })}>
                   <i style={{ background: colorFor(s.location) }} />
-                  <span className="when">{rangeLabel(s.startWeek, s.endWeek)}</span>
+                  <span className="when">{rangeLabel(s)}</span>
                   <strong>{s.location}</strong>
-                  <span className="weeks">{span(s)} 週</span>
+                  <span className="weeks">{weeksLabel(daysOf(s))}・{daysOf(s)} 天</span>
                   {s.note && <span className="note">{s.note}</span>}
                 </li>
               ))}
@@ -270,9 +324,10 @@ export default function App() {
 
       {editing && (
         <Editor
-          key={editing.id ?? `new-${editing.startWeek}-${editing.endWeek}`}
+          key={editing.id ?? `new-${editing.startDay}-${editing.endDay}`}
           editing={editing}
           stay={editingStay}
+          others={stays.filter((s) => s.id !== editing.id)}
           locations={locations}
           onSave={saveEditing}
           onDelete={deleteEditing}
@@ -286,14 +341,17 @@ export default function App() {
 function Editor(props: {
   editing: Editing;
   stay?: Stay;
+  others: Stay[];
   locations: string[];
-  onSave: (location: string, note: string) => void;
+  onSave: (location: string, note: string, range: DayRange) => void;
   onDelete: () => void;
   onClose: () => void;
 }) {
-  const { editing, stay, locations, onSave, onDelete, onClose } = props;
+  const { editing, stay, others, locations, onSave, onDelete, onClose } = props;
   const [location, setLocation] = useState(stay?.location ?? '');
   const [note, setNote] = useState(stay?.note ?? '');
+  const [start, setStart] = useState(isoOfDay(editing.startDay));
+  const [end, setEnd] = useState(isoOfDay(editing.endDay));
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -301,19 +359,33 @@ function Editor(props: {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  const startDay = dayOfIso(start);
+  const endDay = dayOfIso(end);
+  let range: DayRange | null = null;
+  let error = '';
+  if (startDay === null || endDay === null) {
+    error = `日期需在 ${isoOfDay(0)} 到 ${isoOfDay(TOTAL_DAYS - 1)} 之間。`;
+  } else if (startDay > endDay) {
+    error = '結束日不能早於開始日。';
+  } else {
+    range = { startDay, endDay };
+    const clash = others.find((o) => overlaps(o, range!));
+    if (clash) {
+      error = `與「${clash.location}」（${rangeLabel(clash)}）重疊。`;
+      range = null;
+    }
+  }
+
   function submit(e: FormEvent) {
     e.preventDefault();
     const name = location.trim();
-    if (name) onSave(name, note.trim());
+    if (name && range) onSave(name, note.trim(), range);
   }
 
   return (
     <div className="backdrop" onPointerDown={(e) => e.target === e.currentTarget && onClose()}>
       <form className="editor" onSubmit={submit}>
         <h2>{stay ? '編輯行程' : '新增行程'}</h2>
-        <p className="range">
-          {rangeLabel(editing.startWeek, editing.endWeek)}・{span(editing)} 週
-        </p>
         <label>
           地點
           <input
@@ -330,6 +402,25 @@ function Editor(props: {
             <option key={l} value={l} />
           ))}
         </datalist>
+        <div className="dates">
+          <label>
+            開始日
+            <input type="date" value={start} min={isoOfDay(0)} max={isoOfDay(TOTAL_DAYS - 1)} onChange={(e) => setStart(e.target.value)} />
+          </label>
+          <label>
+            結束日
+            <input type="date" value={end} min={isoOfDay(0)} max={isoOfDay(TOTAL_DAYS - 1)} onChange={(e) => setEnd(e.target.value)} />
+          </label>
+        </div>
+        {error ? (
+          <p className="error">{error}</p>
+        ) : (
+          range && (
+            <p className="range">
+              {rangeLabel(range)}・{daysOf(range)} 天（約 {weeksLabel(daysOf(range))}）
+            </p>
+          )
+        )}
         <label>
           備註
           <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="例：回台過年、朋友婚禮" rows={3} maxLength={300} />
@@ -344,7 +435,7 @@ function Editor(props: {
           <button type="button" onClick={onClose}>
             取消
           </button>
-          <button type="submit" className="primary" disabled={!location.trim()}>
+          <button type="submit" className="primary" disabled={!location.trim() || !range}>
             儲存
           </button>
         </div>
