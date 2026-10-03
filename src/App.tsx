@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, FormEvent, PointerEvent as ReactPointerEvent } from 'react';
 import { renderPng } from './exportPng';
-import { PALETTE, colorKeyOf, colorOf, defaultColor, placeFull, placeName, load, overlaps, sanitize, save, serialize, type ColorKey, type Stay } from './storage';
+import { PALETTE, colorKeyOf, colorOf, defaultColor, placeFull, placeName, load, overlaps, sanitize, save, serialize, swapStays, type ColorKey, type Stay } from './storage';
 import {
   MONTHS,
   SLOTS,
@@ -21,12 +21,18 @@ import {
 
 type Drag =
   | { kind: 'select'; anchor: number; lo: number; hi: number } // slots, inclusive
-  | (DayRange & { kind: 'move'; id: string; grabSlot: number; orig: DayRange; moved: boolean })
+  // swapWith: the stay under the pointer, which will trade places with the dragged one on drop
+  | (DayRange & { kind: 'move'; id: string; grabSlot: number; orig: DayRange; moved: boolean; swapWith?: string })
   | (DayRange & { kind: 'resize'; id: string; edge: 'l' | 'r'; grabSlot: number; moved: boolean });
 
 type Editing = DayRange & { id: string | null };
 
+type History = { past: Stay[][]; present: Stay[]; future: Stay[][] };
+const HISTORY_LIMIT = 100;
+
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+
+const MOD = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
 
 const ZOOM_KEY = 'dnp-zoom';
 const ZOOM_MIN = 1;
@@ -48,7 +54,23 @@ const stayCol = (r: DayRange) => {
 };
 
 export default function App() {
-  const [stays, setStays] = useState<Stay[]>(load);
+  const [history, setHistory] = useState<History>(() => ({ past: [], present: load(), future: [] }));
+  const stays = history.present;
+  // Every change to the plan goes through here so it lands on the undo stack.
+  const setStays = (update: Stay[] | ((prev: Stay[]) => Stay[])) =>
+    setHistory((h) => {
+      const next = typeof update === 'function' ? update(h.present) : update;
+      if (next === h.present) return h;
+      return { past: [...h.past, h.present].slice(-HISTORY_LIMIT), present: next, future: [] };
+    });
+  const undo = () =>
+    setHistory((h) =>
+      h.past.length ? { past: h.past.slice(0, -1), present: h.past[h.past.length - 1], future: [h.present, ...h.future] } : h,
+    );
+  const redo = () =>
+    setHistory((h) =>
+      h.future.length ? { past: [...h.past, h.present], present: h.future[0], future: h.future.slice(1) } : h,
+    );
   const [drag, setDrag] = useState<Drag | null>(null);
   const [editing, setEditing] = useState<Editing | null>(null);
   const [zoom, setZoom] = useState(loadZoom);
@@ -60,6 +82,23 @@ export default function App() {
   const thisWeek = useMemo(() => currentWeekIndex(), []);
 
   useEffect(() => save(stays), [stays]);
+
+  const busy = Boolean(drag || editing);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey || busy) return;
+      // Leave native text undo alone while typing in a field.
+      const el = e.target;
+      if (el instanceof Element && el.closest('input:not([type=range]), textarea, [contenteditable]')) return;
+      const key = e.key.toLowerCase();
+      if (key === 'z' && !e.shiftKey) undo();
+      else if ((key === 'z' && e.shiftKey) || (key === 'y' && !e.shiftKey)) redo();
+      else return;
+      e.preventDefault();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [busy]);
 
   function changeZoom(next: number) {
     const el = scrollRef.current;
@@ -152,6 +191,14 @@ export default function App() {
     }
     const others = stays.filter((s) => s.id !== drag.id);
     if (drag.kind === 'move') {
+      const target = others.find((o) => {
+        const { s, e } = slotsOf(o);
+        return slot >= s && slot < e;
+      });
+      if (target) {
+        if (drag.swapWith !== target.id) setDrag({ ...drag, ...drag.orig, swapWith: target.id, moved: true });
+        return;
+      }
       const delta = slot - drag.grabSlot;
       const len = daysOf(drag.orig);
       // Whole-week moves keep the exact dates; half-week moves snap the start to a slot boundary.
@@ -161,9 +208,12 @@ export default function App() {
           : dayOfBoundary(clamp(slotsOf(drag.orig).s + delta, 0, SLOTS - 1));
       const startDay = clamp(raw, 0, TOTAL_DAYS - len);
       const next = { startDay, endDay: startDay + len - 1 };
-      if (startDay === drag.startDay) return;
-      if (others.some((s) => overlaps(s, next))) return;
-      setDrag({ ...drag, ...next, moved: true });
+      if (others.some((s) => overlaps(s, next))) {
+        if (drag.swapWith) setDrag({ ...drag, swapWith: undefined });
+        return;
+      }
+      if (startDay === drag.startDay && !drag.swapWith) return;
+      setDrag({ ...drag, ...next, swapWith: undefined, moved: true });
     } else {
       if (!drag.moved && slot === drag.grabSlot) return;
       let { startDay, endDay } = drag;
@@ -185,6 +235,9 @@ export default function App() {
     if (drag.kind === 'select') {
       const range = fit({ startDay: dayOfBoundary(drag.lo), endDay: dayOfBoundary(drag.hi + 1) - 1 });
       if (range) setEditing({ id: null, ...range });
+    } else if (drag.kind === 'move' && drag.swapWith) {
+      const other = drag.swapWith;
+      setStays((prev) => swapStays(prev, drag.id, other));
     } else if (drag.moved) {
       setStays((prev) => prev.map((s) => (s.id === drag.id ? { ...s, startDay: drag.startDay, endDay: drag.endDay } : s)));
     } else if (drag.kind === 'move') {
@@ -244,8 +297,15 @@ export default function App() {
     if (confirm('確定清空全部行程？這個動作無法復原。')) setStays([]);
   }
 
-  const shown = (s: Stay): Stay =>
-    drag && drag.kind !== 'select' && drag.id === s.id ? { ...s, startDay: drag.startDay, endDay: drag.endDay } : s;
+  // What the timeline draws mid-drag: the swap preview, or the dragged stay at its tentative dates.
+  const activeId = drag && drag.kind !== 'select' && drag.moved ? drag.id : null;
+  const swapId = drag?.kind === 'move' ? drag.swapWith : undefined;
+  const visible =
+    drag && drag.kind !== 'select'
+      ? swapId
+        ? swapStays(stays, drag.id, swapId)
+        : stays.map((s) => (s.id === drag.id ? { ...s, startDay: drag.startDay, endDay: drag.endDay } : s))
+      : stays;
   const editingStay = editing?.id ? stays.find((s) => s.id === editing.id) : undefined;
 
   return (
@@ -253,9 +313,11 @@ export default function App() {
       <header className="topbar">
         <div>
           <h1>{YEAR} 游牧年曆</h1>
-          <p className="hint">在空格上拖拉（以半週為單位）選時段，輸入國家與城市。拖色塊可搬移，拉兩端可伸縮，點一下可編輯並設定確切日期。</p>
+          <p className="hint">在空格上拖拉（以半週為單位）選時段，輸入國家與城市。拖色塊可搬移，拖到另一個色塊上可交換位置，拉兩端可伸縮，點一下可編輯並設定確切日期。</p>
         </div>
         <div className="actions">
+          <button onClick={undo} disabled={history.past.length === 0} title={`復原（${MOD}Z）`}>復原</button>
+          <button onClick={redo} disabled={history.future.length === 0} title={`重做（${MOD}⇧Z）`}>重做</button>
           <button onClick={() => void savePng()} disabled={stays.length === 0}>保存 PNG</button>
           <button onClick={exportJson} disabled={stays.length === 0}>匯出</button>
           <button onClick={() => fileRef.current?.click()}>匯入</button>
@@ -301,21 +363,20 @@ export default function App() {
                 <span>{w.start.getDate()}</span>
               </div>
             ))}
-            {stays.map((stay) => {
-              const s = shown(stay);
+            {visible.map((s) => {
               const weeks = weeksLabel(daysOf(s));
               return (
                 <div
                   key={s.id}
                   data-stay={s.id}
-                  className={`stay${s !== stay ? ' active' : ''}`}
+                  className={`stay${s.id === activeId ? ' active' : ''}${s.id === swapId ? ' swap-target' : ''}`}
                   style={{ ...stayCol(s), background: colorOf(s) }}
                   title={`${placeFull(s)}｜${rangeLabel(s)}｜${weeks}${s.note ? `\n${s.note}` : ''}`}
                 >
                   <span className="handle" data-edge="l" />
                   <span className="label">
                     <strong>{placeName(s)}</strong>
-                    <small>{s !== stay ? rangeLabel(s) : `${weeks}${s.note ? ' ・📝' : ''}`}</small>
+                    <small>{s.id === activeId || s.id === swapId ? rangeLabel(s) : `${weeks}${s.note ? ' ・📝' : ''}`}</small>
                   </span>
                   <span className="handle" data-edge="r" />
                 </div>

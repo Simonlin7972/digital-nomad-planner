@@ -14,6 +14,28 @@ export function overlaps(a: DayRange, b: DayRange) {
   return a.startDay <= b.endDay && b.startDay <= a.endDay;
 }
 
+// Exchanges two stays' places in the sequence. Each keeps its length; anything between them slides by the
+// length difference, so the overall span is unchanged and nothing overlaps.
+export function swapStays(stays: Stay[], idA: string, idB: string): Stay[] {
+  let a = stays.find((s) => s.id === idA);
+  let b = stays.find((s) => s.id === idB);
+  if (!a || !b || a === b) return stays;
+  if (a.startDay > b.startDay) [a, b] = [b, a];
+  const first = a;
+  const second = b;
+  const lenA = first.endDay - first.startDay + 1;
+  const lenB = second.endDay - second.startDay + 1;
+  const shift = lenB - lenA;
+  return stays.map((s) => {
+    if (s.id === first.id) return { ...s, startDay: second.endDay - lenA + 1, endDay: second.endDay };
+    if (s.id === second.id) return { ...s, startDay: first.startDay, endDay: first.startDay + lenB - 1 };
+    if (s.startDay > first.endDay && s.endDay < second.startDay) {
+      return { ...s, startDay: s.startDay + shift, endDay: s.endDay + shift };
+    }
+    return s;
+  });
+}
+
 // Stays are stored with ISO dates so exported files stay readable.
 export function serialize(stays: Stay[]) {
   return {

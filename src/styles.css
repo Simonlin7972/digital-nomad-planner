@@ -64,8 +64,8 @@ button:hover:not(:disabled) { border-color: var(--text); background: var(--subtl
 button:active:not(:disabled) { transform: scale(0.96); }
 button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
-button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-button.primary:hover:not(:disabled) { background: var(--accent-dark); border-color: var(--accent-dark); }
+button.primary { background: var(--text); border-color: var(--text); color: #fff; }
+button.primary:hover:not(:disabled) { background: #000; border-color: #000; }
 button.danger { border-color: transparent; background: none; color: var(--danger); text-decoration: underline; padding-inline: 8px; }
 button.danger:hover:not(:disabled) { border-color: transparent; background: var(--subtle); }
 
@@ -156,6 +156,7 @@ button.danger:hover:not(:disabled) { border-color: transparent; background: var(
 .stay:hover { box-shadow: 0 4px 12px rgb(0 0 0 / 0.22); transform: translateY(-1px); }
 .stay.active { opacity: 0.9; box-shadow: 0 8px 20px rgb(0 0 0 / 0.3); transform: translateY(-2px); z-index: 2; }
 .track.dragging .stay { cursor: grabbing; transition: none; }
+.stay.swap-target { outline: 2px dashed var(--text); outline-offset: 2px; }
 
 .stay .handle {
   flex: 0 0 auto;
