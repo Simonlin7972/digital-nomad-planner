@@ -1,4 +1,4 @@
-import { colorFor, type Stay } from './storage';
+import { colorOf, placeFull, placeName, type Stay } from './storage';
 import { MONTHS, SLOTS, WEEKS, YEAR, daysOf, rangeLabel, slotsOf, weeksLabel } from './weeks';
 
 const FONT = '-apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
@@ -7,14 +7,15 @@ const PAD = 40;
 const SLOT_W = 20;
 const TITLE_H = 56;
 const MONTH_H = 28;
-const TRACK_H = 96;
+const TRACK_H = 100;
 const ROW_H = 28;
 const COLS = 3;
 
-const TEXT = '#1f2328';
-const MUTED = '#6b7280';
-const LINE = '#e2e0d8';
-const LINE_STRONG = '#bdb9ad';
+const TEXT = '#222222';
+const MUTED = '#6a6a6a';
+const LINE = '#ebebeb';
+const LINE_STRONG = '#dddddd';
+const SUBTLE = '#f7f7f7';
 
 function ellipsize(ctx: CanvasRenderingContext2D, text: string, max: number): string {
   if (ctx.measureText(text).width <= max) return text;
@@ -49,7 +50,7 @@ export function renderPng(stays: Stay[]): Promise<Blob> {
   ctx.fillText(`${YEAR} 游牧年曆`, PAD, PAD + 28);
 
   // Track background, week lines and dates
-  ctx.fillStyle = '#fbfaf7';
+  ctx.fillStyle = SUBTLE;
   ctx.fillRect(PAD, trackY, trackW, TRACK_H);
   ctx.lineWidth = 1;
   ctx.font = `10px ${FONT}`;
@@ -62,21 +63,19 @@ export function renderPng(stays: Stay[]): Promise<Blob> {
     ctx.moveTo(x + 0.5, monthStart ? monthsY : trackY);
     ctx.lineTo(x + 0.5, trackY + TRACK_H);
     ctx.stroke();
-    ctx.strokeStyle = LINE;
-    ctx.setLineDash([3, 4]);
+    ctx.strokeStyle = LINE_STRONG;
+    ctx.setLineDash([2, 5]);
     ctx.beginPath();
     ctx.moveTo(x + SLOT_W + 0.5, trackY);
     ctx.lineTo(x + SLOT_W + 0.5, trackY + TRACK_H);
     ctx.stroke();
     ctx.fillStyle = MUTED;
-    ctx.fillText(String(w.start.getDate()), x + 4, trackY + 13);
+    ctx.fillText(String(w.start.getDate()), x + 4, trackY + 15);
   }
   ctx.setLineDash([]);
-  ctx.strokeStyle = LINE;
-  ctx.strokeRect(PAD + 0.5, trackY + 0.5, trackW, TRACK_H);
 
   ctx.font = `600 13px ${FONT}`;
-  ctx.fillStyle = MUTED;
+  ctx.fillStyle = TEXT;
   for (const m of MONTHS) ctx.fillText(`${m.month + 1} 月`, PAD + m.startIndex * 2 * SLOT_W + 6, monthsY + 14);
 
   // Stays
@@ -84,21 +83,21 @@ export function renderPng(stays: Stay[]): Promise<Blob> {
     const { s, e } = slotsOf(stay);
     const x = PAD + s * SLOT_W + 1;
     const w = (e - s) * SLOT_W - 2;
-    const y = trackY + 22;
-    const h = TRACK_H - 30;
-    ctx.fillStyle = colorFor(stay.location);
+    const y = trackY + 24;
+    const h = TRACK_H - 34;
+    ctx.fillStyle = colorOf(stay);
     ctx.beginPath();
-    ctx.roundRect(x, y, w, h, 6);
+    ctx.roundRect(x, y, w, h, 10);
     ctx.fill();
     if (w < 30) continue;
     ctx.save();
     ctx.clip();
     ctx.fillStyle = '#ffffff';
-    ctx.font = `700 13px ${FONT}`;
-    ctx.fillText(ellipsize(ctx, stay.location, w - 14), x + 8, y + h / 2 - 2);
-    ctx.globalAlpha = 0.85;
+    ctx.font = `600 14px ${FONT}`;
+    ctx.fillText(ellipsize(ctx, placeName(stay), w - 20), x + 12, y + h / 2 - 2);
+    ctx.globalAlpha = 0.9;
     ctx.font = `11px ${FONT}`;
-    ctx.fillText(weeksLabel(daysOf(stay)), x + 8, y + h / 2 + 14);
+    ctx.fillText(weeksLabel(daysOf(stay)), x + 12, y + h / 2 + 14);
     ctx.restore();
   }
 
@@ -108,17 +107,17 @@ export function renderPng(stays: Stay[]): Promise<Blob> {
     const x = PAD + Math.floor(i / rows) * colW;
     const y = listY + (i % rows) * ROW_H;
     const right = x + colW - 24;
-    ctx.fillStyle = colorFor(stay.location);
+    ctx.fillStyle = colorOf(stay);
     ctx.beginPath();
-    ctx.roundRect(x, y + 5, 10, 10, 3);
+    ctx.roundRect(x, y + 5, 10, 10, 5);
     ctx.fill();
     ctx.font = `13px ${FONT}`;
     ctx.fillStyle = MUTED;
     ctx.fillText(rangeLabel(stay), x + 20, y + 15);
     let cx = x + 130;
-    ctx.font = `700 13px ${FONT}`;
+    ctx.font = `600 13px ${FONT}`;
     ctx.fillStyle = TEXT;
-    const name = ellipsize(ctx, stay.location, 180);
+    const name = ellipsize(ctx, placeFull(stay), 180);
     ctx.fillText(name, cx, y + 15);
     cx += ctx.measureText(name).width + 10;
     ctx.font = `13px ${FONT}`;
