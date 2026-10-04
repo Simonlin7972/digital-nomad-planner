@@ -47,7 +47,7 @@ export function renderPng(stays: Stay[]): Promise<Blob> {
 
   ctx.fillStyle = TEXT;
   ctx.font = `700 28px ${FONT}`;
-  ctx.fillText(`${YEAR} 游牧年曆`, PAD, PAD + 28);
+  ctx.fillText(`${YEAR} 遊牧年曆`, PAD, PAD + 28);
 
   // Track background, week lines and dates
   ctx.fillStyle = SUBTLE;

@@ -42,7 +42,7 @@ body {
   border-bottom: 1px solid var(--line);
 }
 
-h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+h1 { margin: 0; font-size: 40px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em; }
 h2 { margin: 0 0 16px; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
 .hint { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.5; max-width: 60ch; }
 
@@ -293,7 +293,6 @@ button.danger:hover:not(:disabled) { border-color: transparent; background: var(
 .stay:hover { box-shadow: 0 4px 12px rgb(0 0 0 / 0.22); transform: translateY(-1px); }
 .stay.active { opacity: 0.9; box-shadow: 0 8px 20px rgb(0 0 0 / 0.3); transform: translateY(-2px); z-index: 2; }
 .track.dragging .stay { cursor: grabbing; transition: none; }
-.stay.swap-target { outline: 2px dashed var(--text); outline-offset: 2px; }
 
 .stay .handle {
   flex: 0 0 auto;
@@ -502,6 +501,12 @@ button.danger:hover:not(:disabled) { border-color: transparent; background: var(
 }
 .panel.grow { flex: 1; }
 
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.panel-head h2 { margin: 0; }
+.pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.pills button { padding: 6px 14px; font-size: 13px; font-weight: 500; }
+.pills button[aria-pressed='true'] { background: var(--text); border-color: var(--text); color: #fff; }
+
 .stat { line-height: 1.9; margin: 0 0 16px; padding-bottom: 16px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--muted); }
 .stat b { color: var(--text); font-size: 18px; font-weight: 600; }
 
@@ -516,6 +521,7 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
   padding: 6px 0;
 }
 .totals li span { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+.totals li small { font-size: 12px; font-weight: 400; color: var(--muted); }
 .totals li.country { font-weight: 600; margin-top: 10px; }
 .totals li.country:first-child { margin-top: 0; }
 .flag {

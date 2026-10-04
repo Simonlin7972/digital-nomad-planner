@@ -8,7 +8,7 @@ import { Flag } from './Flag';
 import MonthView from './MonthView';
 import { flightStats, useCoords } from './useCoords';
 import { HOLIDAY_SETS, type Holiday, type HolidaySet } from './holidays';
-import { PALETTE, colorKeyOf, colorOf, defaultColor, placeFull, placeName, load, overlaps, sanitize, save, serialize, swapStays, type ColorKey, type Stay } from './storage';
+import { PALETTE, colorKeyOf, colorOf, defaultColor, placeFull, placeName, load, overlaps, sanitize, save, serialize, pushStays, reorderStays, type ColorKey, type Stay } from './storage';
 import {
   MONTHS,
   SLOTS,
@@ -30,8 +30,7 @@ import {
 
 type Drag =
   | { kind: 'select'; anchor: number; lo: number; hi: number } // slots, inclusive
-  // swapWith: the stay under the pointer, which will trade places with the dragged one on drop
-  | (DayRange & { kind: 'move'; id: string; grabSlot: number; orig: DayRange; moved: boolean; swapWith?: string })
+  | (DayRange & { kind: 'move'; id: string; grabSlot: number; orig: DayRange; moved: boolean })
   | (DayRange & { kind: 'resize'; id: string; edge: 'l' | 'r'; grabSlot: number; moved: boolean });
 
 type Editing = DayRange & { id: string | null };
@@ -113,14 +112,18 @@ export default function App() {
   const [editing, setEditing] = useState<Editing | null>(null);
   const [zoom, setZoom] = useState(loadZoom);
   const [view, setView] = useState(loadView);
+  const [quarter, setQuarter] = useState(0); // 0 = whole year
   const { coords, failed: coordsFailed } = useCoords(stays);
   const [holidayOn, setHolidayOn] = useState(loadHolidayToggles);
   const [stayCard, setStayCard] = useState<{ id: string; x: number; y: number } | null>(null);
   const [holidayCard, setHolidayCard] = useState<{ holiday: Holiday; set: HolidaySet; x: number; y: number } | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  // Fraction of the timeline at the viewport centre, captured before a zoom so the same spot stays centred after it.
-  const zoomCentre = useRef<number | null>(null);
+  // Captured before a zoom so the same spot of the timeline stays under the anchor (pointer or viewport centre):
+  // `frac` is that spot as a fraction of the timeline, `offset` its distance from the scroller's left edge.
+  const zoomAnchor = useRef<{ frac: number; offset: number } | null>(null);
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
   const fileRef = useRef<HTMLInputElement>(null);
   const thisWeek = useMemo(() => currentWeekIndex(), []);
 
@@ -184,16 +187,80 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [busy]);
 
-  function changeZoom(next: number) {
+  // anchorX is a clientX to zoom around; without it the viewport centre stays put.
+  function zoomTo(next: number, anchorX?: number) {
     const el = scrollRef.current;
-    if (el) zoomCentre.current = (el.scrollLeft + el.clientWidth / 2) / el.scrollWidth;
-    setZoom(clamp(Math.round(next / ZOOM_STEP) * ZOOM_STEP, ZOOM_MIN, ZOOM_MAX));
+    if (el) {
+      const offset = anchorX === undefined ? el.clientWidth / 2 : anchorX - el.getBoundingClientRect().left;
+      zoomAnchor.current = { frac: (el.scrollLeft + offset) / el.scrollWidth, offset };
+    }
+    setZoom(clamp(next, ZOOM_MIN, ZOOM_MAX));
   }
+  // Buttons and the slider move in whole steps; pinching is continuous.
+  const changeZoom = (next: number) => zoomTo(Math.round(next / ZOOM_STEP) * ZOOM_STEP);
+
+  // Pinch to zoom: trackpads report it as ctrl+wheel (Chrome, Firefox) or gesture events (Safari);
+  // touch screens as two fingers. All three need non-passive listeners to stop the page itself zooming.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      // ctrl is what a trackpad pinch sends; alt is the same zoom for a plain mouse wheel.
+      if (!e.ctrlKey && !e.altKey) return;
+      e.preventDefault();
+      // A mouse wheel notch is far larger than a trackpad pinch step, so cap each event.
+      zoomTo(zoomRef.current * Math.exp(-clamp(e.deltaY || e.deltaX, -30, 30) * 0.01), e.clientX);
+    };
+    let gestureStart = ZOOM_MIN;
+    const onGestureStart = (e: Event) => {
+      e.preventDefault();
+      gestureStart = zoomRef.current;
+    };
+    const onGestureChange = (e: Event) => {
+      e.preventDefault();
+      const g = e as Event & { scale: number; clientX: number };
+      zoomTo(gestureStart * g.scale, g.clientX);
+    };
+    let pinch: { dist: number; zoom: number } | null = null;
+    const spread = (t: TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 2) return;
+      pinch = { dist: spread(e.touches), zoom: zoomRef.current };
+      setDrag(null); // the first finger may have started a selection
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (!pinch || e.touches.length !== 2) return;
+      e.preventDefault();
+      zoomTo((pinch.zoom * spread(e.touches)) / pinch.dist, (e.touches[0].clientX + e.touches[1].clientX) / 2);
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) pinch = null;
+    };
+    const active = { passive: false } as const;
+    el.addEventListener('wheel', onWheel, active);
+    el.addEventListener('gesturestart', onGestureStart, active);
+    el.addEventListener('gesturechange', onGestureChange, active);
+    el.addEventListener('touchstart', onTouchStart, active);
+    el.addEventListener('touchmove', onTouchMove, active);
+    el.addEventListener('touchend', onTouchEnd);
+    el.addEventListener('touchcancel', onTouchEnd);
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('gesturestart', onGestureStart);
+      el.removeEventListener('gesturechange', onGestureChange);
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('touchcancel', onTouchEnd);
+    };
+    // The scroller only exists in the year view, so re-attach when the view changes.
+  }, [view.mode]);
 
   useLayoutEffect(() => {
     const el = scrollRef.current;
-    if (el && zoomCentre.current !== null) el.scrollLeft = zoomCentre.current * el.scrollWidth - el.clientWidth / 2;
-    zoomCentre.current = null;
+    const anchor = zoomAnchor.current;
+    if (el && anchor) el.scrollLeft = anchor.frac * el.scrollWidth - anchor.offset;
+    zoomAnchor.current = null;
     try {
       localStorage.setItem(ZOOM_KEY, String(zoom));
     } catch {
@@ -225,7 +292,17 @@ export default function App() {
   const countryCount = totals.filter((g) => g.country).length;
   const cityCount = totals.reduce((n, g) => n + g.cities.filter(([city]) => city).length, 0);
   const flights = useMemo(() => flightStats(stays, coords), [stays, coords]);
-  const listRange = view.mode === 'month' ? monthRange(view.month) : null;
+  // The itinerary list follows the month in month view; in year view it can be narrowed to a quarter.
+  const monthFilter = view.mode === 'month' ? monthRange(view.month) : null;
+  const quarterFilter: DayRange | null =
+    quarter === 0
+      ? null
+      : {
+          // Q1 and Q4 also take the few days of the neighbouring years that the timeline shows.
+          startDay: quarter === 1 ? 0 : monthRange(quarter * 3 - 3).startDay,
+          endDay: quarter === 4 ? TOTAL_DAYS - 1 : monthRange(quarter * 3 - 1).endDay,
+        };
+  const listRange = monthFilter ?? quarterFilter;
   const listed = listRange ? sorted.filter((s) => overlaps(s, listRange)) : sorted;
   const plannedDays = stays.reduce((n, s) => n + daysOf(s), 0);
 
@@ -282,43 +359,39 @@ export default function App() {
       setDrag({ ...drag, lo: Math.min(drag.anchor, reach), hi: Math.max(drag.anchor, reach) });
       return;
     }
-    const others = stays.filter((s) => s.id !== drag.id);
     if (drag.kind === 'move') {
-      const target = others.find((o) => {
-        const { s, e } = slotsOf(o);
-        return slot >= s && slot < e;
-      });
-      if (target) {
-        if (drag.swapWith !== target.id) setDrag({ ...drag, ...drag.orig, swapWith: target.id, moved: true });
-        return;
-      }
-      const delta = slot - drag.grabSlot;
       const len = daysOf(drag.orig);
-      // Whole-week moves keep the exact dates; half-week moves snap the start to a slot boundary.
-      const raw =
-        delta % 2 === 0
-          ? drag.orig.startDay + (delta / 2) * 7
-          : dayOfBoundary(clamp(slotsOf(drag.orig).s + delta, 0, SLOTS - 1));
-      const startDay = clamp(raw, 0, TOTAL_DAYS - len);
-      const next = { startDay, endDay: startDay + len - 1 };
-      if (others.some((s) => overlaps(s, next))) {
-        if (drag.swapWith) setDrag({ ...drag, swapWith: undefined });
-        return;
-      }
-      if (startDay === drag.startDay && !drag.swapWith) return;
-      setDrag({ ...drag, ...next, swapWith: undefined, moved: true });
+      const rangeAt = (delta: number): DayRange => {
+        // Whole-week moves keep the exact dates; half-week moves snap the start to a slot boundary.
+        const raw =
+          delta % 2 === 0
+            ? drag.orig.startDay + (delta / 2) * 7
+            : dayOfBoundary(clamp(slotsOf(drag.orig).s + delta, 0, SLOTS - 1));
+        const startDay = clamp(raw, 0, TOTAL_DAYS - len);
+        return { startDay, endDay: startDay + len - 1 };
+      };
+      // The drag only records where the pointer wants the stay; reorderStays decides where it actually lands.
+      const next = rangeAt(slot - drag.grabSlot);
+      if (next.startDay === drag.startDay) return;
+      setDrag({ ...drag, ...next, moved: true });
     } else {
       if (!drag.moved && slot === drag.grabSlot) return;
-      let { startDay, endDay } = drag;
-      if (drag.edge === 'l') {
-        const prevEnd = Math.max(-1, ...others.filter((s) => s.endDay < endDay).map((s) => s.endDay));
-        startDay = Math.max(Math.min(dayOfBoundary(slot), endDay), prevEnd + 1);
-      } else {
-        const nextStart = Math.min(TOTAL_DAYS, ...others.filter((s) => s.startDay > startDay).map((s) => s.startDay));
-        endDay = Math.min(Math.max(dayOfBoundary(slot + 1) - 1, startDay), nextStart - 1);
+      const rangeAt = (at: number): DayRange =>
+        drag.edge === 'l'
+          ? { startDay: Math.min(dayOfBoundary(at), drag.endDay), endDay: drag.endDay }
+          : { startDay: drag.startDay, endDay: Math.max(dayOfBoundary(at + 1) - 1, drag.startDay) };
+      // Growing into a neighbour pushes it; back off toward the grab point if that runs out of year.
+      let next: DayRange | null = null;
+      for (let at = slot; ; at += Math.sign(drag.grabSlot - slot)) {
+        const range = rangeAt(at);
+        if (pushStays(stays, drag.id, range)) {
+          next = range;
+          break;
+        }
+        if (at === drag.grabSlot) break;
       }
-      if (startDay === drag.startDay && endDay === drag.endDay) return;
-      setDrag({ ...drag, startDay, endDay, moved: true });
+      if (!next || (next.startDay === drag.startDay && next.endDay === drag.endDay)) return;
+      setDrag({ ...drag, ...next, moved: true });
     }
   }
 
@@ -328,11 +401,8 @@ export default function App() {
     if (drag.kind === 'select') {
       const range = fit({ startDay: dayOfBoundary(drag.lo), endDay: dayOfBoundary(drag.hi + 1) - 1 });
       if (range) setEditing({ id: null, ...range });
-    } else if (drag.kind === 'move' && drag.swapWith) {
-      const other = drag.swapWith;
-      setStays((prev) => swapStays(prev, drag.id, other));
     } else if (drag.moved) {
-      setStays((prev) => prev.map((s) => (s.id === drag.id ? { ...s, startDay: drag.startDay, endDay: drag.endDay } : s)));
+      setStays((prev) => (drag.kind === 'move' ? reorderStays(prev, drag.id, drag) : (pushStays(prev, drag.id, drag) ?? prev)));
     } else if (drag.kind === 'move') {
       setEditing({ id: drag.id, startDay: drag.startDay, endDay: drag.endDay });
     }
@@ -390,15 +460,14 @@ export default function App() {
     if (confirm('確定清空全部行程？這個動作無法復原。')) setStays([]);
   }
 
-  // What the timeline draws mid-drag: the swap preview, or the dragged stay at its tentative dates.
+  // What the timeline draws mid-drag: a moved stay reorders past its neighbours, a resized one pushes them.
   const activeId = drag && drag.kind !== 'select' && drag.moved ? drag.id : null;
-  const swapId = drag?.kind === 'move' ? drag.swapWith : undefined;
   const visible =
-    drag && drag.kind !== 'select'
-      ? swapId
-        ? swapStays(stays, drag.id, swapId)
-        : stays.map((s) => (s.id === drag.id ? { ...s, startDay: drag.startDay, endDay: drag.endDay } : s))
-      : stays;
+    drag?.kind === 'move'
+      ? reorderStays(stays, drag.id, drag)
+      : drag?.kind === 'resize'
+        ? (pushStays(stays, drag.id, drag) ?? stays)
+        : stays;
   // No card mid-drag or behind the editor; it would only get in the way.
   const hoveredStay = stayCard && !drag && !editing ? stays.find((s) => s.id === stayCard.id) : undefined;
   // One strip per country under the stays; back-to-back stays in the same country share a strip.
@@ -415,14 +484,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div>
-          <h1>{YEAR} 游牧年曆</h1>
-          <p className="hint">
-            {view.mode === 'year'
-              ? '在空格上拖拉（以半週為單位）選時段，輸入國家與城市。拖色塊可搬移，拖到另一個色塊上可交換位置，拉兩端可伸縮，點一下可編輯並設定確切日期。點月份可切到月檢視。'
-              : '在日期上拖拉（以天為單位）新增行程，拉橫條兩端調整開始與結束日，點一下可編輯。'}
-          </p>
-        </div>
+        <h1>{YEAR} 遊牧年曆</h1>
         <div className="actions">
           <button onClick={undo} disabled={history.past.length === 0} title={`復原（${MOD}Z）`}>復原</button>
           <button onClick={redo} disabled={history.future.length === 0} title={`重做（${MOD}⇧Z）`}>重做</button>
@@ -505,7 +567,7 @@ export default function App() {
           pending={editing && !editing.id ? editing : null}
           onCreate={(range) => setEditing({ id: null, ...range })}
           onEdit={(s) => setEditing({ id: s.id, startDay: s.startDay, endDay: s.endDay })}
-          onResize={(id, range) => setStays((prev) => prev.map((s) => (s.id === id ? { ...s, ...range } : s)))}
+          onResize={(id, range) => setStays((prev) => pushStays(prev, id, range) ?? prev)}
           onHover={setStayCard}
         />
       ) : (
@@ -568,7 +630,7 @@ export default function App() {
                 <div
                   key={s.id}
                   data-stay={s.id}
-                  className={`stay${s.id === activeId ? ' active' : ''}${s.id === swapId ? ' swap-target' : ''}`}
+                  className={`stay${s.id === activeId ? ' active' : ''}`}
                   style={{ ...stayCol(s), background: colorOf(s) }}
                   onMouseEnter={(e) => {
                     const r = e.currentTarget.getBoundingClientRect();
@@ -581,7 +643,7 @@ export default function App() {
                   <span className="handle" data-edge="l" />
                   <span className="label">
                     <strong>{placeName(s)}</strong>
-                    <small>{s.id === activeId || s.id === swapId ? rangeLabel(s) : `${weeks}${s.note ? `・${s.note.replace(/\s+/g, ' ')}` : ''}`}</small>
+                    <small>{s.id === activeId ? rangeLabel(s) : `${weeks}${s.note ? `・${s.note.replace(/\s+/g, ' ')}` : ''}`}</small>
                   </span>
                   <span className="handle" data-edge="r" />
                 </div>
@@ -633,13 +695,19 @@ export default function App() {
                   <li className="country">
                     <Flag country={g.country} />
                     {g.country}
-                    <span>{weeksLabel(g.days)}</span>
+                    <span>
+                      {weeksLabel(g.days)}
+                      <small>（{g.days} 天）</small>
+                    </span>
                   </li>
                 )}
                 {g.cities.map(([city, c]) => (
                   <li key={city} className={g.country ? 'city' : undefined}>
                     {city || '其他'}
-                    <span>{weeksLabel(c.days)}</span>
+                    <span>
+                      {weeksLabel(c.days)}
+                      <small>（{c.days} 天）</small>
+                    </span>
                   </li>
                 ))}
               </Fragment>
@@ -647,9 +715,26 @@ export default function App() {
           </ul>
         </div>
         <div className="panel grow">
-          <h2>行程{listRange && `・${view.month + 1} 月`}</h2>
+          <div className="panel-head">
+            <h2>行程{monthFilter && `・${view.month + 1} 月`}</h2>
+            {!monthFilter && (
+              <div className="pills" role="group" aria-label="依季度篩選">
+                {['全部', 'Q1', 'Q2', 'Q3', 'Q4'].map((label, q) => (
+                  <button key={label} aria-pressed={quarter === q} onClick={() => setQuarter(q)}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           {listed.length === 0 ? (
-            <p className="empty">{listRange ? '這個月還沒有行程。在上面的月曆拖幾天試試。' : '還沒有行程。到上面的時間軸拖幾格試試。'}</p>
+            <p className="empty">
+              {monthFilter
+                ? '這個月還沒有行程。在上面的月曆拖幾天試試。'
+                : quarterFilter
+                  ? `Q${quarter} 還沒有行程。`
+                  : '還沒有行程。到上面的時間軸拖幾格試試。'}
+            </p>
           ) : (
             <ol className="stays">
               {listed.map((s) => (

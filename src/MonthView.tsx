@@ -4,7 +4,7 @@ import { CaretLeft } from '@phosphor-icons/react/dist/csr/CaretLeft';
 import { CaretRight } from '@phosphor-icons/react/dist/csr/CaretRight';
 import { Flag } from './Flag';
 import type { HolidaySet } from './holidays';
-import { colorOf, placeName, type Stay } from './storage';
+import { colorOf, placeName, pushStays, type Stay } from './storage';
 import { TOTAL_DAYS, YEAR, dateOfDay, daysOf, monthRange, todayIndex, type DayRange } from './weeks';
 
 type Drag =
@@ -38,9 +38,7 @@ export default function MonthView(props: Props) {
   const weekCount = Math.ceil((range.endDay - gridStart + 1) / 7);
   const today = todayIndex();
 
-  const shown = stays.map((s) =>
-    drag?.kind === 'resize' && drag.id === s.id ? { ...s, startDay: drag.startDay, endDay: drag.endDay } : s,
-  );
+  const shown = drag?.kind === 'resize' ? (pushStays(stays, drag.id, drag) ?? stays) : stays;
   const inMonth = shown.filter((s) => s.startDay <= range.endDay && s.endDay >= range.startDay);
   const plannedDays = inMonth.reduce(
     (n, s) => n + Math.min(s.endDay, range.endDay) - Math.max(s.startDay, range.startDay) + 1,
@@ -93,16 +91,20 @@ export default function MonthView(props: Props) {
       setDrag({ ...drag, lo: Math.min(drag.anchor, reach), hi: Math.max(drag.anchor, reach) });
       return;
     }
-    const others = stays.filter((s) => s.id !== drag.id);
-    let { startDay, endDay } = drag;
-    if (drag.edge === 'l') {
-      const prevEnd = Math.max(-1, ...others.filter((s) => s.endDay < endDay).map((s) => s.endDay));
-      startDay = clamp(day, prevEnd + 1, endDay);
-    } else {
-      const nextStart = Math.min(TOTAL_DAYS, ...others.filter((s) => s.startDay > startDay).map((s) => s.startDay));
-      endDay = clamp(day, startDay, nextStart - 1);
+    const fixed = drag.edge === 'l' ? drag.endDay : drag.startDay;
+    const rangeAt = (at: number): DayRange =>
+      drag.edge === 'l' ? { startDay: Math.min(at, fixed), endDay: fixed } : { startDay: fixed, endDay: Math.max(at, fixed) };
+    // Growing into a neighbour pushes it; back off toward the fixed end if that runs out of year.
+    let next: DayRange | null = null;
+    for (let at = day; ; at += Math.sign(fixed - day)) {
+      const range = rangeAt(at);
+      if (pushStays(stays, drag.id, range)) {
+        next = range;
+        break;
+      }
+      if (at === fixed) break;
     }
-    if (startDay !== drag.startDay || endDay !== drag.endDay) setDrag({ ...drag, startDay, endDay, moved: true });
+    if (next && (next.startDay !== drag.startDay || next.endDay !== drag.endDay)) setDrag({ ...drag, ...next, moved: true });
   }
 
   function onPointerUp() {

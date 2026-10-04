@@ -15,26 +15,72 @@ export function overlaps(a: DayRange, b: DayRange) {
   return a.startDay <= b.endDay && b.startDay <= a.endDay;
 }
 
-// Exchanges two stays' places in the sequence. Each keeps its length; anything between them slides by the
-// length difference, so the overall span is unchanged and nothing overlaps.
-export function swapStays(stays: Stay[], idA: string, idB: string): Stay[] {
-  let a = stays.find((s) => s.id === idA);
-  let b = stays.find((s) => s.id === idB);
-  if (!a || !b || a === b) return stays;
-  if (a.startDay > b.startDay) [a, b] = [b, a];
-  const first = a;
-  const second = b;
-  const lenA = first.endDay - first.startDay + 1;
-  const lenB = second.endDay - second.startDay + 1;
-  const shift = lenB - lenA;
+// Resizes one stay to `range`, shoving whatever is in the way: neighbours slide in the direction of the move,
+// each pushing the next, and gaps soak up the push. Order never changes. Null if a stay would leave the year.
+export function pushStays(stays: Stay[], id: string, range: DayRange): Stay[] | null {
+  const moved = stays.find((s) => s.id === id);
+  if (!moved) return null;
+  const next = new Map<string, DayRange>([[id, range]]);
+  const others = stays.filter((s) => s.id !== id).sort((a, b) => a.startDay - b.startDay);
+
+  let edge = range.endDay + 1; // first free day to the right
+  for (const s of others.filter((o) => o.startDay > moved.startDay)) {
+    if (s.startDay >= edge) break;
+    const endDay = edge + (s.endDay - s.startDay);
+    if (endDay >= TOTAL_DAYS) return null;
+    next.set(s.id, { startDay: edge, endDay });
+    edge = endDay + 1;
+  }
+
+  edge = range.startDay - 1; // last free day to the left
+  for (const s of others.filter((o) => o.startDay < moved.startDay).reverse()) {
+    if (s.endDay <= edge) break;
+    const startDay = edge - (s.endDay - s.startDay);
+    if (startDay < 0) return null;
+    next.set(s.id, { startDay, endDay: edge });
+    edge = startDay - 1;
+  }
+
+  return stays.map((s) => (next.has(s.id) ? { ...s, ...next.get(s.id)! } : s));
+}
+
+const len = (r: DayRange) => r.endDay - r.startDay + 1;
+
+// Exchanges two neighbouring stays. Each keeps its length and the gap between them, so the span they cover
+// together is unchanged.
+function swapNeighbours(stays: Stay[], first: Stay, second: Stay): Stay[] {
   return stays.map((s) => {
-    if (s.id === first.id) return { ...s, startDay: second.endDay - lenA + 1, endDay: second.endDay };
-    if (s.id === second.id) return { ...s, startDay: first.startDay, endDay: first.startDay + lenB - 1 };
-    if (s.startDay > first.endDay && s.endDay < second.startDay) {
-      return { ...s, startDay: s.startDay + shift, endDay: s.endDay + shift };
-    }
+    if (s.id === first.id) return { ...s, startDay: second.endDay - len(first) + 1, endDay: second.endDay };
+    if (s.id === second.id) return { ...s, startDay: first.startDay, endDay: first.startDay + len(second) - 1 };
     return s;
   });
+}
+
+// Drags one stay toward `desired`, list-reorder style: once its leading edge passes the middle of a neighbour
+// the two trade places, then the next neighbour, and so on. Between neighbours it slides freely.
+export function reorderStays(stays: Stay[], id: string, desired: DayRange): Stay[] {
+  const orig = stays.find((s) => s.id === id);
+  if (!orig || desired.startDay === orig.startDay) return stays;
+  const dir = desired.startDay > orig.startDay ? 1 : -1;
+  let cur = stays;
+  const neighbours = () => {
+    const sorted = [...cur].sort((a, b) => a.startDay - b.startDay);
+    const i = sorted.findIndex((s) => s.id === id);
+    return { me: sorted[i], prev: sorted[i - 1] as Stay | undefined, next: sorted[i + 1] as Stay | undefined };
+  };
+  for (;;) {
+    const { me, prev, next } = neighbours();
+    const other = dir > 0 ? next : prev;
+    if (!other) break;
+    const middle = (other.startDay + other.endDay) / 2;
+    if (dir > 0 ? desired.endDay < middle : desired.startDay > middle) break;
+    cur = dir > 0 ? swapNeighbours(cur, me, other) : swapNeighbours(cur, other, me);
+  }
+  const { me, prev, next } = neighbours();
+  const lo = prev ? prev.endDay + 1 : 0;
+  const hi = (next ? next.startDay : TOTAL_DAYS) - len(me);
+  const startDay = Math.min(hi, Math.max(lo, desired.startDay));
+  return cur.map((s) => (s.id === id ? { ...s, startDay, endDay: startDay + len(me) - 1 } : s));
 }
 
 // Stays are stored with ISO dates so exported files stay readable.
