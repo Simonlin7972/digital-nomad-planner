@@ -1,8 +1,14 @@
 import { Fragment, Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, CSSProperties, FormEvent, PointerEvent as ReactPointerEvent } from 'react';
+import { ArrowClockwise } from '@phosphor-icons/react/dist/csr/ArrowClockwise';
+import { ArrowCounterClockwise } from '@phosphor-icons/react/dist/csr/ArrowCounterClockwise';
+import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
+import { Image as ImageIcon } from '@phosphor-icons/react/dist/csr/Image';
 import { Minus } from '@phosphor-icons/react/dist/csr/Minus';
 import { PencilSimple } from '@phosphor-icons/react/dist/csr/PencilSimple';
 import { Ticket as TicketIcon } from '@phosphor-icons/react/dist/csr/Ticket';
+import { Trash } from '@phosphor-icons/react/dist/csr/Trash';
+import { UploadSimple } from '@phosphor-icons/react/dist/csr/UploadSimple';
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus';
 import { renderPng } from './exportPng';
 import { Flag } from './Flag';
@@ -501,12 +507,30 @@ export default function App() {
       <header className="topbar">
         <h1>{YEAR} 數位遊牧計畫</h1>
         <div className="actions">
-          <button onClick={undo} disabled={history.past.length === 0} title={`復原（${MOD}Z）`}>復原</button>
-          <button onClick={redo} disabled={history.future.length === 0} title={`重做（${MOD}⇧Z）`}>重做</button>
-          <button onClick={() => void savePng()} disabled={stays.length === 0}>保存 PNG</button>
-          <button onClick={exportJson} disabled={stays.length === 0}>匯出</button>
-          <button onClick={() => fileRef.current?.click()}>匯入</button>
-          <button onClick={clearAll} disabled={stays.length === 0}>清空</button>
+          <button onClick={undo} disabled={history.past.length === 0} title={`復原（${MOD}Z）`}>
+            <ArrowCounterClockwise size={16} weight="bold" />
+            復原
+          </button>
+          <button onClick={redo} disabled={history.future.length === 0} title={`重做（${MOD}⇧Z）`}>
+            <ArrowClockwise size={16} weight="bold" />
+            重做
+          </button>
+          <button onClick={() => void savePng()} disabled={stays.length === 0}>
+            <ImageIcon size={16} weight="bold" />
+            保存 PNG
+          </button>
+          <button onClick={exportJson} disabled={stays.length === 0}>
+            <DownloadSimple size={16} weight="bold" />
+            匯出
+          </button>
+          <button onClick={() => fileRef.current?.click()}>
+            <UploadSimple size={16} weight="bold" />
+            匯入
+          </button>
+          <button onClick={clearAll} disabled={stays.length === 0}>
+            <Trash size={16} weight="bold" />
+            清空
+          </button>
           <input
             ref={fileRef}
             type="file"
