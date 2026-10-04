@@ -5,6 +5,7 @@ export type Stay = DayRange & {
   country: string; // either may be empty, but not both
   city: string;
   color?: ColorKey;
+  companions?: string; // who the trip is with, free text
   note?: string;
 };
 
@@ -47,6 +48,7 @@ export function serialize(stays: Stay[]) {
       start: isoOfDay(s.startDay),
       end: isoOfDay(s.endDay),
       ...(s.color ? { color: s.color } : {}),
+      ...(s.companions ? { companions: s.companions } : {}),
       ...(s.note ? { note: s.note } : {}),
     })),
   };
@@ -85,6 +87,7 @@ export function sanitize(data: unknown): Stay[] {
       ...range,
     };
     if (isColorKey(s.color)) stay.color = s.color;
+    if (typeof s.companions === 'string' && s.companions.trim()) stay.companions = s.companions.trim();
     if (typeof s.note === 'string' && s.note.trim()) stay.note = s.note.trim();
     if (out.some((o) => overlaps(o, stay) || o.id === stay.id)) continue;
     out.push(stay);

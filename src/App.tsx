@@ -1,6 +1,8 @@
 import { Fragment, Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, FormEvent, PointerEvent as ReactPointerEvent } from 'react';
+import { PencilSimple } from '@phosphor-icons/react/dist/csr/PencilSimple';
 import { renderPng } from './exportPng';
+import { flagCode } from './flags';
 import { HOLIDAY_SETS, type Holiday, type HolidaySet } from './holidays';
 import { PALETTE, colorKeyOf, colorOf, defaultColor, placeFull, placeName, load, overlaps, sanitize, save, serialize, swapStays, type ColorKey, type Stay } from './storage';
 import {
@@ -28,6 +30,7 @@ type Drag =
   | (DayRange & { kind: 'resize'; id: string; edge: 'l' | 'r'; grabSlot: number; moved: boolean });
 
 type Editing = DayRange & { id: string | null };
+type StayDetails = Pick<Stay, 'country' | 'city' | 'companions' | 'note'>;
 
 type History = { past: Stay[][]; present: Stay[]; future: Stay[][] };
 const HISTORY_LIMIT = 100;
@@ -92,6 +95,7 @@ export default function App() {
   const [editing, setEditing] = useState<Editing | null>(null);
   const [zoom, setZoom] = useState(loadZoom);
   const [holidayOn, setHolidayOn] = useState(loadHolidayToggles);
+  const [stayCard, setStayCard] = useState<{ id: string; x: number; y: number } | null>(null);
   const [holidayCard, setHolidayCard] = useState<{ holiday: Holiday; set: HolidaySet; x: number; y: number } | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -171,15 +175,21 @@ export default function App() {
       const g = groups.get(s.country) ?? { days: 0, cities: new Map() };
       groups.set(s.country, g);
       g.days += daysOf(s);
-      if (!s.city) continue;
       const c = g.cities.get(s.city) ?? { days: 0, stay: s };
       g.cities.set(s.city, c);
       c.days += daysOf(s);
     }
     return [...groups.entries()]
-      .map(([country, g]) => ({ country, days: g.days, cities: [...g.cities.entries()].sort((a, b) => b[1].days - a[1].days) }))
+      .map(([country, g]) => ({
+        country,
+        days: g.days,
+        // Stays with no city are keyed '' and listed last, labelled 其他.
+        cities: [...g.cities.entries()].sort((a, b) => Number(!a[0]) - Number(!b[0]) || b[1].days - a[1].days),
+      }))
       .sort((a, b) => b.days - a.days);
   }, [sorted]);
+  const countryCount = totals.filter((g) => g.country).length;
+  const cityCount = totals.reduce((n, g) => n + g.cities.filter(([city]) => city).length, 0);
   const plannedDays = stays.reduce((n, s) => n + daysOf(s), 0);
 
   const slotAt = (clientX: number) => {
@@ -291,9 +301,9 @@ export default function App() {
     }
   }
 
-  function saveEditing(place: { country: string; city: string }, note: string, range: DayRange, color: ColorKey) {
+  function saveEditing(details: StayDetails, range: DayRange, color: ColorKey) {
     if (!editing) return;
-    const fields = { ...place, color, note: note || undefined, ...range };
+    const fields = { ...details, color, ...range };
     setStays((prev) =>
       editing.id
         ? prev.map((s) => (s.id === editing.id ? { ...s, ...fields } : s))
@@ -352,6 +362,17 @@ export default function App() {
         ? swapStays(stays, drag.id, swapId)
         : stays.map((s) => (s.id === drag.id ? { ...s, startDay: drag.startDay, endDay: drag.endDay } : s))
       : stays;
+  // No card mid-drag or behind the editor; it would only get in the way.
+  const hoveredStay = stayCard && !drag && !editing ? stays.find((s) => s.id === stayCard.id) : undefined;
+  // One strip per country under the stays; back-to-back stays in the same country share a strip.
+  const countryBars: { id: string; country: string; color: string; s: number; e: number }[] = [];
+  for (const stay of [...visible].sort((a, b) => a.startDay - b.startDay)) {
+    if (!stay.country) continue;
+    const { s, e } = slotsOf(stay);
+    const last = countryBars[countryBars.length - 1];
+    if (last && last.country === stay.country && last.e === s) last.e = e;
+    else countryBars.push({ id: stay.id, country: stay.country, color: colorOf(stay), s, e });
+  }
   const editingStay = editing?.id ? stays.find((s) => s.id === editing.id) : undefined;
 
   return (
@@ -382,20 +403,37 @@ export default function App() {
         </div>
       </header>
 
-      <div className="toggles">
-        {HOLIDAY_SETS.map((set) => (
-          <button
-            key={set.key}
-            role="switch"
-            aria-checked={holidayOn[set.key]}
-            className="toggle"
-            style={{ '--c': set.color } as CSSProperties}
-            onClick={() => setHolidayOn((prev) => ({ ...prev, [set.key]: !prev[set.key] }))}
-          >
-            <span className="knob" />
-            {set.label}
-          </button>
-        ))}
+      <div className="timeline-bar">
+        <div className="toggles">
+          {HOLIDAY_SETS.map((set) => (
+            <button
+              key={set.key}
+              role="switch"
+              aria-checked={holidayOn[set.key]}
+              className="toggle"
+              style={{ '--c': set.color } as CSSProperties}
+              onClick={() => setHolidayOn((prev) => ({ ...prev, [set.key]: !prev[set.key] }))}
+            >
+              <span className="knob" />
+              {set.label}
+            </button>
+          ))}
+        </div>
+        <div className="zoombar">
+          <button onClick={() => changeZoom(zoom - ZOOM_STEP)} disabled={zoom <= ZOOM_MIN} aria-label="縮小">−</button>
+          <input
+            type="range"
+            min={ZOOM_MIN}
+            max={ZOOM_MAX}
+            step={ZOOM_STEP}
+            value={zoom}
+            onChange={(e) => changeZoom(Number(e.target.value))}
+            aria-label="時間軸縮放"
+          />
+          <button onClick={() => changeZoom(zoom + ZOOM_STEP)} disabled={zoom >= ZOOM_MAX} aria-label="放大">+</button>
+          <span className="zoom-value">{Math.round(zoom * 100)}%</span>
+          <button onClick={() => changeZoom(ZOOM_MIN)} disabled={zoom === ZOOM_MIN}>符合寬度</button>
+        </div>
       </div>
 
       <div className="scroll" ref={scrollRef}>
@@ -459,7 +497,13 @@ export default function App() {
                   data-stay={s.id}
                   className={`stay${s.id === activeId ? ' active' : ''}${s.id === swapId ? ' swap-target' : ''}`}
                   style={{ ...stayCol(s), background: colorOf(s) }}
-                  title={`${placeFull(s)}｜${rangeLabel(s)}｜${weeks}${s.note ? `\n${s.note}` : ''}`}
+                  onMouseEnter={(e) => {
+                    const r = e.currentTarget.getBoundingClientRect();
+                    // A wide block can run off-screen, so centre on the part that is visible.
+                    const x = (Math.max(r.left, 0) + Math.min(r.right, window.innerWidth)) / 2;
+                    setStayCard({ id: s.id, x, y: r.bottom });
+                  }}
+                  onMouseLeave={() => setStayCard(null)}
                 >
                   <span className="handle" data-edge="l" />
                   <span className="label">
@@ -477,23 +521,22 @@ export default function App() {
             )}
             {editing && !editing.id && <div className="selection" style={stayCol(editing)} />}
           </div>
+          {countryBars.length > 0 && (
+            <div className="row countries">
+              {countryBars.map((bar) => (
+                <div
+                  key={bar.id}
+                  className="country-bar"
+                  style={{ ...slotCol(bar.s, bar.e), '--c': bar.color } as CSSProperties}
+                  title={bar.country}
+                >
+                  <Flag country={bar.country} />
+                  <span>{bar.country}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      </div>
-
-      <div className="zoombar">
-        <button onClick={() => changeZoom(zoom - ZOOM_STEP)} disabled={zoom <= ZOOM_MIN} aria-label="縮小">−</button>
-        <input
-          type="range"
-          min={ZOOM_MIN}
-          max={ZOOM_MAX}
-          step={ZOOM_STEP}
-          value={zoom}
-          onChange={(e) => changeZoom(Number(e.target.value))}
-          aria-label="時間軸縮放"
-        />
-        <button onClick={() => changeZoom(zoom + ZOOM_STEP)} disabled={zoom >= ZOOM_MAX} aria-label="放大">+</button>
-        <span className="zoom-value">{Math.round(zoom * 100)}%</span>
-        <button onClick={() => changeZoom(ZOOM_MIN)} disabled={zoom === ZOOM_MIN}>符合寬度</button>
       </div>
 
       <section className="panels">
@@ -501,20 +544,22 @@ export default function App() {
           <h2>摘要</h2>
           <p className="stat">
             已安排 <b>{weeksLabel(plannedDays)}</b>・未安排 <b>{weeksLabel(TOTAL_DAYS - plannedDays)}</b>
+            <br />
+            去了 <b>{countryCount}</b> 個國家・<b>{cityCount}</b> 個城市
           </p>
           <ul className="totals">
             {totals.map((g) => (
               <Fragment key={g.country}>
                 {g.country && (
                   <li className="country">
+                    <Flag country={g.country} />
                     {g.country}
                     <span>{weeksLabel(g.days)}</span>
                   </li>
                 )}
                 {g.cities.map(([city, c]) => (
                   <li key={city} className={g.country ? 'city' : undefined}>
-                    <i style={{ background: colorOf(c.stay) }} />
-                    {city}
+                    {city || '其他'}
                     <span>{weeksLabel(c.days)}</span>
                   </li>
                 ))}
@@ -529,12 +574,21 @@ export default function App() {
           ) : (
             <ol className="stays">
               {sorted.map((s) => (
-                <li key={s.id} onClick={() => setEditing({ id: s.id, startDay: s.startDay, endDay: s.endDay })}>
+                <li key={s.id}>
                   <i style={{ background: colorOf(s) }} />
-                  <span className="when">{rangeLabel(s)}</span>
+                  <span className="when">{longRangeLabel(s)}</span>
                   <strong>{placeName(s)}</strong>
                   {s.city && s.country && <span className="weeks">{s.country}</span>}
                   <span className="weeks">{weeksLabel(daysOf(s))}・{daysOf(s)} 天</span>
+                  {s.companions && <span className="weeks">跟 {s.companions}</span>}
+                  <button
+                    className="edit"
+                    aria-label={`編輯 ${placeFull(s)}`}
+                    title="編輯"
+                    onClick={() => setEditing({ id: s.id, startDay: s.startDay, endDay: s.endDay })}
+                  >
+                    <PencilSimple size={18} weight="bold" />
+                  </button>
                   {s.note && <span className="note">{s.note}</span>}
                 </li>
               ))}
@@ -549,6 +603,25 @@ export default function App() {
           <MapView stays={stays} />
         </Suspense>
       </section>
+
+      {hoveredStay && stayCard && (
+        <div
+          className="holiday-card"
+          role="tooltip"
+          style={{ left: clamp(stayCard.x, 130, window.innerWidth - 130), top: stayCard.y + 8 }}
+        >
+          <strong className="place">
+            {hoveredStay.country && <Flag country={hoveredStay.country} />}
+            {placeFull(hoveredStay)}
+          </strong>
+          <span>{longRangeLabel(hoveredStay)}</span>
+          <span>
+            {daysOf(hoveredStay)} 天（約 {weeksLabel(daysOf(hoveredStay))}）
+          </span>
+          {hoveredStay.companions && <span>跟 {hoveredStay.companions}</span>}
+          {hoveredStay.note && <span className="note">{hoveredStay.note}</span>}
+        </div>
+      )}
 
       {holidayCard && (
         // Fixed, because the timeline's scroll container would clip anything positioned inside it.
@@ -582,11 +655,17 @@ export default function App() {
   );
 }
 
+function Flag({ country }: { country: string }) {
+  const code = flagCode(country);
+  // Regions without a flag (e.g. a continent) keep an empty slot so the names stay aligned.
+  return <span className={code ? `flag fi fi-${code}` : 'flag none'} aria-hidden="true" />;
+}
+
 function Editor(props: {
   editing: Editing;
   stay?: Stay;
   others: Stay[];
-  onSave: (place: { country: string; city: string }, note: string, range: DayRange, color: ColorKey) => void;
+  onSave: (details: StayDetails, range: DayRange, color: ColorKey) => void;
   onDelete: () => void;
   onClose: () => void;
 }) {
@@ -607,6 +686,8 @@ function Editor(props: {
     if (known && !country.trim()) setCountry(known.country);
   }
   const [note, setNote] = useState(stay?.note ?? '');
+  const [companions, setCompanions] = useState(stay?.companions ?? '');
+  const knownCompanions = [...new Set(others.map((s) => s.companions).filter(Boolean))];
   // null = follow the suggested colour for the typed place until the user picks one
   const [picked, setPicked] = useState<ColorKey | null>(stay ? colorKeyOf(stay) : null);
   const color = picked ?? defaultColor(place, others);
@@ -638,7 +719,9 @@ function Editor(props: {
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    if (hasPlace && range) onSave(place, note.trim(), range, color);
+    if (hasPlace && range) {
+      onSave({ ...place, companions: companions.trim() || undefined, note: note.trim() || undefined }, range, color);
+    }
   }
 
   return (
@@ -715,6 +798,21 @@ function Editor(props: {
             </p>
           )
         )}
+        <label>
+          跟誰去
+          <input
+            value={companions}
+            onChange={(e) => setCompanions(e.target.value)}
+            placeholder="例：自己、家人、Amy"
+            list="known-companions"
+            maxLength={60}
+          />
+        </label>
+        <datalist id="known-companions">
+          {knownCompanions.map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
         <label>
           備註
           <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="例：回台過年、朋友婚禮" rows={3} maxLength={300} />
