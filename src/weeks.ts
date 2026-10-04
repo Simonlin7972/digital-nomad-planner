@@ -80,6 +80,14 @@ export function rangeLabel(r: DayRange): string {
   return `${fmt(addDays(DAY0, r.startDay))} – ${fmt(addDays(DAY0, r.endDay))}`;
 }
 
+const WEEKDAYS = '一二三四五六日';
+const fmtLong = (day: number) => `${fmt(addDays(DAY0, day))}（${WEEKDAYS[day % 7]}）`;
+
+// Like rangeLabel, with weekdays; a single day isn't repeated.
+export function longRangeLabel(r: DayRange): string {
+  return r.startDay === r.endDay ? fmtLong(r.startDay) : `${fmtLong(r.startDay)} – ${fmtLong(r.endDay)}`;
+}
+
 export const daysOf = (r: DayRange) => r.endDay - r.startDay + 1;
 
 export function weeksLabel(days: number): string {

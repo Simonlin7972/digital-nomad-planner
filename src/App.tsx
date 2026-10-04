@@ -1,6 +1,7 @@
-import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, FormEvent, PointerEvent as ReactPointerEvent } from 'react';
 import { renderPng } from './exportPng';
+import { HOLIDAY_SETS, type Holiday, type HolidaySet } from './holidays';
 import { PALETTE, colorKeyOf, colorOf, defaultColor, placeFull, placeName, load, overlaps, sanitize, save, serialize, swapStays, type ColorKey, type Stay } from './storage';
 import {
   MONTHS,
@@ -11,6 +12,7 @@ import {
   currentWeekIndex,
   dayOfBoundary,
   dayOfIso,
+  longRangeLabel,
   daysOf,
   isoOfDay,
   rangeLabel,
@@ -30,6 +32,9 @@ type Editing = DayRange & { id: string | null };
 type History = { past: Stay[][]; present: Stay[]; future: Stay[][] };
 const HISTORY_LIMIT = 100;
 
+// The map library is large; load it separately from the planner itself.
+const MapView = lazy(() => import('./MapView'));
+
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
 const MOD = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
@@ -38,6 +43,18 @@ const ZOOM_KEY = 'dnp-zoom';
 const ZOOM_MIN = 1;
 const ZOOM_MAX = 6;
 const ZOOM_STEP = 0.25;
+
+const HOLIDAYS_KEY = 'dnp-holidays';
+type HolidayToggles = Record<HolidaySet['key'], boolean>;
+
+function loadHolidayToggles(): HolidayToggles {
+  try {
+    const saved = JSON.parse(localStorage.getItem(HOLIDAYS_KEY) ?? '{}');
+    return { tw: saved?.tw === true, au: saved?.au === true };
+  } catch {
+    return { tw: false, au: false };
+  }
+}
 
 function loadZoom(): number {
   try {
@@ -74,6 +91,8 @@ export default function App() {
   const [drag, setDrag] = useState<Drag | null>(null);
   const [editing, setEditing] = useState<Editing | null>(null);
   const [zoom, setZoom] = useState(loadZoom);
+  const [holidayOn, setHolidayOn] = useState(loadHolidayToggles);
+  const [holidayCard, setHolidayCard] = useState<{ holiday: Holiday; set: HolidaySet; x: number; y: number } | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   // Fraction of the timeline at the viewport centre, captured before a zoom so the same spot stays centred after it.
@@ -82,6 +101,33 @@ export default function App() {
   const thisWeek = useMemo(() => currentWeekIndex(), []);
 
   useEffect(() => save(stays), [stays]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(HOLIDAYS_KEY, JSON.stringify(holidayOn));
+    } catch {
+      // toggles just won't be remembered
+    }
+  }, [holidayOn]);
+
+  // Dragging the month header pans the (zoomed) timeline.
+  const pan = useRef<{ x: number; left: number } | null>(null);
+  const [panning, setPanning] = useState(false);
+  function onPanStart(e: ReactPointerEvent<HTMLDivElement>) {
+    const el = scrollRef.current;
+    if (e.button !== 0 || !el) return;
+    pan.current = { x: e.clientX, left: el.scrollLeft };
+    setPanning(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  }
+  function onPanMove(e: ReactPointerEvent<HTMLDivElement>) {
+    if (pan.current && scrollRef.current) scrollRef.current.scrollLeft = pan.current.left - (e.clientX - pan.current.x);
+  }
+  function onPanEnd() {
+    pan.current = null;
+    setPanning(false);
+  }
 
   const busy = Boolean(drag || editing);
   useEffect(() => {
@@ -336,15 +382,57 @@ export default function App() {
         </div>
       </header>
 
+      <div className="toggles">
+        {HOLIDAY_SETS.map((set) => (
+          <button
+            key={set.key}
+            role="switch"
+            aria-checked={holidayOn[set.key]}
+            className="toggle"
+            style={{ '--c': set.color } as CSSProperties}
+            onClick={() => setHolidayOn((prev) => ({ ...prev, [set.key]: !prev[set.key] }))}
+          >
+            <span className="knob" />
+            {set.label}
+          </button>
+        ))}
+      </div>
+
       <div className="scroll" ref={scrollRef}>
         <div className="timeline" style={{ '--n': SLOTS, '--zoom': zoom } as CSSProperties}>
-          <div className="row months">
+          <div
+            className={`row months${panning ? ' panning' : ''}`}
+            onPointerDown={onPanStart}
+            onPointerMove={onPanMove}
+            onPointerUp={onPanEnd}
+            onPointerCancel={onPanEnd}
+            title="拖曳可左右移動時間軸"
+          >
             {MONTHS.map((m) => (
               <div key={m.month} className="month" style={{ gridColumn: `${m.startIndex * 2 + 1} / span ${m.span * 2}` }}>
                 {m.month + 1} 月
               </div>
             ))}
           </div>
+          {HOLIDAY_SETS.filter((set) => holidayOn[set.key]).map((set) => (
+            <div key={set.key} className="lane" style={{ '--c': set.color } as CSSProperties} aria-label={set.label}>
+              {set.holidays.map((d) => (
+                <div
+                  key={`${d.name}-${d.startDay}`}
+                  className="holiday"
+                  style={{ left: `${(d.startDay / TOTAL_DAYS) * 100}%`, width: `${(daysOf(d) / TOTAL_DAYS) * 100}%` }}
+                  onMouseEnter={(e) => {
+                    // Anchor to the visible label, which can extend past a one-day bar.
+                    const r = (e.currentTarget.firstElementChild ?? e.currentTarget).getBoundingClientRect();
+                    setHolidayCard({ holiday: d, set, x: r.left + r.width / 2, y: r.bottom });
+                  }}
+                  onMouseLeave={() => setHolidayCard(null)}
+                >
+                  <span>{d.short}</span>
+                </div>
+              ))}
+            </div>
+          ))}
           <div
             ref={trackRef}
             className={`row track${drag ? ' dragging' : ''}`}
@@ -376,7 +464,7 @@ export default function App() {
                   <span className="handle" data-edge="l" />
                   <span className="label">
                     <strong>{placeName(s)}</strong>
-                    <small>{s.id === activeId || s.id === swapId ? rangeLabel(s) : `${weeks}${s.note ? ' ・📝' : ''}`}</small>
+                    <small>{s.id === activeId || s.id === swapId ? rangeLabel(s) : `${weeks}${s.note ? `・${s.note.replace(/\s+/g, ' ')}` : ''}`}</small>
                   </span>
                   <span className="handle" data-edge="r" />
                 </div>
@@ -454,6 +542,30 @@ export default function App() {
           )}
         </div>
       </section>
+
+      <section className="panel map-panel">
+        <h2>地圖</h2>
+        <Suspense fallback={<p className="map-status">載入地圖中…</p>}>
+          <MapView stays={stays} />
+        </Suspense>
+      </section>
+
+      {holidayCard && (
+        // Fixed, because the timeline's scroll container would clip anything positioned inside it.
+        <div
+          className="holiday-card"
+          role="tooltip"
+          style={{ left: clamp(holidayCard.x, 130, window.innerWidth - 130), top: holidayCard.y + 8 }}
+        >
+          <span className="set" style={{ color: holidayCard.set.color }}>{holidayCard.set.label}</span>
+          <strong>{holidayCard.holiday.name}</strong>
+          <span>
+            {longRangeLabel(holidayCard.holiday)}
+            {daysOf(holidayCard.holiday) > 1 && `・${daysOf(holidayCard.holiday)} 天`}
+          </span>
+          {holidayCard.holiday.note && <span className="note">{holidayCard.holiday.note}</span>}
+        </div>
+      )}
 
       {editing && (
         <Editor

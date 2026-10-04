@@ -97,7 +97,8 @@ export function renderPng(stays: Stay[]): Promise<Blob> {
     ctx.fillText(ellipsize(ctx, placeName(stay), w - 20), x + 12, y + h / 2 - 2);
     ctx.globalAlpha = 0.9;
     ctx.font = `11px ${FONT}`;
-    ctx.fillText(weeksLabel(daysOf(stay)), x + 12, y + h / 2 + 14);
+    const sub = `${weeksLabel(daysOf(stay))}${stay.note ? `・${stay.note.replace(/\s+/g, ' ')}` : ''}`;
+    ctx.fillText(ellipsize(ctx, sub, w - 20), x + 12, y + h / 2 + 14);
     ctx.restore();
   }
 
