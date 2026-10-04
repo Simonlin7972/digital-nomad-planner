@@ -1,8 +1,12 @@
 import { Fragment, Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, FormEvent, PointerEvent as ReactPointerEvent } from 'react';
+import { Minus } from '@phosphor-icons/react/dist/csr/Minus';
 import { PencilSimple } from '@phosphor-icons/react/dist/csr/PencilSimple';
+import { Plus } from '@phosphor-icons/react/dist/csr/Plus';
 import { renderPng } from './exportPng';
-import { flagCode } from './flags';
+import { Flag } from './Flag';
+import MonthView from './MonthView';
+import { flightStats, useCoords } from './useCoords';
 import { HOLIDAY_SETS, type Holiday, type HolidaySet } from './holidays';
 import { PALETTE, colorKeyOf, colorOf, defaultColor, placeFull, placeName, load, overlaps, sanitize, save, serialize, swapStays, type ColorKey, type Stay } from './storage';
 import {
@@ -15,6 +19,7 @@ import {
   dayOfBoundary,
   dayOfIso,
   longRangeLabel,
+  monthRange,
   daysOf,
   isoOfDay,
   rangeLabel,
@@ -59,6 +64,19 @@ function loadHolidayToggles(): HolidayToggles {
   }
 }
 
+const VIEW_KEY = 'dnp-view';
+type View = { mode: 'year' | 'month'; month: number };
+
+function loadView(): View {
+  try {
+    const v = JSON.parse(localStorage.getItem(VIEW_KEY) ?? '{}');
+    const month = Number.isInteger(v?.month) && v.month >= 0 && v.month <= 11 ? v.month : 0;
+    return { mode: v?.mode === 'month' ? 'month' : 'year', month };
+  } catch {
+    return { mode: 'year', month: 0 };
+  }
+}
+
 function loadZoom(): number {
   try {
     const z = Number(localStorage.getItem(ZOOM_KEY));
@@ -94,6 +112,8 @@ export default function App() {
   const [drag, setDrag] = useState<Drag | null>(null);
   const [editing, setEditing] = useState<Editing | null>(null);
   const [zoom, setZoom] = useState(loadZoom);
+  const [view, setView] = useState(loadView);
+  const { coords, failed: coordsFailed } = useCoords(stays);
   const [holidayOn, setHolidayOn] = useState(loadHolidayToggles);
   const [stayCard, setStayCard] = useState<{ id: string; x: number; y: number } | null>(null);
   const [holidayCard, setHolidayCard] = useState<{ holiday: Holiday; set: HolidaySet; x: number; y: number } | null>(null);
@@ -114,21 +134,35 @@ export default function App() {
     }
   }, [holidayOn]);
 
-  // Dragging the month header pans the (zoomed) timeline.
-  const pan = useRef<{ x: number; left: number } | null>(null);
+  useEffect(() => {
+    try {
+      localStorage.setItem(VIEW_KEY, JSON.stringify(view));
+    } catch {
+      // view just won't be remembered
+    }
+  }, [view]);
+
+  // Dragging the month header pans the (zoomed) timeline; a plain click opens that month.
+  const pan = useRef<{ x: number; left: number; month: number | null; moved: boolean } | null>(null);
   const [panning, setPanning] = useState(false);
   function onPanStart(e: ReactPointerEvent<HTMLDivElement>) {
     const el = scrollRef.current;
     if (e.button !== 0 || !el) return;
-    pan.current = { x: e.clientX, left: el.scrollLeft };
+    const label = (e.target as HTMLElement).closest<HTMLElement>('[data-month]');
+    pan.current = { x: e.clientX, left: el.scrollLeft, month: label ? Number(label.dataset.month) : null, moved: false };
     setPanning(true);
     e.currentTarget.setPointerCapture(e.pointerId);
     e.preventDefault();
   }
   function onPanMove(e: ReactPointerEvent<HTMLDivElement>) {
-    if (pan.current && scrollRef.current) scrollRef.current.scrollLeft = pan.current.left - (e.clientX - pan.current.x);
+    if (!pan.current || !scrollRef.current) return;
+    const dx = e.clientX - pan.current.x;
+    if (Math.abs(dx) > 4) pan.current.moved = true;
+    scrollRef.current.scrollLeft = pan.current.left - dx;
   }
   function onPanEnd() {
+    const p = pan.current;
+    if (p && !p.moved && p.month !== null) setView({ mode: 'month', month: p.month });
     pan.current = null;
     setPanning(false);
   }
@@ -190,6 +224,9 @@ export default function App() {
   }, [sorted]);
   const countryCount = totals.filter((g) => g.country).length;
   const cityCount = totals.reduce((n, g) => n + g.cities.filter(([city]) => city).length, 0);
+  const flights = useMemo(() => flightStats(stays, coords), [stays, coords]);
+  const listRange = view.mode === 'month' ? monthRange(view.month) : null;
+  const listed = listRange ? sorted.filter((s) => overlaps(s, listRange)) : sorted;
   const plannedDays = stays.reduce((n, s) => n + daysOf(s), 0);
 
   const slotAt = (clientX: number) => {
@@ -380,7 +417,11 @@ export default function App() {
       <header className="topbar">
         <div>
           <h1>{YEAR} 游牧年曆</h1>
-          <p className="hint">在空格上拖拉（以半週為單位）選時段，輸入國家與城市。拖色塊可搬移，拖到另一個色塊上可交換位置，拉兩端可伸縮，點一下可編輯並設定確切日期。</p>
+          <p className="hint">
+            {view.mode === 'year'
+              ? '在空格上拖拉（以半週為單位）選時段，輸入國家與城市。拖色塊可搬移，拖到另一個色塊上可交換位置，拉兩端可伸縮，點一下可編輯並設定確切日期。點月份可切到月檢視。'
+              : '在日期上拖拉（以天為單位）新增行程，拉橫條兩端調整開始與結束日，點一下可編輯。'}
+          </p>
         </div>
         <div className="actions">
           <button onClick={undo} disabled={history.past.length === 0} title={`復原（${MOD}Z）`}>復原</button>
@@ -404,6 +445,18 @@ export default function App() {
       </header>
 
       <div className="timeline-bar">
+        <div className="segmented" role="tablist" aria-label="檢視">
+          {(['year', 'month'] as const).map((mode) => (
+            <button
+              key={mode}
+              role="tab"
+              aria-selected={view.mode === mode}
+              onClick={() => setView((v) => ({ ...v, mode }))}
+            >
+              {mode === 'year' ? '年' : '月'}
+            </button>
+          ))}
+        </div>
         <div className="toggles">
           {HOLIDAY_SETS.map((set) => (
             <button
@@ -419,8 +472,10 @@ export default function App() {
             </button>
           ))}
         </div>
-        <div className="zoombar">
-          <button onClick={() => changeZoom(zoom - ZOOM_STEP)} disabled={zoom <= ZOOM_MIN} aria-label="縮小">−</button>
+        {view.mode === 'year' && <div className="zoombar">
+          <button onClick={() => changeZoom(zoom - ZOOM_STEP)} disabled={zoom <= ZOOM_MIN} aria-label="縮小" title="縮小">
+            <Minus size={14} weight="bold" />
+          </button>
           <input
             type="range"
             min={ZOOM_MIN}
@@ -429,13 +484,31 @@ export default function App() {
             value={zoom}
             onChange={(e) => changeZoom(Number(e.target.value))}
             aria-label="時間軸縮放"
+            style={{ '--pct': `${((zoom - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN)) * 100}%` } as CSSProperties}
           />
-          <button onClick={() => changeZoom(zoom + ZOOM_STEP)} disabled={zoom >= ZOOM_MAX} aria-label="放大">+</button>
+          <button onClick={() => changeZoom(zoom + ZOOM_STEP)} disabled={zoom >= ZOOM_MAX} aria-label="放大" title="放大">
+            <Plus size={14} weight="bold" />
+          </button>
           <span className="zoom-value">{Math.round(zoom * 100)}%</span>
-          <button onClick={() => changeZoom(ZOOM_MIN)} disabled={zoom === ZOOM_MIN}>符合寬度</button>
-        </div>
+          <button className="reset" onClick={() => changeZoom(ZOOM_MIN)} disabled={zoom === ZOOM_MIN}>
+            符合寬度
+          </button>
+        </div>}
       </div>
 
+      {view.mode === 'month' ? (
+        <MonthView
+          stays={stays}
+          month={view.month}
+          onMonth={(month) => setView({ mode: 'month', month: clamp(month, 0, 11) })}
+          holidaySets={HOLIDAY_SETS.filter((set) => holidayOn[set.key])}
+          pending={editing && !editing.id ? editing : null}
+          onCreate={(range) => setEditing({ id: null, ...range })}
+          onEdit={(s) => setEditing({ id: s.id, startDay: s.startDay, endDay: s.endDay })}
+          onResize={(id, range) => setStays((prev) => prev.map((s) => (s.id === id ? { ...s, ...range } : s)))}
+          onHover={setStayCard}
+        />
+      ) : (
       <div className="scroll" ref={scrollRef}>
         <div className="timeline" style={{ '--n': SLOTS, '--zoom': zoom } as CSSProperties}>
           <div
@@ -444,10 +517,10 @@ export default function App() {
             onPointerMove={onPanMove}
             onPointerUp={onPanEnd}
             onPointerCancel={onPanEnd}
-            title="拖曳可左右移動時間軸"
+            title="拖曳可左右移動時間軸，點月份可看該月"
           >
             {MONTHS.map((m) => (
-              <div key={m.month} className="month" style={{ gridColumn: `${m.startIndex * 2 + 1} / span ${m.span * 2}` }}>
+              <div key={m.month} className="month" data-month={m.month} style={{ gridColumn: `${m.startIndex * 2 + 1} / span ${m.span * 2}` }}>
                 {m.month + 1} 月
               </div>
             ))}
@@ -538,6 +611,7 @@ export default function App() {
           )}
         </div>
       </div>
+      )}
 
       <section className="panels">
         <div className="panel">
@@ -546,6 +620,11 @@ export default function App() {
             已安排 <b>{weeksLabel(plannedDays)}</b>・未安排 <b>{weeksLabel(TOTAL_DAYS - plannedDays)}</b>
             <br />
             去了 <b>{countryCount}</b> 個國家・<b>{cityCount}</b> 個城市
+            <br />
+            <span title="依行程順序、兩地直線距離估算；300 公里內視為陸路不計，未含轉機">
+              約 <b>{flights.legs}</b> 個航段・飛行約 <b>{Math.round(flights.hours)}</b> 小時
+              {flights.unknown > 0 && `（${flights.unknown} 段查無座標未計）`}
+            </span>
           </p>
           <ul className="totals">
             {totals.map((g) => (
@@ -568,12 +647,12 @@ export default function App() {
           </ul>
         </div>
         <div className="panel grow">
-          <h2>行程</h2>
-          {sorted.length === 0 ? (
-            <p className="empty">還沒有行程。到上面的時間軸拖幾格試試。</p>
+          <h2>行程{listRange && `・${view.month + 1} 月`}</h2>
+          {listed.length === 0 ? (
+            <p className="empty">{listRange ? '這個月還沒有行程。在上面的月曆拖幾天試試。' : '還沒有行程。到上面的時間軸拖幾格試試。'}</p>
           ) : (
             <ol className="stays">
-              {sorted.map((s) => (
+              {listed.map((s) => (
                 <li key={s.id}>
                   <i style={{ background: colorOf(s) }} />
                   <span className="when">{longRangeLabel(s)}</span>
@@ -600,7 +679,7 @@ export default function App() {
       <section className="panel map-panel">
         <h2>地圖</h2>
         <Suspense fallback={<p className="map-status">載入地圖中…</p>}>
-          <MapView stays={stays} />
+          <MapView stays={stays} coords={coords} failed={coordsFailed} />
         </Suspense>
       </section>
 
@@ -653,12 +732,6 @@ export default function App() {
       )}
     </div>
   );
-}
-
-function Flag({ country }: { country: string }) {
-  const code = flagCode(country);
-  // Regions without a flag (e.g. a continent) keep an empty slot so the names stay aligned.
-  return <span className={code ? `flag fi fi-${code}` : 'flag none'} aria-hidden="true" />;
 }
 
 function Editor(props: {

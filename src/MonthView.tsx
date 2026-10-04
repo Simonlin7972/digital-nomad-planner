@@ -1,0 +1,224 @@
+import { useRef, useState } from 'react';
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
+import { CaretLeft } from '@phosphor-icons/react/dist/csr/CaretLeft';
+import { CaretRight } from '@phosphor-icons/react/dist/csr/CaretRight';
+import { Flag } from './Flag';
+import type { HolidaySet } from './holidays';
+import { colorOf, placeName, type Stay } from './storage';
+import { TOTAL_DAYS, YEAR, dateOfDay, daysOf, monthRange, todayIndex, type DayRange } from './weeks';
+
+type Drag =
+  | { kind: 'select'; anchor: number; lo: number; hi: number }
+  | (DayRange & { kind: 'resize'; id: string; edge: 'l' | 'r'; moved: boolean })
+  | { kind: 'press'; id: string };
+
+type Props = {
+  stays: Stay[];
+  month: number;
+  onMonth: (month: number) => void;
+  holidaySets: HolidaySet[]; // only the ones switched on
+  pending: DayRange | null; // range of the stay being created in the editor
+  onCreate: (range: DayRange) => void;
+  onEdit: (stay: Stay) => void;
+  onResize: (id: string, range: DayRange) => void;
+  onHover: (card: { id: string; x: number; y: number } | null) => void;
+};
+
+const WEEKDAYS = ['一', '二', '三', '四', '五', '六', '日'];
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+
+export default function MonthView(props: Props) {
+  const { stays, month, onMonth, holidaySets, pending, onCreate, onEdit, onResize, onHover } = props;
+  const [drag, setDrag] = useState<Drag | null>(null);
+  const weekEls = useRef<(HTMLDivElement | null)[]>([]);
+
+  const range = monthRange(month);
+  // Day index 0 is a Monday, so day % 7 is the weekday column.
+  const gridStart = range.startDay - (range.startDay % 7);
+  const weekCount = Math.ceil((range.endDay - gridStart + 1) / 7);
+  const today = todayIndex();
+
+  const shown = stays.map((s) =>
+    drag?.kind === 'resize' && drag.id === s.id ? { ...s, startDay: drag.startDay, endDay: drag.endDay } : s,
+  );
+  const inMonth = shown.filter((s) => s.startDay <= range.endDay && s.endDay >= range.startDay);
+  const plannedDays = inMonth.reduce(
+    (n, s) => n + Math.min(s.endDay, range.endDay) - Math.max(s.startDay, range.startDay) + 1,
+    0,
+  );
+  const selection: DayRange | null = drag?.kind === 'select' ? { startDay: drag.lo, endDay: drag.hi } : pending;
+
+  const isFree = (day: number) => day >= 0 && day < TOTAL_DAYS && !stays.some((s) => day >= s.startDay && day <= s.endDay);
+
+  function dayAt(e: ReactPointerEvent) {
+    const rows = weekEls.current.slice(0, weekCount);
+    let row = rows.findIndex((el) => el && e.clientY < el.getBoundingClientRect().bottom);
+    if (row === -1) row = weekCount - 1;
+    const rect = rows[row]!.getBoundingClientRect();
+    const col = clamp(Math.floor(((e.clientX - rect.left) / rect.width) * 7), 0, 6);
+    return gridStart + row * 7 + col;
+  }
+
+  function onPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    const bar = target.closest<HTMLElement>('[data-stay]');
+    onHover(null);
+    if (bar) {
+      const stay = stays.find((s) => s.id === bar.dataset.stay);
+      if (!stay) return;
+      const edge = target.dataset.edge as 'l' | 'r' | undefined;
+      setDrag(
+        edge
+          ? { kind: 'resize', id: stay.id, edge, startDay: stay.startDay, endDay: stay.endDay, moved: false }
+          : { kind: 'press', id: stay.id },
+      );
+    } else {
+      const day = dayAt(e);
+      if (!isFree(day)) return;
+      setDrag({ kind: 'select', anchor: day, lo: day, hi: day });
+    }
+    e.currentTarget.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  }
+
+  function onPointerMove(e: ReactPointerEvent<HTMLDivElement>) {
+    if (!drag || drag.kind === 'press') return;
+    const day = dayAt(e);
+    if (drag.kind === 'select') {
+      // Extend from the anchor toward the pointer, stopping at the first taken day.
+      const dir = day >= drag.anchor ? 1 : -1;
+      let reach = drag.anchor;
+      while (reach !== day && isFree(reach + dir)) reach += dir;
+      setDrag({ ...drag, lo: Math.min(drag.anchor, reach), hi: Math.max(drag.anchor, reach) });
+      return;
+    }
+    const others = stays.filter((s) => s.id !== drag.id);
+    let { startDay, endDay } = drag;
+    if (drag.edge === 'l') {
+      const prevEnd = Math.max(-1, ...others.filter((s) => s.endDay < endDay).map((s) => s.endDay));
+      startDay = clamp(day, prevEnd + 1, endDay);
+    } else {
+      const nextStart = Math.min(TOTAL_DAYS, ...others.filter((s) => s.startDay > startDay).map((s) => s.startDay));
+      endDay = clamp(day, startDay, nextStart - 1);
+    }
+    if (startDay !== drag.startDay || endDay !== drag.endDay) setDrag({ ...drag, startDay, endDay, moved: true });
+  }
+
+  function onPointerUp() {
+    if (!drag) return;
+    setDrag(null);
+    if (drag.kind === 'select') onCreate({ startDay: drag.lo, endDay: drag.hi });
+    else if (drag.kind === 'resize' && drag.moved) onResize(drag.id, { startDay: drag.startDay, endDay: drag.endDay });
+    else if (drag.kind === 'press') {
+      const stay = stays.find((s) => s.id === drag.id);
+      if (stay) onEdit(stay);
+    }
+  }
+
+  // Position of a day range within one week row, or null if it doesn't touch that week.
+  const segment = (r: DayRange, weekStart: number) => {
+    const from = Math.max(r.startDay, weekStart);
+    const to = Math.min(r.endDay, weekStart + 6);
+    if (from > to) return null;
+    return {
+      style: { left: `${((from - weekStart) / 7) * 100}%`, width: `${((to - from + 1) / 7) * 100}%` } as CSSProperties,
+      starts: from === r.startDay,
+      ends: to === r.endDay,
+    };
+  };
+
+  return (
+    <div className="month-view">
+      <div className="mhead">
+        <button className="icon" onClick={() => onMonth(month - 1)} disabled={month === 0} aria-label="上個月">
+          <CaretLeft size={16} weight="bold" />
+        </button>
+        <h2>
+          {YEAR} 年 {month + 1} 月
+        </h2>
+        <button className="icon" onClick={() => onMonth(month + 1)} disabled={month === 11} aria-label="下個月">
+          <CaretRight size={16} weight="bold" />
+        </button>
+        <span className="mstat">
+          已安排 <b>{plannedDays}</b> 天・未安排 <b>{daysOf(range) - plannedDays}</b> 天
+        </span>
+      </div>
+
+      <div className="mweekdays">
+        {WEEKDAYS.map((d) => (
+          <span key={d}>{d}</span>
+        ))}
+      </div>
+
+      <div
+        className={`mgrid${drag ? ' dragging' : ''}`}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={() => setDrag(null)}
+      >
+        {Array.from({ length: weekCount }, (_, w) => {
+          const weekStart = gridStart + w * 7;
+          const sel = selection && segment(selection, weekStart);
+          return (
+            <div key={weekStart} className="mweek" ref={(el) => void (weekEls.current[w] = el)}>
+              {Array.from({ length: 7 }, (_, i) => {
+                const day = weekStart + i;
+                const date = dateOfDay(day);
+                const outside = day < range.startDay || day > range.endDay;
+                return (
+                  <div key={day} className={`mday${outside ? ' out' : ''}${day === today ? ' today' : ''}`}>
+                    <span className="num">{date.getDate() === 1 || outside ? `${date.getMonth() + 1}/${date.getDate()}` : date.getDate()}</span>
+                    {holidaySets.map((set) => {
+                      const h = set.holidays.find((d) => day >= d.startDay && day <= d.endDay);
+                      return (
+                        h && (
+                          <span key={set.key} className="hol" style={{ '--c': set.color } as CSSProperties} title={`${h.name}${h.note ? `\n${h.note}` : ''}`}>
+                            {h.short}
+                          </span>
+                        )
+                      );
+                    })}
+                  </div>
+                );
+              })}
+              {shown.map((s) => {
+                const seg = segment(s, weekStart);
+                if (!seg) return null;
+                const active = drag?.kind === 'resize' && drag.id === s.id;
+                return (
+                  <div
+                    key={s.id}
+                    data-stay={s.id}
+                    className={`mbar${seg.starts ? ' starts' : ''}${seg.ends ? ' ends' : ''}${active ? ' active' : ''}`}
+                    style={{ ...seg.style, background: colorOf(s) }}
+                    onMouseEnter={(e) => {
+                      if (drag) return;
+                      const r = e.currentTarget.getBoundingClientRect();
+                      onHover({ id: s.id, x: r.left + r.width / 2, y: r.bottom });
+                    }}
+                    onMouseLeave={() => onHover(null)}
+                  >
+                    {seg.starts && <span className="handle" data-edge="l" />}
+                    <span className="label">
+                      {s.country && <Flag country={s.country} />}
+                      <strong>{placeName(s)}</strong>
+                      {s.note && <small>{s.note.replace(/\s+/g, ' ')}</small>}
+                    </span>
+                    {seg.ends && <span className="handle" data-edge="r" />}
+                  </div>
+                );
+              })}
+              {sel && (
+                <div className={`mbar msel${sel.starts ? ' starts' : ''}${sel.ends ? ' ends' : ''}`} style={sel.style}>
+                  {sel.starts && drag?.kind === 'select' && <span className="label">{drag.hi - drag.lo + 1} 天</span>}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

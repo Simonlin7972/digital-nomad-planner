@@ -163,15 +163,74 @@ button.danger:hover:not(:disabled) { border-color: transparent; background: var(
 }
 
 .zoombar {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
   margin-left: auto;
+  padding: 4px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
 }
-.zoombar input[type='range'] { width: min(260px, 40vw); accent-color: var(--text); }
-.zoombar button { padding: 6px 12px; font-size: 13px; }
-.zoombar button[aria-label] { width: 32px; height: 32px; padding: 0; font-size: 16px; line-height: 1; }
-.zoom-value { width: 44px; text-align: right; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.zoombar button { border: 0; background: none; color: var(--text); }
+.zoombar button:hover:not(:disabled) { background: var(--subtle); }
+.zoombar button[aria-label] { width: 30px; height: 30px; padding: 0; display: grid; place-items: center; }
+.zoombar .reset { padding: 6px 12px; font-size: 13px; font-weight: 500; }
+.zoom-value {
+  min-width: 46px;
+  padding: 0 4px 0 8px;
+  margin-left: 4px;
+  border-left: 1px solid var(--line);
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Range slider: thin track filled up to the thumb (--pct), white thumb */
+.zoombar input[type='range'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: min(200px, 34vw);
+  height: 30px; /* tall hit area around a thin track */
+  margin: 0 4px;
+  background: transparent;
+  cursor: pointer;
+}
+.zoombar input[type='range']::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--text) var(--pct), var(--line-strong) var(--pct));
+}
+.zoombar input[type='range']::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--text) var(--pct), var(--line-strong) var(--pct));
+}
+.zoombar input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px; /* centre on the 4px track */
+  border-radius: 50%;
+  border: 1px solid #b0b0b0;
+  background: #fff;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.18);
+  transition: transform 0.12s, border-color 0.12s;
+}
+.zoombar input[type='range']::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid #b0b0b0;
+  background: #fff;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.18);
+}
+.zoombar input[type='range']:hover::-webkit-slider-thumb { transform: scale(1.1); border-color: var(--text); }
+.zoombar input[type='range']:active::-webkit-slider-thumb { transform: scale(1.18); border-color: var(--text); }
+.zoombar input[type='range']:focus-visible { outline: none; }
+.zoombar input[type='range']:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--text); outline-offset: 2px; }
+.zoombar input[type='range']:focus-visible::-moz-range-thumb { outline: 2px solid var(--text); outline-offset: 2px; }
 
 .row {
   display: grid;
@@ -314,6 +373,116 @@ button.danger:hover:not(:disabled) { border-color: transparent; background: var(
   pointer-events: none;
   z-index: 1;
 }
+
+/* View switch */
+.segmented { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--subtle); border: 1px solid var(--line); }
+.segmented button { border: 0; background: none; padding: 6px 18px; font-size: 13px; color: var(--muted); }
+.segmented button:hover:not(:disabled) { background: none; color: var(--text); }
+.segmented button[aria-selected='true'] { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgb(0 0 0 / 0.15); }
+
+/* Month view */
+.month-view {
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+}
+.mhead { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.mhead h2 { margin: 0; min-width: 132px; text-align: center; font-variant-numeric: tabular-nums; }
+.mhead .icon { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; }
+.mstat { margin-left: auto; font-size: 14px; color: var(--muted); }
+.mstat b { color: var(--text); font-size: 16px; font-weight: 600; }
+
+.mweekdays,
+.mweek { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.mweekdays { font-size: 12px; font-weight: 600; color: var(--muted); padding-bottom: 8px; }
+.mweekdays span { padding-left: 10px; }
+
+.mgrid {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  cursor: crosshair;
+}
+.mweek { position: relative; }
+.mweek + .mweek { border-top: 1px solid var(--line); }
+.mday {
+  min-height: 96px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px; /* room for the stay bar between the date and the holiday names */
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.12s;
+}
+.mday + .mday { border-left: 1px solid var(--line); }
+.mday:hover { background-color: var(--subtle); }
+.mday.out { background-color: var(--subtle); color: #b0b0b0; }
+.mday.today .num { color: var(--accent); font-weight: 700; }
+.mday .hol {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mbar {
+  position: absolute;
+  top: 34px;
+  height: 32px;
+  display: flex;
+  align-items: stretch;
+  color: #fff;
+  cursor: pointer;
+  min-width: 0;
+  background-clip: padding-box !important; /* the transparent border below acts as an inset */
+}
+/* Rounded and inset only where the stay really starts or ends; a flat edge means it continues past the week. */
+.mbar.starts { border-radius: 10px 0 0 10px; border-left: 3px solid transparent; }
+.mbar.ends { border-radius: 0 10px 10px 0; border-right: 3px solid transparent; }
+.mbar.starts.ends { border-radius: 10px; }
+.mbar.active { opacity: 0.85; z-index: 2; }
+.mgrid.dragging .mbar { cursor: grabbing; }
+.mbar .label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.mbar .handle + .label { padding-left: 0; }
+.mbar strong { font-size: 13px; font-weight: 600; }
+.mbar small { font-size: 11px; opacity: 0.9; overflow: hidden; text-overflow: ellipsis; }
+.mbar .flag { width: 16px; height: 12px; border-radius: 2px; }
+.mbar .handle { flex: none; width: 10px; cursor: ew-resize; display: grid; place-items: center; }
+.mbar .handle::after { content: ''; width: 3px; height: 45%; border-radius: 2px; background: #fff; opacity: 0; transition: opacity 0.12s; }
+.mbar:hover .handle::after { opacity: 0.6; }
+.mbar .handle:hover { background: rgb(0 0 0 / 0.25); }
+.mbar .handle:hover::after { opacity: 1; }
+.mbar.msel {
+  background: rgb(255 56 92 / 0.1);
+  border: 2px dashed var(--accent);
+  background-clip: border-box !important;
+  color: var(--accent-dark);
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+}
+.mbar.msel.starts { border-left: 2px dashed var(--accent); }
+.mbar.msel.ends { border-right: 2px dashed var(--accent); }
+.mbar.msel:not(.starts) { border-left: 0; }
+.mbar.msel:not(.ends) { border-right: 0; }
 
 /* Panels */
 .panels {

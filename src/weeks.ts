@@ -88,6 +88,21 @@ export function longRangeLabel(r: DayRange): string {
   return r.startDay === r.endDay ? fmtLong(r.startDay) : `${fmtLong(r.startDay)} – ${fmtLong(r.endDay)}`;
 }
 
+export const dateOfDay = (day: number) => addDays(DAY0, day);
+
+const dayOfDate = (d: Date) =>
+  Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(DAY0.getFullYear(), DAY0.getMonth(), DAY0.getDate())) / 86_400_000);
+
+// First and last day of a calendar month (0–11) of YEAR.
+export function monthRange(month: number): DayRange {
+  return { startDay: dayOfDate(new Date(YEAR, month, 1)), endDay: dayOfDate(new Date(YEAR, month + 1, 0)) };
+}
+
+export function todayIndex(now = new Date()): number | null {
+  const day = dayOfDate(now);
+  return day >= 0 && day < TOTAL_DAYS ? day : null;
+}
+
 export const daysOf = (r: DayRange) => r.endDay - r.startDay + 1;
 
 export function weeksLabel(days: number): string {

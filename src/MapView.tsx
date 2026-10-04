@@ -3,8 +3,9 @@ import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 // Let Vite bundle the worker; MapLibre's own lookup breaks once the library is pre-bundled.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
-import { geocode, loadGeocodeCache, type LngLat } from './geocode';
+import type { LngLat } from './geocode';
 import { colorOf, placeFull, placeName, type Stay } from './storage';
+import { placeQuery, type Coords } from './useCoords';
 import { daysOf, rangeLabel, weeksLabel } from './weeks';
 
 maplibregl.setWorkerUrl(workerUrl);
@@ -12,16 +13,14 @@ maplibregl.setWorkerUrl(workerUrl);
 const STYLE = 'https://tiles.openfreemap.org/styles/positron';
 const ROUTE = 'route';
 
-const queryOf = (s: Stay) => [s.city, s.country].filter(Boolean).join(', ');
+const queryOf = placeQuery;
 
-export default function MapView({ stays }: { stays: Stay[] }) {
+export default function MapView({ stays, coords, failed }: { stays: Stay[]; coords: Coords; failed: boolean }) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markers = useRef<maplibregl.Marker[]>([]);
   const fitted = useRef('');
   const [ready, setReady] = useState(false);
-  const [coords, setCoords] = useState(loadGeocodeCache);
-  const [failed, setFailed] = useState(false);
 
   // Unique places in the order they are first visited, each with all of its stays.
   const places = useMemo(() => {
@@ -35,22 +34,6 @@ export default function MapView({ stays }: { stays: Stay[] }) {
 
   const pending = places.filter((p) => !(p.query in coords)).map((p) => p.query);
   const missing = places.filter((p) => coords[p.query] === null).map((p) => placeFull(p.visits[0]));
-  const pendingKey = pending.join('|');
-
-  useEffect(() => {
-    if (!pendingKey) return;
-    let cancelled = false;
-    setFailed(false);
-    for (const query of pendingKey.split('|')) {
-      geocode(query).then(
-        (value) => !cancelled && setCoords((prev) => ({ ...prev, [query]: value })),
-        () => !cancelled && setFailed(true),
-      );
-    }
-    return () => {
-      cancelled = true;
-    };
-  }, [pendingKey]);
 
   useEffect(() => {
     const map = new maplibregl.Map({
