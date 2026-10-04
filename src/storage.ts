@@ -1,11 +1,37 @@
 import { TOTAL_DAYS, WEEK_COUNT, YEAR, dayOfIso, isoOfDay, type DayRange } from './weeks';
 
+// Flight booked for getting to a stay. Every field is optional free text; the object existing means "booked".
+export type Ticket = { airline?: string; flightNo?: string; departure?: string; bookingRef?: string; price?: string };
+export const TICKET_FIELDS = ['airline', 'flightNo', 'departure', 'bookingRef', 'price'] as const;
+
+export function cleanTicket(raw: unknown): Ticket | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const ticket: Ticket = {};
+  for (const key of TICKET_FIELDS) {
+    const value = (raw as Record<string, unknown>)[key];
+    if (typeof value === 'string' && value.trim()) ticket[key] = value.trim().slice(0, 80);
+  }
+  return ticket;
+}
+
+// Human-readable lines for a ticket, for the info card.
+export function ticketLines(t: Ticket): string[] {
+  const lines = [
+    [t.airline, t.flightNo].filter(Boolean).join(' '),
+    t.departure && `起飛 ${t.departure.replace('T', ' ').replace(/-/g, '/')}`,
+    t.bookingRef && `訂位代號 ${t.bookingRef}`,
+    t.price && `票價 ${t.price}`,
+  ].filter((l): l is string => Boolean(l));
+  return lines.length ? lines : ['尚未填寫細節'];
+}
+
 export type Stay = DayRange & {
   id: string;
   country: string; // either may be empty, but not both
   city: string;
   color?: ColorKey;
   companions?: string; // who the trip is with, free text
+  ticket?: Ticket;
   note?: string;
 };
 
@@ -95,6 +121,7 @@ export function serialize(stays: Stay[]) {
       end: isoOfDay(s.endDay),
       ...(s.color ? { color: s.color } : {}),
       ...(s.companions ? { companions: s.companions } : {}),
+      ...(s.ticket ? { ticket: s.ticket } : {}),
       ...(s.note ? { note: s.note } : {}),
     })),
   };
@@ -134,6 +161,8 @@ export function sanitize(data: unknown): Stay[] {
     };
     if (isColorKey(s.color)) stay.color = s.color;
     if (typeof s.companions === 'string' && s.companions.trim()) stay.companions = s.companions.trim();
+    const ticket = cleanTicket(s.ticket);
+    if (ticket) stay.ticket = ticket;
     if (typeof s.note === 'string' && s.note.trim()) stay.note = s.note.trim();
     if (out.some((o) => overlaps(o, stay) || o.id === stay.id)) continue;
     out.push(stay);

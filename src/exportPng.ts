@@ -1,7 +1,8 @@
 import { colorOf, placeFull, placeName, type Stay } from './storage';
 import { MONTHS, SLOTS, WEEKS, YEAR, daysOf, rangeLabel, slotsOf, weeksLabel } from './weeks';
 
-const FONT = '-apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
+const FONT = '"975HazyGo", -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
+const TITLE = `${YEAR} 數位遊牧計畫`;
 const SCALE = 2;
 const PAD = 40;
 const SLOT_W = 20;
@@ -25,7 +26,10 @@ function ellipsize(ctx: CanvasRenderingContext2D, text: string, max: number): st
 }
 
 // Draws the whole year at a fixed width, so the image doesn't depend on the window size or scroll position.
-export function renderPng(stays: Stay[]): Promise<Blob> {
+export async function renderPng(stays: Stay[]): Promise<Blob> {
+  // Canvas text falls back silently if the web font hasn't been fetched yet, so load every glyph we'll draw first.
+  const text = `${TITLE}0123456789/–・週天月 ${stays.map((s) => `${placeFull(s)}${s.note ?? ''}`).join('')}`;
+  await Promise.all([`13px ${FONT}`, `600 13px ${FONT}`].map((font) => document.fonts.load(font, text))).catch(() => undefined);
   const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
   const trackW = SLOTS * SLOT_W;
   const width = trackW + PAD * 2;
@@ -46,8 +50,8 @@ export function renderPng(stays: Stay[]): Promise<Blob> {
   ctx.fillRect(0, 0, width, height);
 
   ctx.fillStyle = TEXT;
-  ctx.font = `700 28px ${FONT}`;
-  ctx.fillText(`${YEAR} 遊牧年曆`, PAD, PAD + 28);
+  ctx.font = `600 28px ${FONT}`;
+  ctx.fillText(TITLE, PAD, PAD + 28);
 
   // Track background, week lines and dates
   ctx.fillStyle = SUBTLE;

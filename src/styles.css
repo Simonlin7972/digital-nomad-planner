@@ -13,7 +13,8 @@
   --radius-lg: 16px;
   --shadow-card: 0 6px 16px rgb(0 0 0 / 0.08);
   --shadow-pop: 0 8px 28px rgb(0 0 0 / 0.28);
-  font-family: -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', 'Helvetica Neue', sans-serif;
+  /* 975HazyGo ships 400 and 600 only: 500 resolves to 400, and nothing asks for more than 600. */
+  font-family: '975HazyGo', -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', 'Helvetica Neue', sans-serif;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
 }
@@ -42,7 +43,13 @@ body {
   border-bottom: 1px solid var(--line);
 }
 
-h1 { margin: 0; font-size: 40px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em; }
+h1 {
+  margin: 0;
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+}
 h2 { margin: 0 0 16px; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
 .hint { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.5; max-width: 60ch; }
 
@@ -138,6 +145,7 @@ button.danger:hover:not(:disabled) { border-color: transparent; background: var(
   pointer-events: none;
   animation: fade 0.12s ease-out;
 }
+.holiday-card .with-icon { display: flex; align-items: center; gap: 6px; }
 .holiday-card .set { font-size: 11px; font-weight: 600; }
 .holiday-card strong { font-size: 14px; }
 .holiday-card .place { display: flex; align-items: center; gap: 8px; }
@@ -373,6 +381,11 @@ button.danger:hover:not(:disabled) { border-color: transparent; background: var(
   z-index: 1;
 }
 
+/* Year/month cross-fade: the old view fades out, then the new one fades in */
+.view { animation: view-in 0.2s ease-out; transition: opacity 0.14s ease-in, transform 0.14s ease-in; }
+.view.leaving { opacity: 0; transform: translateY(4px); pointer-events: none; }
+@keyframes view-in { from { opacity: 0; transform: translateY(4px); } }
+
 /* View switch */
 .segmented { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--subtle); border: 1px solid var(--line); }
 .segmented button { border: 0; background: none; padding: 6px 18px; font-size: 13px; color: var(--muted); }
@@ -422,7 +435,7 @@ button.danger:hover:not(:disabled) { border-color: transparent; background: var(
 .mday + .mday { border-left: 1px solid var(--line); }
 .mday:hover { background-color: var(--subtle); }
 .mday.out { background-color: var(--subtle); color: #b0b0b0; }
-.mday.today .num { color: var(--accent); font-weight: 700; }
+.mday.today .num { color: var(--accent); font-weight: 600; }
 .mday .hol {
   font-size: 11px;
   font-weight: 600;
@@ -557,6 +570,9 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
 .stays li:first-child { border-top-color: transparent; }
 .stays li:hover { background: var(--subtle); border-radius: var(--radius); border-top-color: transparent; }
 .stays li:hover + li { border-top-color: transparent; }
+/* ticket button: always visible on stays with a flight booked */
+.stays .ticket { width: 30px; height: 30px; padding: 0; border: 0; background: none; display: grid; place-items: center; color: var(--text); }
+.stays .ticket:hover { background: var(--line); }
 /* edit button: revealed on row hover or keyboard focus; always shown where there is no hover */
 .stays .edit {
   position: absolute;
@@ -591,7 +607,7 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
   box-shadow: 0 2px 6px rgb(0 0 0 / 0.3);
   color: #fff;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -604,7 +620,9 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
 .backdrop {
   position: fixed;
   inset: 0;
-  background: rgb(0 0 0 / 0.5);
+  background: rgb(0 0 0 / 0.28);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: grid;
   place-items: center;
   padding: 16px;
@@ -614,7 +632,7 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
 .editor {
   width: min(440px, 100%);
   max-height: calc(100dvh - 32px);
-  overflow-y: auto;
+  overflow: hidden auto;
   background: var(--surface);
   border-radius: var(--radius-lg);
   padding: 0 24px 20px;
@@ -628,7 +646,7 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
   margin: 0 -24px;
   padding: 20px 24px;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
   text-align: center;
   border-bottom: 1px solid var(--line);
 }
@@ -664,6 +682,10 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
 .swatch:hover:not(:disabled) { border: 0; transform: scale(1.1); }
 .swatch.selected { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text); }
 .swatch:focus-visible { outline: 2px solid var(--text); outline-offset: 5px; }
+.editor .field > .toggle { align-self: flex-start; }
+.ticket-fields label { min-width: 0; }
+.ticket-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 6px; padding: 14px; border-radius: var(--radius); background: var(--subtle); }
+.ticket-fields .wide { grid-column: 1 / -1; }
 .editor .dates { display: flex; gap: 12px; }
 .editor .dates label { flex: 1; min-width: 0; }
 .editor .error { margin: -4px 0 0; font-size: 13px; color: var(--danger); }

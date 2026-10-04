@@ -1,14 +1,15 @@
 import { Fragment, Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, FormEvent, PointerEvent as ReactPointerEvent } from 'react';
+import type { ChangeEvent, CSSProperties, FormEvent, PointerEvent as ReactPointerEvent } from 'react';
 import { Minus } from '@phosphor-icons/react/dist/csr/Minus';
 import { PencilSimple } from '@phosphor-icons/react/dist/csr/PencilSimple';
+import { Ticket as TicketIcon } from '@phosphor-icons/react/dist/csr/Ticket';
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus';
 import { renderPng } from './exportPng';
 import { Flag } from './Flag';
 import MonthView from './MonthView';
 import { flightStats, useCoords } from './useCoords';
 import { HOLIDAY_SETS, type Holiday, type HolidaySet } from './holidays';
-import { PALETTE, colorKeyOf, colorOf, defaultColor, placeFull, placeName, load, overlaps, sanitize, save, serialize, pushStays, reorderStays, type ColorKey, type Stay } from './storage';
+import { PALETTE, colorKeyOf, colorOf, defaultColor, placeFull, placeName, load, overlaps, sanitize, save, serialize, pushStays, reorderStays, cleanTicket, ticketLines, type Ticket, type ColorKey, type Stay } from './storage';
 import {
   MONTHS,
   SLOTS,
@@ -34,7 +35,7 @@ type Drag =
   | (DayRange & { kind: 'resize'; id: string; edge: 'l' | 'r'; grabSlot: number; moved: boolean });
 
 type Editing = DayRange & { id: string | null };
-type StayDetails = Pick<Stay, 'country' | 'city' | 'companions' | 'note'>;
+type StayDetails = Pick<Stay, 'country' | 'city' | 'companions' | 'ticket' | 'note'>;
 
 type History = { past: Stay[][]; present: Stay[]; future: Stay[][] };
 const HISTORY_LIMIT = 100;
@@ -64,6 +65,7 @@ function loadHolidayToggles(): HolidayToggles {
 }
 
 const VIEW_KEY = 'dnp-view';
+const VIEW_FADE_MS = 140; // keep in sync with .view in styles.css
 type View = { mode: 'year' | 'month'; month: number };
 
 function loadView(): View {
@@ -113,8 +115,16 @@ export default function App() {
   const [zoom, setZoom] = useState(loadZoom);
   const [view, setView] = useState(loadView);
   const [quarter, setQuarter] = useState(0); // 0 = whole year
+  // The view on screen trails view.mode by one fade-out, so the old view can leave before the new one enters.
+  const [shownMode, setShownMode] = useState(view.mode);
+  useEffect(() => {
+    if (shownMode === view.mode) return;
+    const timer = setTimeout(() => setShownMode(view.mode), VIEW_FADE_MS);
+    return () => clearTimeout(timer);
+  }, [view.mode, shownMode]);
   const { coords, failed: coordsFailed } = useCoords(stays);
   const [holidayOn, setHolidayOn] = useState(loadHolidayToggles);
+  const [ticketCard, setTicketCard] = useState<{ id: string; x: number; y: number } | null>(null);
   const [stayCard, setStayCard] = useState<{ id: string; x: number; y: number } | null>(null);
   const [holidayCard, setHolidayCard] = useState<{ holiday: Holiday; set: HolidaySet; x: number; y: number } | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -253,8 +263,8 @@ export default function App() {
       el.removeEventListener('touchend', onTouchEnd);
       el.removeEventListener('touchcancel', onTouchEnd);
     };
-    // The scroller only exists in the year view, so re-attach when the view changes.
-  }, [view.mode]);
+    // The scroller only exists in the year view, so re-attach when the view on screen changes.
+  }, [shownMode]);
 
   useLayoutEffect(() => {
     const el = scrollRef.current;
@@ -479,12 +489,17 @@ export default function App() {
     if (last && last.country === stay.country && last.e === s) last.e = e;
     else countryBars.push({ id: stay.id, country: stay.country, color: colorOf(stay), s, e });
   }
+  const ticketStay = ticketCard && !editing ? stays.find((s) => s.id === ticketCard.id) : undefined;
+  function showTicket(id: string, el: HTMLElement) {
+    const r = el.getBoundingClientRect();
+    setTicketCard({ id, x: r.left + r.width / 2, y: r.bottom });
+  }
   const editingStay = editing?.id ? stays.find((s) => s.id === editing.id) : undefined;
 
   return (
     <div className="app">
       <header className="topbar">
-        <h1>{YEAR} 遊牧年曆</h1>
+        <h1>{YEAR} 數位遊牧計畫</h1>
         <div className="actions">
           <button onClick={undo} disabled={history.past.length === 0} title={`復原（${MOD}Z）`}>復原</button>
           <button onClick={redo} disabled={history.future.length === 0} title={`重做（${MOD}⇧Z）`}>重做</button>
@@ -558,7 +573,8 @@ export default function App() {
         </div>}
       </div>
 
-      {view.mode === 'month' ? (
+      <div key={shownMode} className={`view${shownMode !== view.mode ? ' leaving' : ''}`}>
+      {shownMode === 'month' ? (
         <MonthView
           stays={stays}
           month={view.month}
@@ -674,6 +690,7 @@ export default function App() {
         </div>
       </div>
       )}
+      </div>
 
       <section className="panels">
         <div className="panel">
@@ -745,6 +762,20 @@ export default function App() {
                   {s.city && s.country && <span className="weeks">{s.country}</span>}
                   <span className="weeks">{weeksLabel(daysOf(s))}・{daysOf(s)} 天</span>
                   {s.companions && <span className="weeks">跟 {s.companions}</span>}
+                  {s.ticket && (
+                    <button
+                      className="ticket"
+                      aria-label={`${placeFull(s)} 的機票資訊`}
+                      onMouseEnter={(e) => showTicket(s.id, e.currentTarget)}
+                      onMouseLeave={() => setTicketCard(null)}
+                      onFocus={(e) => showTicket(s.id, e.currentTarget)}
+                      onBlur={() => setTicketCard(null)}
+                      // Touch has no hover, so a tap toggles the card.
+                      onClick={(e) => (ticketCard?.id === s.id ? setTicketCard(null) : showTicket(s.id, e.currentTarget))}
+                    >
+                      <TicketIcon size={18} weight="bold" />
+                    </button>
+                  )}
                   <button
                     className="edit"
                     aria-label={`編輯 ${placeFull(s)}`}
@@ -783,7 +814,24 @@ export default function App() {
             {daysOf(hoveredStay)} 天（約 {weeksLabel(daysOf(hoveredStay))}）
           </span>
           {hoveredStay.companions && <span>跟 {hoveredStay.companions}</span>}
+          {hoveredStay.ticket && (
+            <span className="with-icon">
+              <TicketIcon size={14} weight="bold" />
+              已買機票
+            </span>
+          )}
           {hoveredStay.note && <span className="note">{hoveredStay.note}</span>}
+        </div>
+      )}
+
+      {ticketStay?.ticket && ticketCard && (
+        <div
+          className="holiday-card"
+          role="tooltip"
+          style={{ left: clamp(ticketCard.x, 130, window.innerWidth - 130), top: ticketCard.y + 8 }}
+        >
+          <span className="set">機票・{placeFull(ticketStay)}</span>
+          {ticketLines(ticketStay.ticket).map((line, i) => (i === 0 ? <strong key={line}>{line}</strong> : <span key={line}>{line}</span>))}
         </div>
       )}
 
@@ -845,6 +893,13 @@ function Editor(props: {
   }
   const [note, setNote] = useState(stay?.note ?? '');
   const [companions, setCompanions] = useState(stay?.companions ?? '');
+  const [hasTicket, setHasTicket] = useState(Boolean(stay?.ticket));
+  const [ticket, setTicket] = useState<Ticket>(stay?.ticket ?? {});
+  const ticketField = (key: keyof Ticket) => ({
+    value: ticket[key] ?? '',
+    onChange: (e: ChangeEvent<HTMLInputElement>) => setTicket((t) => ({ ...t, [key]: e.target.value })),
+    maxLength: 80,
+  });
   const knownCompanions = [...new Set(others.map((s) => s.companions).filter(Boolean))];
   // null = follow the suggested colour for the typed place until the user picks one
   const [picked, setPicked] = useState<ColorKey | null>(stay ? colorKeyOf(stay) : null);
@@ -878,7 +933,16 @@ function Editor(props: {
   function submit(e: FormEvent) {
     e.preventDefault();
     if (hasPlace && range) {
-      onSave({ ...place, companions: companions.trim() || undefined, note: note.trim() || undefined }, range, color);
+      onSave(
+        {
+          ...place,
+          companions: companions.trim() || undefined,
+          ticket: hasTicket ? cleanTicket(ticket) : undefined,
+          note: note.trim() || undefined,
+        },
+        range,
+        color,
+      );
     }
   }
 
@@ -971,6 +1035,43 @@ function Editor(props: {
             <option key={c} value={c} />
           ))}
         </datalist>
+        <div className="field">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={hasTicket}
+            className="toggle"
+            style={{ '--c': 'var(--text)' } as CSSProperties}
+            onClick={() => setHasTicket((on) => !on)}
+          >
+            <span className="knob" />
+            已買機票
+          </button>
+          {hasTicket && (
+            <div className="ticket-fields">
+              <label>
+                航空公司
+                <input {...ticketField('airline')} placeholder="例：長榮航空" />
+              </label>
+              <label>
+                航班編號
+                <input {...ticketField('flightNo')} placeholder="例：BR211" />
+              </label>
+              <label>
+                起飛時間
+                <input {...ticketField('departure')} type="datetime-local" />
+              </label>
+              <label>
+                訂位代號
+                <input {...ticketField('bookingRef')} placeholder="例：ABC123" />
+              </label>
+              <label className="wide">
+                票價
+                <input {...ticketField('price')} placeholder="例：NT$ 8,500" />
+              </label>
+            </div>
+          )}
+        </div>
         <label>
           備註
           <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="例：回台過年、朋友婚禮" rows={3} maxLength={300} />
