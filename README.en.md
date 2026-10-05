@@ -242,6 +242,8 @@ src/
     DatePicker          Custom date picker (instead of the browser's)
     MapView             Map (lazy-loaded)
     Flag                Country flag
+    PixelNomad          The pixel-art animation in the header (someone on a laptop under a palm tree)
+    Tagline             The typewriter tagline under the title
     Dialog.css          Shell shared by the editor and help dialogs
   hooks/
     useHistory          Undo/redo stack

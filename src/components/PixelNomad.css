@@ -1,0 +1,15 @@
+.pixel-nomad { flex: none; width: 48px; height: 45px; }
+
+/* Two frames swapped with a hard cut. Without animation (reduced motion) only the first frame shows. */
+.pixel-nomad .frame-b { opacity: 0; }
+.pixel-nomad .frame-a { animation: nomad-frame 1.1s steps(1, end) infinite; }
+.pixel-nomad .frame-b { animation: nomad-frame 1.1s steps(1, end) -0.55s infinite; }
+
+@keyframes nomad-frame {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@media (max-width: 720px) {
+  .pixel-nomad { width: 40px; height: 37.5px; }
+}

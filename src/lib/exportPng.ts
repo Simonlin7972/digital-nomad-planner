@@ -1,6 +1,6 @@
 import { daysText, getLocale, t } from './i18n';
 import { colorOf, placeFull, placeName, type Stay } from './storage';
-import { MONTHS, SLOTS, WEEKS, YEAR, daysOf, monthName, rangeLabel, slotsOf, weeksLabel } from './weeks';
+import { MONTHS, SLOTS, WEEKS, daysOf, monthName, rangeLabel, slotsOf, weeksLabel } from './weeks';
 
 const FONT = '"975HazyGo", -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
 const TAGLINE_FONT = '16px "Pixelify Sans", monospace';
@@ -30,7 +30,7 @@ function ellipsize(ctx: CanvasRenderingContext2D, text: string, max: number): st
 export async function renderPng(stays: Stay[]): Promise<Blob> {
   // Canvas text falls back silently if the web font hasn't been fetched yet, so load every glyph we'll draw first.
   const title = t('app.title');
-  const tagline = `${t('app.tagline')} · ${YEAR}`;
+  const tagline = t('app.tagline');
   // Every character the image can contain: the title, digits and punctuation, unit words, month names, places.
   const text = `${title}0123456789/–()（）${t('sep')}${t('unit.weeks', { n: '' })}${daysText(2)}${MONTHS.map((m) => monthName(m.month)).join('')}${stays.map((s) => `${placeFull(s)}${s.note ?? ''}`).join('')}`;
   await Promise.all([

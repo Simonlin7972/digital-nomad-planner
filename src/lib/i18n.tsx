@@ -8,6 +8,9 @@ export type Locale = 'zh' | 'en';
 const zh = {
   'app.title': '今天不在家工作',
   'app.tagline': 'A Digital Nomad Planner',
+  'app.tagline.1': 'Not Working From Home Today',
+  'app.tagline.2': 'Out of office, all year',
+  'app.tagline.3': 'Where to Next?',
 
   'unit.weeks': '{n} 週',
   'unit.day': '{n} 天',
@@ -148,6 +151,9 @@ const zh = {
 const en: Record<keyof typeof zh, string> = {
   'app.title': '今天不在家工作',
   'app.tagline': 'A Digital Nomad Planner',
+  'app.tagline.1': 'Not Working From Home Today',
+  'app.tagline.2': 'Out of office, all year',
+  'app.tagline.3': 'Where to Next?',
 
   'unit.weeks': '{n} wk',
   'unit.day': '{n} day',

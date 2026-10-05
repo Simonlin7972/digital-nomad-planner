@@ -239,6 +239,8 @@ src/
     DatePicker          自製的日期選擇器（取代瀏覽器原生的）
     MapView             地圖（延遲載入）
     Flag                國旗
+    PixelNomad          頁首的像素小動畫（棕櫚樹下用筆電的人）
+    Tagline             標題下方的打字機副標
     Dialog.css          編輯與說明視窗共用的外框樣式
   hooks/
     useHistory          復原／重做堆疊

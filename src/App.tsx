@@ -6,6 +6,8 @@ import { HolidayCard, StayCard, TicketCard, type Anchor } from './components/Hov
 import MonthView from './components/MonthView';
 import { StayList } from './components/StayList';
 import { Summary } from './components/Summary';
+import { PixelNomad } from './components/PixelNomad';
+import { Tagline } from './components/Tagline';
 import { Toolbar } from './components/Toolbar';
 import { ViewBar } from './components/ViewBar';
 import YearView from './components/YearView';
@@ -134,10 +136,11 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          <h1>{t('app.title')}</h1>
-          <p className="tagline" lang="en">
-            {t('app.tagline')}
-          </p>
+          <h1>
+            <PixelNomad />
+            {t('app.title')}
+          </h1>
+          <Tagline />
         </div>
         <Toolbar
           canUndo={canUndo}

@@ -1,0 +1,23 @@
+.tagline {
+  margin: 6px 0 0;
+  /* One line tall even while empty, so nothing below moves as it types. */
+  min-height: 24px;
+  font-family: 'Pixelify Sans', ui-monospace, monospace;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.tagline .caret {
+  display: inline-block;
+  width: 9px;
+  height: 16px;
+  margin-left: 3px;
+  vertical-align: -2px;
+  background: var(--muted);
+  animation: caret-blink 0.8s steps(1, end) infinite;
+}
+@keyframes caret-blink {
+  50% { opacity: 0; }
+}
