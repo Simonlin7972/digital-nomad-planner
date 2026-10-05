@@ -56,6 +56,10 @@ A Stop hook (`.claude/hooks/docs-check.sh`) blocks once when code under `src/` o
 - Pointer interactions can be exercised with synthetic `PointerEvent`s; stub `Element.prototype.setPointerCapture` first, since capture fails for synthetic pointer ids.
 - Say plainly what was verified by simulation and what was not tried with a real mouse, trackpad or touch screen.
 
+## Deployment
+
+Pushing to `main` publishes the site to GitHub Pages through `.github/workflows/deploy.yml` (https://simonlin7972.github.io/digital-nomad-planner/). A push is therefore a release: make sure `npm run build` passes first. The build uses `base: './'`, so keep asset references relative.
+
 ## Git
 
 - Commit and push only when asked.

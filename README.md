@@ -2,6 +2,8 @@
 
 一頁式的年度行程規劃工具：把一整年拆成 53 週，拖一拖就排好「幾月在哪個城市」。資料只存在你的瀏覽器，沒有帳號、沒有後端。
 
+**線上版：<https://simonlin7972.github.io/digital-nomad-planner/>**
+
 ![整年時間軸與行程清單（範例資料）](docs/overview.png)
 
 > A single-page planner for a year of digital nomading. Drag across a 53-week timeline to block out where you'll be, refine exact dates in a month view, and see the route on a map. Everything stays in your browser — no account, no backend. The interface is in Traditional Chinese.
@@ -88,7 +90,14 @@ npm run dev
 | `npm run build` | 型別檢查後打包到 `dist/` |
 | `npm run preview` | 在本機預覽打包結果 |
 
-打包結果是純靜態檔案，可放在任何靜態主機。目前沒有自動化測試，也沒有 lint 設定；`npm run build` 內含的 `tsc --noEmit` 是唯一的檢查。
+打包結果是純靜態檔案，可放在任何靜態主機。資源路徑是相對的（`vite.config.ts` 的 `base: './'`），所以放在子路徑下也能運作。
+
+### 部署
+
+推到 `main` 會由 GitHub Actions（`.github/workflows/deploy.yml`）自動打包並發佈到 GitHub Pages。Fork 之後要自己部署：到 repo 的 Settings → Pages，把 Source 設為 **GitHub Actions**。
+
+線上版和本機版各用各的瀏覽器儲存空間（網址不同），資料不互通；要搬移請用匯出／匯入。
+目前沒有自動化測試，也沒有 lint 設定；`npm run build` 內含的 `tsc --noEmit` 是唯一的檢查。
 
 ---
 
@@ -205,6 +214,7 @@ src/
   exportPng.ts        用 canvas 繪製 PNG
   styles.css          全站樣式
 MVP.md                產品規格與決策紀錄
+.github/workflows/    推到 main 時自動部署到 GitHub Pages
 CLAUDE.md             給 Claude Code 的專案須知
 .claude/              Claude Code 設定：預覽啟動、文件同步檢查 hook
 ```
