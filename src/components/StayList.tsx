@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { PencilSimple } from '@phosphor-icons/react/dist/csr/PencilSimple';
 import { Ticket as TicketIcon } from '@phosphor-icons/react/dist/csr/Ticket';
-import { colorOf, overlaps, placeFull, type Stay } from '../lib/storage';
-import { TOTAL_DAYS, daysOf, longRangeLabel, monthRange, weeksLabel, type DayRange } from '../lib/weeks';
+import { daysText, t, useLocale } from '../lib/i18n';
+import { cityOf, colorOf, countryOf, overlaps, placeFull, type Stay } from '../lib/storage';
+import { TOTAL_DAYS, daysOf, longRangeLabel, monthName, monthRange, weeksLabel, type DayRange } from '../lib/weeks';
 import { Flag } from './Flag';
 import type { Anchor } from './HoverCards';
 import './StayList.css';
@@ -17,6 +18,7 @@ type Props = {
 
 // The itinerary: one line per stay, in date order.
 export function StayList({ stays, month, onEdit, ticketCardId, onTicket }: Props) {
+  useLocale();
   const [quarter, setQuarter] = useState(0); // 0 = whole year
 
   const monthFilter = month === null ? null : monthRange(month);
@@ -40,10 +42,10 @@ export function StayList({ stays, month, onEdit, ticketCardId, onTicket }: Props
   return (
     <div className="panel grow">
       <div className="panel-head">
-        <h2>行程{month !== null && `・${month + 1} 月`}</h2>
+        <h2>{month === null ? t('stays.title') : t('stays.titleMonth', { month: monthName(month) })}</h2>
         {month === null && (
-          <div className="pills" role="group" aria-label="依季度篩選">
-            {['全部', 'Q1', 'Q2', 'Q3', 'Q4'].map((label, q) => (
+          <div className="pills" role="group" aria-label={t('stays.filter')}>
+            {[t('stays.all'), 'Q1', 'Q2', 'Q3', 'Q4'].map((label, q) => (
               <button key={label} aria-pressed={quarter === q} onClick={() => setQuarter(q)}>
                 {label}
               </button>
@@ -54,10 +56,10 @@ export function StayList({ stays, month, onEdit, ticketCardId, onTicket }: Props
       {listed.length === 0 ? (
         <p className="empty">
           {monthFilter
-            ? '這個月還沒有行程。在上面的月曆拖幾天試試。'
+            ? t('stays.emptyMonth')
             : quarterFilter
-              ? `Q${quarter} 還沒有行程。`
-              : '還沒有行程。到上面的時間軸拖幾格試試。'}
+              ? t('stays.emptyQuarter', { q: quarter })
+              : t('stays.empty')}
         </p>
       ) : (
         <ol className="stays">
@@ -66,16 +68,17 @@ export function StayList({ stays, month, onEdit, ticketCardId, onTicket }: Props
               <i style={{ background: colorOf(s) }} />
               <span className="when">{longRangeLabel(s)}</span>
               <Flag country={s.country} />
-              {s.country && <strong>{s.country}</strong>}
-              {s.city && <span className={s.country ? 'city' : 'city lead'}>{s.city}</span>}
+              {s.country && <strong>{countryOf(s)}</strong>}
+              {s.city && <span className={s.country ? 'city' : 'city lead'}>{cityOf(s)}</span>}
               <span className="weeks">
-                {weeksLabel(daysOf(s))}（{daysOf(s)} 天）
+                {weeksLabel(daysOf(s))}
+                {t('paren', { x: daysText(daysOf(s)) })}
               </span>
-              {s.companions && <span className="weeks">跟 {s.companions}</span>}
+              {s.companions && <span className="weeks">{t('with', { who: s.companions })}</span>}
               {s.ticket && (
                 <button
                   className="ticket"
-                  aria-label={`${placeFull(s)} 的機票資訊`}
+                  aria-label={t('stays.ticket', { place: placeFull(s) })}
                   onMouseEnter={(e) => showTicket(s.id, e.currentTarget)}
                   onMouseLeave={() => onTicket(null)}
                   onFocus={(e) => showTicket(s.id, e.currentTarget)}
@@ -86,7 +89,7 @@ export function StayList({ stays, month, onEdit, ticketCardId, onTicket }: Props
                   <TicketIcon size={18} weight="bold" />
                 </button>
               )}
-              <button className="edit" aria-label={`編輯 ${placeFull(s)}`} title="編輯" onClick={() => onEdit(s)}>
+              <button className="edit" aria-label={t('stays.editPlace', { place: placeFull(s) })} title={t('stays.edit')} onClick={() => onEdit(s)}>
                 <PencilSimple size={18} weight="bold" />
               </button>
               {s.note && (

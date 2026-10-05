@@ -6,6 +6,8 @@ import { Image as ImageIcon } from '@phosphor-icons/react/dist/csr/Image';
 import { Question } from '@phosphor-icons/react/dist/csr/Question';
 import { Trash } from '@phosphor-icons/react/dist/csr/Trash';
 import { UploadSimple } from '@phosphor-icons/react/dist/csr/UploadSimple';
+import { Translate } from '@phosphor-icons/react/dist/csr/Translate';
+import { setLocale, t, useLocale } from '../lib/i18n';
 import { MOD } from '../lib/util';
 import './Toolbar.css';
 
@@ -25,35 +27,41 @@ type Props = {
 // The row of plan-wide actions in the page header.
 export function Toolbar({ canUndo, canRedo, hasStays, onHelp, onUndo, onRedo, onSavePng, onExport, onImport, onClear }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const locale = useLocale();
   return (
     <div className="actions">
       <button onClick={onHelp}>
         <Question size={16} weight="bold" />
-        如何使用
+        {t('toolbar.help')}
       </button>
-      <button onClick={onUndo} disabled={!canUndo} title={`復原（${MOD}Z）`}>
+      <button onClick={onUndo} disabled={!canUndo} title={t('toolbar.shortcut', { action: t('toolbar.undo'), keys: `${MOD}Z` })}>
         <ArrowCounterClockwise size={16} weight="bold" />
-        復原
+        {t('toolbar.undo')}
       </button>
-      <button onClick={onRedo} disabled={!canRedo} title={`重做（${MOD}⇧Z）`}>
+      <button onClick={onRedo} disabled={!canRedo} title={t('toolbar.shortcut', { action: t('toolbar.redo'), keys: `${MOD}⇧Z` })}>
         <ArrowClockwise size={16} weight="bold" />
-        重做
+        {t('toolbar.redo')}
       </button>
       <button onClick={onSavePng} disabled={!hasStays}>
         <ImageIcon size={16} weight="bold" />
-        保存 PNG
+        {t('toolbar.savePng')}
       </button>
       <button onClick={onExport} disabled={!hasStays}>
         <DownloadSimple size={16} weight="bold" />
-        匯出
+        {t('toolbar.export')}
       </button>
       <button onClick={() => fileRef.current?.click()}>
         <UploadSimple size={16} weight="bold" />
-        匯入
+        {t('toolbar.import')}
       </button>
       <button onClick={onClear} disabled={!hasStays}>
         <Trash size={16} weight="bold" />
-        清空
+        {t('toolbar.clear')}
+      </button>
+      {/* Labelled in the language it switches to, so it can be found by someone who can't read the current one. */}
+      <button onClick={() => setLocale(locale === 'en' ? 'zh' : 'en')} title={t('toolbar.languageHint')} lang={locale === 'en' ? 'zh-Hant' : 'en'}>
+        <Translate size={16} weight="bold" />
+        {t('toolbar.language')}
       </button>
       <input
         ref={fileRef}

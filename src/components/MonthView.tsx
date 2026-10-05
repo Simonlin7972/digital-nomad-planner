@@ -4,8 +4,9 @@ import { CaretLeft } from '@phosphor-icons/react/dist/csr/CaretLeft';
 import { CaretRight } from '@phosphor-icons/react/dist/csr/CaretRight';
 import { Flag } from './Flag';
 import type { HolidaySet } from '../lib/holidays';
+import { daysText, t, tr, useLocale } from '../lib/i18n';
 import { colorOf, placeName, pushStays, type Stay } from '../lib/storage';
-import { TOTAL_DAYS, YEAR, dateOfDay, daysOf, monthRange, todayIndex, type DayRange } from '../lib/weeks';
+import { TOTAL_DAYS, YEAR, dateOfDay, daysOf, monthRange, monthTitle, todayIndex, weekdayHeaders, type DayRange } from '../lib/weeks';
 import './MonthView.css';
 
 type Drag =
@@ -25,11 +26,11 @@ type Props = {
   onHover: (card: { id: string; x: number; y: number } | null) => void;
 };
 
-const WEEKDAYS = ['一', '二', '三', '四', '五', '六', '日'];
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
 export default function MonthView(props: Props) {
   const { stays, month, onMonth, holidaySets, pending, onCreate, onEdit, onResize, onHover } = props;
+  useLocale();
   const [drag, setDrag] = useState<Drag | null>(null);
   const weekEls = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -134,22 +135,22 @@ export default function MonthView(props: Props) {
   return (
     <div className="month-view">
       <div className="mhead">
-        <button className="icon" onClick={() => onMonth(month - 1)} disabled={month === 0} aria-label="上個月">
+        <button className="icon" onClick={() => onMonth(month - 1)} disabled={month === 0} aria-label={t('month.prev')}>
           <CaretLeft size={16} weight="bold" />
         </button>
         <h2>
-          {YEAR} 年 {month + 1} 月
+          {monthTitle(YEAR, month)}
         </h2>
-        <button className="icon" onClick={() => onMonth(month + 1)} disabled={month === 11} aria-label="下個月">
+        <button className="icon" onClick={() => onMonth(month + 1)} disabled={month === 11} aria-label={t('month.next')}>
           <CaretRight size={16} weight="bold" />
         </button>
         <span className="mstat">
-          已安排 <b>{plannedDays}</b> 天・未安排 <b>{daysOf(range) - plannedDays}</b> 天
+          {tr('month.stat', { planned: <b>{daysText(plannedDays)}</b>, free: <b>{daysText(daysOf(range) - plannedDays)}</b> })}
         </span>
       </div>
 
       <div className="mweekdays">
-        {WEEKDAYS.map((d) => (
+        {weekdayHeaders().map((d) => (
           <span key={d}>{d}</span>
         ))}
       </div>
@@ -215,7 +216,7 @@ export default function MonthView(props: Props) {
               })}
               {sel && (
                 <div className={`mbar msel${sel.starts ? ' starts' : ''}${sel.ends ? ' ends' : ''}`} style={sel.style}>
-                  {sel.starts && drag?.kind === 'select' && <span className="label">{drag.hi - drag.lo + 1} 天</span>}
+                  {sel.starts && drag?.kind === 'select' && <span className="label">{daysText(drag.hi - drag.lo + 1)}</span>}
                 </div>
               )}
             </div>

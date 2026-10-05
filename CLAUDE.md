@@ -4,7 +4,7 @@ Guidance for Claude Code working in this repository.
 
 ## What this is
 
-A single-page planner for a year of digital nomading (2027). Vite + React 19 + TypeScript, no backend; all data lives in the browser's `localStorage`. The UI is in Traditional Chinese.
+A single-page planner for a year of digital nomading (2027). Vite + React 19 + TypeScript, no backend; all data lives in the browser's `localStorage`. The UI is in Traditional Chinese and English.
 
 - Product behaviour and decisions: [MVP.md](MVP.md)
 - Setup, data format, structure, design notes: [README.md](README.md)
@@ -39,7 +39,8 @@ A Stop hook (`.claude/hooks/docs-check.sh`) blocks once when code under `src/` o
 - **Position logic is pure and lives in `src/lib/storage.ts`.** `reorderStays` (dragging a whole stay: list-style reorder), `pushStays` (stretching an edge: shove neighbours) and `insertStay` (alt-drag: drop a copy and make room for it). During a drag they are recomputed from the original stays on every pointer move, so no drag state accumulates.
 - **Imports are sanitised.** `sanitize` drops malformed or overlapping entries and accepts two legacy formats. New fields on `Stay` need handling in `serialize`, `sanitize`, the editor, and the README data-format section.
 - **The PNG export is drawn separately** in `src/lib/exportPng.ts` on a canvas. New visual elements do not appear there unless added.
-- **Countries are stored as display names, not codes.** `src/lib/flags.ts` builds the option list from `Intl.DisplayNames` (Taiwan usage) plus a few regions and aliases; `flagCode` maps a name back to a flag. The pickers (`src/components/Combobox.tsx`) still accept free text, so never assume a stay's country or city is on a list.
+- **Places are stored language-neutrally.** A stay's `country` is an ISO code or region id and its `city` the listed city's English name; unlisted values are kept as typed. Show them with `countryOf` / `cityOf` / `placeName` / `placeFull` from `lib/storage.ts`, never the raw field. `normalizeCountry` / `normalizeCity` convert typed or legacy names on save and on load.
+- **Country names come from the browser.** `src/lib/flags.ts` builds the list from `Intl.DisplayNames` plus a few regions and aliases. The pickers (`src/components/Combobox.tsx`) still accept free text, so never assume a stay's country or city is on a list.
 - **The city list is a typing aid.** `src/lib/cities.ts` holds a hand-written `[Chinese, English]` list per ISO code. It is deliberately incomplete and carries no coordinates; unlisted cities are normal and get no warning.
 - **Coordinates** come from Nominatim via `src/lib/geocode.ts` (rate-limited, cached) and are shared through the `useCoords` hook.
 
@@ -50,7 +51,9 @@ A Stop hook (`.claude/hooks/docs-check.sh`) blocks once when code under `src/` o
 - The dialog shell class is `.editor` (in `components/Dialog.css`), shared by the stay editor and the help dialog.
 - Typeface is 975HazyGo with two weights only: 400 and 600. Do not introduce 500 or 700.
 - Icons are Phosphor at `weight="bold"`, imported per icon from `@phosphor-icons/react/dist/csr/<Name>`. Flags use `flag-icons` via `src/components/Flag.tsx`.
-- UI strings are Traditional Chinese (Taiwan usage). Code, comments and commit messages are English.
+- **Every UI string goes through `src/lib/i18n.tsx`.** Add the key to both the `zh` and `en` dictionaries and use `t(key, vars)` (or `tr()` when a placeholder is a React node). Never hard-code display text in a component. A component that shows text calls `useLocale()` once so it re-renders on a language switch. Date and length text comes from the helpers in `lib/weeks.ts` and `daysText()`, which already follow the locale.
+- Chinese strings are Traditional Chinese (Taiwan usage). Code, comments and commit messages are English.
+- `HelpDialog` holds its prose per language rather than in the dictionary; change both versions together.
 - Anything new that talks to the network must be listed under "資料與隱私" in the README.
 - `src/components/HelpDialog.tsx` is the in-app guide. When a control, shortcut, or how data is stored or exported changes, update its text too.
 - Dialogs call `useScrollLock()` so the page behind them doesn't scroll.

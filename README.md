@@ -6,7 +6,7 @@
 
 ![整年時間軸與行程清單（範例資料）](docs/overview.png)
 
-> A single-page planner for a year of digital nomading. Drag across a 53-week timeline to block out where you'll be, refine exact dates in a month view, and see the route on a map. Everything stays in your browser — no account, no backend. The interface is in Traditional Chinese.
+> A single-page planner for a year of digital nomading. Drag across a 53-week timeline to block out where you'll be, refine exact dates in a month view, and see the route on a map. Everything stays in your browser — no account, no backend. The interface is available in Traditional Chinese and English (switch from the toolbar); this README is in Chinese.
 
 ---
 
@@ -67,6 +67,7 @@
 ### 其他
 
 - 內建「如何使用」說明：操作方式、資料存在哪、備份與搬移
+- 繁體中文與英文介面，工具列可切換；預設依瀏覽器語言，選擇會記住
 - 復原／重做，最多 100 步
 - JSON 匯出／匯入，檔名帶匯出當天日期（例：`nomad-plan-2027_2026-10-05.json`）
 - 保存 PNG：整年時間軸加行程清單，固定尺寸
@@ -144,6 +145,7 @@ npm run dev
 | `dnp-zoom` | 時間軸縮放比例 |
 | `dnp-view` | 目前檢視（年／月）與月份 |
 | `dnp-holidays` | 假日開關狀態 |
+| `dnp-lang` | 介面語言 |
 
 清除瀏覽器資料、換瀏覽器或換電腦都會看不到行程，請用「匯出」備份。
 
@@ -169,8 +171,8 @@ npm run dev
   "stays": [
     {
       "id": "0b7c…",              // 省略時匯入會自動產生
-      "country": "泰國",           // 可為空字串，但不可與 city 同時為空
-      "city": "清邁",
+      "country": "th",            // 見下方說明；可為空字串，但不可與 city 同時為空
+      "city": "Chiang Mai",
       "start": "2027-02-10",      // ISO 日期
       "end": "2027-03-07",        // 含當日，需 >= start
       "color": "teal",            // 選填：red orange yellow green teal blue purple pink
@@ -188,11 +190,20 @@ npm run dev
 }
 ```
 
+**國家與城市存的是與語言無關的值**，顯示時才依介面語言轉成名稱：
+
+| 欄位 | 清單內的 | 清單外的 |
+| --- | --- | --- |
+| `country` | 小寫 ISO 國碼（`th`、`jp`），或區域代號（`europe`、`southeast-asia`、`south-america`…） | 你輸入的文字，原樣保存 |
+| `city` | 該城市的英文名（`Chiang Mai`） | 你輸入的文字，原樣保存 |
+
+匯入時名稱也接受：`"country": "泰國"`、`"Thailand"`、`"city": "清邁"` 都會被辨識並轉成上面的形式。
+
 匯入時會做清理（`sanitize`）：格式不對、日期超出範圍、或與前面行程重疊的項目會被略過，不會讓整份檔案失敗。
 
 可用日期範圍是 2026-12-28 到 2028-01-02，也就是涵蓋 2027 年的完整 53 週。
 
-向下相容兩種舊格式：以週為單位的 `startWeek`／`endWeek`，以及單一欄位的 `location`（視為城市）。
+向下相容舊格式：以週為單位的 `startWeek`／`endWeek`、單一欄位的 `location`（視為城市），以及用名稱而非代碼儲存的國家與城市。
 
 ---
 
@@ -237,6 +248,7 @@ src/
     exportPng.ts        用 canvas 繪製 PNG
     files.ts            下載檔案
     util.ts             小工具
+    i18n.tsx            翻譯字典、目前語言、`t()`
   styles/base.css       設計變數、頁面底、按鈕與面板等共用樣式
 MVP.md                  產品規格與決策紀錄
 CLAUDE.md               給 Claude Code 的專案須知
@@ -262,9 +274,11 @@ CLAUDE.md               給 Claude Code 的專案須知
 
 **所有資料變更都經過同一個 `setStays`。** 它來自 `useHistory`，負責把舊狀態推進復原堆疊，因此新功能只要走這條路就自動支援復原。行程資料只由 `App.tsx` 持有；年檢視與月檢視各自管理自己的拖曳狀態，拖完才透過 callback 回報結果。
 
-**國家清單不是寫死的。** `lib/flags.ts` 用瀏覽器的 `Intl.DisplayNames` 產生台灣用語的國家名稱（約 260 個），再加上幾個區域選項（歐洲、東南亞、南美洲等）與常見別名。選單挑出來的是名稱字串，存檔時存的就是這個字串，不是代碼。欄位仍接受清單外的文字（為了相容舊資料與特殊情況），但會提示「不在國家清單內」。
+**國家清單不是寫死的，存的是代碼。** `lib/flags.ts` 用瀏覽器的 `Intl.DisplayNames` 產生約 260 個國家的中英文名稱，再加上幾個區域選項（歐洲、東南亞、南美洲等）與常見別名。行程裡存的是 ISO 國碼或區域代號，顯示時才轉成目前語言的名稱，所以切換語言不用改資料。欄位仍接受清單外的文字（為了相容舊資料與特殊情況），那種情況就原樣儲存，並提示「不在國家清單內」。
 
-**城市清單是手工整理的。** `lib/cities.ts` 內建約 330 個常被當作據點的城市，中英文名稱寫死在檔案裡，不是完整地名庫，也沒有座標。它只是輸入輔助：城市欄位接受任何文字，清單外的城市不會有任何警告。要增補城市，直接在該檔對應的國碼下加一筆 `['中文', 'English']`。國旗同樣由名稱對照出來；區域選項除了歐洲以外沒有旗。
+**城市清單是手工整理的。** `lib/cities.ts` 內建約 330 個常被當作據點的城市，中英文名稱寫死在檔案裡，不是完整地名庫，也沒有座標。清單內的城市以英文名儲存、依語言顯示；清單外的照輸入的文字儲存，不會有任何警告。要增補城市，直接在該檔對應的國碼下加一筆 `['中文', 'English']`。
+
+**翻譯層很小。** `lib/i18n.tsx` 是兩份字典加一個 `t(key, vars)`。目前語言放在 React 之外的模組變數，所以日期格式、PNG 匯出這些純函式也讀得到；元件呼叫一次 `useLocale()` 就會在切換語言時重繪。「如何使用」的內容是整段文章，兩種語言各寫一份，不拆成字典。
 
 **飛行時數是估算。** 依行程順序取相鄰兩地的直線距離，以時速 850 公里加每段 0.5 小時計算；300 公里內視為陸路不計。不含轉機，也不含從家出發與回家。
 
@@ -275,7 +289,8 @@ CLAUDE.md               給 Claude Code 的專案須知
 ## 已知限制
 
 - **年份寫死 2027。** 常數在 `lib/weeks.ts` 的 `YEAR`；假日資料也只有 2027 年
-- **介面只有繁體中文**
+- **介面語言只有繁體中文與英文**；README 與規格文件只有中文
+- **你自己輸入的文字不會翻譯**：清單外的國家／城市、備註、同行者，在兩種語言下都照原樣顯示
 - **以桌機為主。** 窄螢幕可用但未最佳化
 - **沒有自動化測試**
 - **月檢視不能整條拖曳搬移，也不能 `Alt` 拖曳複製**，只能拉兩端或進編輯視窗改日期
@@ -296,7 +311,7 @@ CLAUDE.md               給 Claude Code 的專案須知
 尚未排程，歡迎討論：
 
 - 年份可切換、多年度
-- 多語系
+- 更多語言、英文版 README
 - 城市資料庫與搜尋，取代純文字輸入
 - 季節資訊層：各地最佳月份、該避開的月份（例如清邁 11 月水燈節、2–3 月霾害）
 - 簽證停留天數計算（例如申根 90/180）
@@ -336,7 +351,7 @@ CLAUDE.md               給 Claude Code 的專案須知
 - 調整行程位置的邏輯請放在 `lib/storage.ts` 的純函式裡，並維持「行程不重疊」
 - 新元件放 `src/components/`，樣式寫在同名的 `.css` 並由該元件自己 import；跨元件共用的才放 `styles/base.css`
 - 新增會對外連線的功能，請在本文件的[資料與隱私](#資料與隱私)補上說明
-- 介面文字目前為繁體中文
+- 介面文字一律放進 `src/lib/i18n.tsx` 的字典，中英文都要補；不要在元件裡寫死字串
 - 功能有變動時，請同步更新 `README.md` 與 `MVP.md`（以及在慣例改變時更新 `CLAUDE.md`）。用 Claude Code 開發時，`.claude/hooks/docs-check.sh` 會在結束前檢查這件事
 
 ---

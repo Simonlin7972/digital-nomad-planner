@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { ChangeEvent, CSSProperties, FormEvent } from 'react';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { normalizeCity } from '../lib/cities';
+import { normalizeCountry } from '../lib/flags';
+import { daysText, t, useLocale } from '../lib/i18n';
 import { PALETTE, cleanTicket, colorKeyOf, defaultColor, overlaps, placeName, type ColorKey, type Stay, type Ticket } from '../lib/storage';
 import { TOTAL_DAYS, dayOfIso, daysOf, isoOfDay, rangeLabel, weeksLabel, type DayRange } from '../lib/weeks';
 import { CityCombobox, CountryCombobox } from './Combobox';
@@ -22,9 +25,12 @@ export function Editor(props: {
   onClose: () => void;
 }) {
   const { editing, stay, others, onSave, onDelete, onClose } = props;
+  useLocale();
   const [country, setCountry] = useState(stay?.country ?? '');
   const [city, setCity] = useState(stay?.city ?? '');
-  const place = { country: country.trim(), city: city.trim() };
+  // What will be stored: a typed name that matches the list becomes that listed place.
+  const placeCountry = normalizeCountry(country);
+  const place = { country: placeCountry, city: normalizeCity(placeCountry, city) };
   const hasPlace = Boolean(place.country || place.city);
   const countries = [...new Set(others.map((s) => s.country).filter(Boolean))];
   const usedCities = others.map((s) => ({ city: s.city, country: s.country }));
@@ -75,7 +81,7 @@ export function Editor(props: {
   const dates: DayRange = { startDay, endDay };
   const clash = others.find((o) => overlaps(o, dates));
   const range = clash ? null : dates;
-  const error = clash ? `與「${placeName(clash)}」（${rangeLabel(clash)}）重疊。` : '';
+  const error = clash ? t('editor.clash', { place: placeName(clash), range: rangeLabel(clash) }) : '';
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -96,28 +102,28 @@ export function Editor(props: {
   return (
     <div className="backdrop" onPointerDown={(e) => e.target === e.currentTarget && onClose()}>
       <form className="editor" onSubmit={submit}>
-        <h2>{stay ? '編輯行程' : '新增行程'}</h2>
+        <h2>{stay ? t('editor.edit') : t('editor.new')}</h2>
         <div className="dates place">
           <label>
-            國家
+            {t('editor.country')}
             <CountryCombobox value={country} onChange={setCountry} recent={countries} autoFocus />
           </label>
           <label>
-            城市
+            {t('editor.city')}
             <CityCombobox value={city} country={country} onChange={setCity} onPickCountry={setCountry} recent={usedCities} />
           </label>
         </div>
         <div className="field">
-          顏色
-          <div className="swatches" role="radiogroup" aria-label="顏色">
+          {t('editor.color')}
+          <div className="swatches" role="radiogroup" aria-label={t('editor.color')}>
             {PALETTE.map((c) => (
               <button
                 key={c.key}
                 type="button"
                 role="radio"
                 aria-checked={c.key === color}
-                aria-label={c.name}
-                title={c.name}
+                aria-label={t(`color.${c.key}`)}
+                title={t(`color.${c.key}`)}
                 className={`swatch${c.key === color ? ' selected' : ''}`}
                 style={{ background: c.hex }}
                 onClick={() => setPicked(c.key)}
@@ -127,12 +133,12 @@ export function Editor(props: {
         </div>
         <div className="dates">
           <div className="field">
-            開始日
-            <DatePicker {...planDates} value={isoOfDay(startDay)} onChange={(iso) => pickDay(iso, pickStart)} rangeWith={isoOfDay(endDay)} label="開始日" />
+            {t('editor.start')}
+            <DatePicker {...planDates} value={isoOfDay(startDay)} onChange={(iso) => pickDay(iso, pickStart)} rangeWith={isoOfDay(endDay)} label={t('editor.start')} />
           </div>
           <div className="field">
-            結束日
-            <DatePicker {...planDates} value={isoOfDay(endDay)} onChange={(iso) => pickDay(iso, pickEnd)} rangeWith={isoOfDay(startDay)} align="right" label="結束日" />
+            {t('editor.end')}
+            <DatePicker {...planDates} value={isoOfDay(endDay)} onChange={(iso) => pickDay(iso, pickEnd)} rangeWith={isoOfDay(startDay)} align="right" label={t('editor.end')} />
           </div>
         </div>
         {error ? (
@@ -140,16 +146,19 @@ export function Editor(props: {
         ) : (
           range && (
             <p className="range">
-              {rangeLabel(range)}・{daysOf(range)} 天（約 {weeksLabel(daysOf(range))}）
+              {t('editor.range', {
+                range: rangeLabel(range),
+                length: t('about', { days: daysText(daysOf(range)), weeks: weeksLabel(daysOf(range)) }),
+              })}
             </p>
           )
         )}
         <label>
-          跟誰去
+          {t('editor.companions')}
           <input
             value={companions}
             onChange={(e) => setCompanions(e.target.value)}
-            placeholder="例：自己、家人、Amy"
+            placeholder={t('editor.companionsPh')}
             list="known-companions"
             maxLength={60}
           />
@@ -169,25 +178,25 @@ export function Editor(props: {
             onClick={() => setHasTicket((on) => !on)}
           >
             <span className="knob" />
-            已買機票
+            {t('ticket.booked')}
           </button>
           {hasTicket && (
             <div className="ticket-fields">
               <label>
-                航空公司
-                <input {...ticketField('airline')} placeholder="例：長榮航空" />
+                {t('editor.airline')}
+                <input {...ticketField('airline')} placeholder={t('editor.airlinePh')} />
               </label>
               <label>
-                航班編號
-                <input {...ticketField('flightNo')} placeholder="例：BR211" />
+                {t('editor.flightNo')}
+                <input {...ticketField('flightNo')} placeholder={t('editor.flightNoPh')} />
               </label>
               <div className="field wide">
-                起飛時間
+                {t('editor.departure')}
                 <div className="date-time">
-                  <DatePicker value={depDate} onChange={(date) => setDeparture(date, depTime)} openAt={isoOfDay(startDay)} label="起飛日期" />
+                  <DatePicker value={depDate} onChange={(date) => setDeparture(date, depTime)} openAt={isoOfDay(startDay)} label={t('editor.depDate')} />
                   <input
                     type="time"
-                    aria-label="起飛時刻"
+                    aria-label={t('editor.depTime')}
                     value={depTime}
                     disabled={!depDate}
                     onChange={(e) => setDeparture(depDate, e.target.value)}
@@ -195,32 +204,32 @@ export function Editor(props: {
                 </div>
               </div>
               <label>
-                訂位代號
-                <input {...ticketField('bookingRef')} placeholder="例：ABC123" />
+                {t('editor.bookingRef')}
+                <input {...ticketField('bookingRef')} placeholder={t('editor.bookingRefPh')} />
               </label>
               <label>
-                票價
-                <input {...ticketField('price')} placeholder="例：NT$ 8,500" />
+                {t('editor.fare')}
+                <input {...ticketField('price')} placeholder={t('editor.farePh')} />
               </label>
             </div>
           )}
         </div>
         <label>
-          備註
-          <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="例：回台過年、朋友婚禮" rows={3} maxLength={300} />
+          {t('editor.note')}
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('editor.notePh')} rows={3} maxLength={300} />
         </label>
         <div className="buttons">
           {stay && (
             <button type="button" className="danger" onClick={onDelete}>
-              刪除
+              {t('editor.delete')}
             </button>
           )}
           <span className="spacer" />
           <button type="button" onClick={onClose}>
-            取消
+            {t('editor.cancel')}
           </button>
           <button type="submit" className="primary" disabled={!hasPlace || !range}>
-            儲存
+            {t('editor.save')}
           </button>
         </div>
       </form>

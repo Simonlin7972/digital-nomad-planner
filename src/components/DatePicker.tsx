@@ -3,6 +3,8 @@ import type { KeyboardEvent } from 'react';
 import { CalendarBlank } from '@phosphor-icons/react/dist/csr/CalendarBlank';
 import { CaretLeft } from '@phosphor-icons/react/dist/csr/CaretLeft';
 import { CaretRight } from '@phosphor-icons/react/dist/csr/CaretRight';
+import { t, useLocale } from '../lib/i18n';
+import { fullDate, monthTitle, weekdayHeaders } from '../lib/weeks';
 import './DatePicker.css';
 
 type Props = {
@@ -17,7 +19,6 @@ type Props = {
   label: string; // accessible name of the field
 };
 
-const WEEKDAYS = ['一', '二', '三', '四', '五', '六', '日'];
 const pad = (n: number) => String(n).padStart(2, '0');
 const toIso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 function fromIso(iso: string | undefined): Date | null {
@@ -27,7 +28,8 @@ function fromIso(iso: string | undefined): Date | null {
 const monthStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 
 // A date field with our own calendar instead of the browser's. Weeks start on Monday, like the rest of the app.
-export function DatePicker({ value, onChange, min, max, rangeWith, openAt, align = 'left', placeholder = '選擇日期', label }: Props) {
+export function DatePicker({ value, onChange, min, max, rangeWith, openAt, align = 'left', placeholder, label }: Props) {
+  useLocale();
   const selected = fromIso(value);
   const [open, setOpen] = useState(false);
   const [shown, setShown] = useState(() => monthStart(selected ?? fromIso(openAt) ?? fromIso(min) ?? new Date()));
@@ -110,25 +112,25 @@ export function DatePicker({ value, onChange, min, max, rangeWith, openAt, align
         onClick={toggle}
       >
         <span className={selected ? undefined : 'empty'}>
-          {selected ? `${selected.getFullYear()}/${selected.getMonth() + 1}/${selected.getDate()}（${WEEKDAYS[(selected.getDay() + 6) % 7]}）` : placeholder}
+          {selected ? fullDate(selected) : (placeholder ?? t('date.placeholder'))}
         </span>
         <CalendarBlank size={16} weight="bold" />
       </button>
       {open && (
         <div className={`datepicker-pop ${align}`} id={popId} role="dialog" aria-label={label}>
           <div className="datepicker-head">
-            <button type="button" onClick={() => setShown(prevMonth)} disabled={!canPrev} aria-label="上個月">
+            <button type="button" onClick={() => setShown(prevMonth)} disabled={!canPrev} aria-label={t('month.prev')}>
               <CaretLeft size={14} weight="bold" />
             </button>
             <strong>
-              {shown.getFullYear()} 年 {shown.getMonth() + 1} 月
+              {monthTitle(shown.getFullYear(), shown.getMonth())}
             </strong>
-            <button type="button" onClick={() => setShown(nextMonth)} disabled={!canNext} aria-label="下個月">
+            <button type="button" onClick={() => setShown(nextMonth)} disabled={!canNext} aria-label={t('month.next')}>
               <CaretRight size={14} weight="bold" />
             </button>
           </div>
           <div className="datepicker-weekdays">
-            {WEEKDAYS.map((d) => (
+            {weekdayHeaders().map((d) => (
               <span key={d}>{d}</span>
             ))}
           </div>

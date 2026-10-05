@@ -1,3 +1,6 @@
+import { cityLabel, normalizeCity } from './cities';
+import { countryLabel, normalizeCountry } from './flags';
+import { t } from './i18n';
 import { TOTAL_DAYS, WEEK_COUNT, YEAR, dayOfIso, isoOfDay, type DayRange } from './weeks';
 
 // Flight booked for getting to a stay. Every field is optional free text; the object existing means "booked".
@@ -15,19 +18,22 @@ export function cleanTicket(raw: unknown): Ticket | undefined {
 }
 
 // Human-readable lines for a ticket, for the info card.
-export function ticketLines(t: Ticket): string[] {
+export function ticketLines(ticket: Ticket): string[] {
   const lines = [
-    [t.airline, t.flightNo].filter(Boolean).join(' '),
-    t.departure && `起飛 ${t.departure.replace('T', ' ').replace(/-/g, '/')}`,
-    t.bookingRef && `訂位代號 ${t.bookingRef}`,
-    t.price && `票價 ${t.price}`,
+    [ticket.airline, ticket.flightNo].filter(Boolean).join(' '),
+    ticket.departure && t('ticket.departs', { time: ticket.departure.replace('T', ' ').replace(/-/g, '/') }),
+    ticket.bookingRef && t('ticket.ref', { ref: ticket.bookingRef }),
+    ticket.price && t('ticket.fare', { fare: ticket.price }),
   ].filter((l): l is string => Boolean(l));
-  return lines.length ? lines : ['尚未填寫細節'];
+  return lines.length ? lines : [t('ticket.none')];
 }
 
 export type Stay = DayRange & {
   id: string;
-  country: string; // either may be empty, but not both
+  // Either may be empty, but not both. Listed places are stored in a language-neutral form — an ISO code or
+  // region id for the country, the English name for the city — and anything else as the user typed it.
+  // Use countryOf / cityOf / placeName / placeFull to show them.
+  country: string;
   city: string;
   color?: ColorKey;
   companions?: string; // who the trip is with, free text
@@ -183,9 +189,10 @@ export function sanitize(data: unknown): Stay[] {
   const out: Stay[] = [];
   for (const s of raw) {
     if (!s || typeof s !== 'object') continue;
-    const country = typeof s.country === 'string' ? s.country.trim() : '';
+    // Older files hold names ("泰國", "清邁") rather than codes; normalising accepts both.
+    const country = normalizeCountry(typeof s.country === 'string' ? s.country : '');
     // Files from before the country/city split had a single `location`.
-    const city = (typeof s.city === 'string' ? s.city : typeof s.location === 'string' ? s.location : '').trim();
+    const city = normalizeCity(country, typeof s.city === 'string' ? s.city : typeof s.location === 'string' ? s.location : '');
     const range = rangeOf(s);
     if ((!country && !city) || !range || range.startDay > range.endDay || range.endDay >= TOTAL_DAYS) continue;
     const stay: Stay = {
@@ -222,15 +229,16 @@ export function save(stays: Stay[]) {
   }
 }
 
+// Colour names for display come from the dictionary: t(`color.${key}`).
 export const PALETTE = [
-  { key: 'red', name: '紅', hex: '#cf4b45' },
-  { key: 'orange', name: '橘', hex: '#d97a1e' },
-  { key: 'yellow', name: '黃', hex: '#a8841f' },
-  { key: 'green', name: '綠', hex: '#4a9d5b' },
-  { key: 'teal', name: '青', hex: '#2a9d8f' },
-  { key: 'blue', name: '藍', hex: '#3b82c4' },
-  { key: 'purple', name: '紫', hex: '#7c5cc4' },
-  { key: 'pink', name: '粉', hex: '#c2548f' },
+  { key: 'red', hex: '#cf4b45' },
+  { key: 'orange', hex: '#d97a1e' },
+  { key: 'yellow', hex: '#a8841f' },
+  { key: 'green', hex: '#4a9d5b' },
+  { key: 'teal', hex: '#2a9d8f' },
+  { key: 'blue', hex: '#3b82c4' },
+  { key: 'purple', hex: '#7c5cc4' },
+  { key: 'pink', hex: '#c2548f' },
 ] as const;
 
 export type ColorKey = (typeof PALETTE)[number]['key'];
@@ -245,11 +253,17 @@ function hashColor(name: string): ColorKey {
 
 type Place = Pick<Stay, 'country' | 'city'>;
 
+// A stay's country and city as shown to the user, in the current language.
+export const countryOf = (p: Place) => countryLabel(p.country);
+export const cityOf = (p: Place) => cityLabel(p.country, p.city);
 // Short label for tight spaces (the city, or the country when no city is set).
-export const placeName = (p: Place) => p.city || p.country;
-export const placeFull = (p: Place) => [p.country, p.city].filter(Boolean).join('・');
+export const placeName = (p: Place) => cityOf(p) || countryOf(p);
+export const placeFull = (p: Place) => [countryOf(p), cityOf(p)].filter(Boolean).join(t('sep'));
 
-export const colorKeyOf = (stay: Place & Pick<Stay, 'color'>): ColorKey => stay.color ?? hashColor(placeFull(stay));
+// The stored values, not the labels, so a stay's fallback colour doesn't change with the language.
+const placeKey = (p: Place) => `${p.country}/${p.city}`;
+
+export const colorKeyOf = (stay: Place & Pick<Stay, 'color'>): ColorKey => stay.color ?? hashColor(placeKey(stay));
 
 export const colorOf = (stay: Place & Pick<Stay, 'color'>): string =>
   PALETTE.find((c) => c.key === colorKeyOf(stay))!.hex;
@@ -257,5 +271,5 @@ export const colorOf = (stay: Place & Pick<Stay, 'color'>): string =>
 // Suggested colour for a place: reuse what the same place already has, otherwise pick one from its name.
 export function defaultColor(place: Place, stays: Stay[]): ColorKey {
   const same = stays.find((s) => s.country === place.country && s.city === place.city);
-  return same ? colorKeyOf(same) : hashColor(placeFull(place));
+  return same ? colorKeyOf(same) : hashColor(placeKey(place));
 }

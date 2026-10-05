@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Ticket as TicketIcon } from '@phosphor-icons/react/dist/csr/Ticket';
 import type { Holiday, HolidaySet } from '../lib/holidays';
+import { daysText, t } from '../lib/i18n';
 import { placeFull, ticketLines, type Stay } from '../lib/storage';
 import { clamp } from '../lib/util';
 import { daysOf, longRangeLabel, weeksLabel } from '../lib/weeks';
@@ -29,13 +30,13 @@ export function StayCard({ stay, ...anchor }: Anchor & { stay: Stay }) {
       </strong>
       <span>{longRangeLabel(stay)}</span>
       <span>
-        {daysOf(stay)} 天（約 {weeksLabel(daysOf(stay))}）
+        {t('about', { days: daysText(daysOf(stay)), weeks: weeksLabel(daysOf(stay)) })}
       </span>
-      {stay.companions && <span>跟 {stay.companions}</span>}
+      {stay.companions && <span>{t('with', { who: stay.companions })}</span>}
       {stay.ticket && (
         <span className="with-icon">
           <TicketIcon size={14} weight="bold" />
-          已買機票
+          {t('ticket.booked')}
         </span>
       )}
       {stay.note && <span className="note">{stay.note}</span>}
@@ -47,7 +48,7 @@ export function TicketCard({ stay, ...anchor }: Anchor & { stay: Stay }) {
   if (!stay.ticket) return null;
   return (
     <Card {...anchor}>
-      <span className="set">機票・{placeFull(stay)}</span>
+      <span className="set">{t('ticket.title', { place: placeFull(stay) })}</span>
       {ticketLines(stay.ticket).map((line, i) => (i === 0 ? <strong key={line}>{line}</strong> : <span key={line}>{line}</span>))}
     </Card>
   );
@@ -62,7 +63,7 @@ export function HolidayCard({ holiday, set, ...anchor }: Anchor & { holiday: Hol
       <strong>{holiday.name}</strong>
       <span>
         {longRangeLabel(holiday)}
-        {daysOf(holiday) > 1 && `・${daysOf(holiday)} 天`}
+        {daysOf(holiday) > 1 && `${t('sep')}${daysText(daysOf(holiday))}`}
       </span>
       {holiday.note && <span className="note">{holiday.note}</span>}
     </Card>

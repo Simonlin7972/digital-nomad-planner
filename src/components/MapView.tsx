@@ -4,6 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 // Let Vite bundle the worker; MapLibre's own lookup breaks once the library is pre-bundled.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import type { LngLat } from '../lib/geocode';
+import { t, useLocale } from '../lib/i18n';
 import { colorOf, placeFull, placeName, type Stay } from '../lib/storage';
 import { placeQuery, type Coords } from '../hooks/useCoords';
 import { daysOf, rangeLabel, weeksLabel } from '../lib/weeks';
@@ -17,6 +18,7 @@ const ROUTE = 'route';
 const queryOf = placeQuery;
 
 export default function MapView({ stays, coords, failed }: { stays: Stay[]; coords: Coords; failed: boolean }) {
+  const locale = useLocale();
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markers = useRef<maplibregl.Marker[]>([]);
@@ -120,16 +122,17 @@ export default function MapView({ stays, coords, failed }: { stays: Stay[]; coor
       map.fitBounds(bounds, { padding: 64, maxZoom: 6, duration: 600 });
     }
     fitted.current = key;
-  }, [places, stays, coords, ready]);
+    // locale: the pin titles and popups are built as plain DOM, so they have to be rebuilt to change language
+  }, [places, stays, coords, ready, locale]);
 
   return (
     <>
       <div ref={container} className="map" />
       <p className="map-status">
-        {places.length === 0 && '排好行程後，去過的地方會出現在地圖上。'}
-        {pending.length > 0 && !failed && `查詢座標中…（剩 ${pending.length} 個地點）`}
-        {failed && '座標查詢失敗，請檢查網路後重新整理。'}
-        {missing.length > 0 && ` 找不到：${missing.join('、')}（試試改用英文或更完整的名稱）`}
+        {places.length === 0 && t('map.empty')}
+        {pending.length > 0 && !failed && t('map.pending', { n: pending.length })}
+        {failed && t('map.failed')}
+        {missing.length > 0 && ` ${t('map.missing', { places: missing.join(t('list')) })}`}
       </p>
     </>
   );

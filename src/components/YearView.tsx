@@ -3,7 +3,8 @@ import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import { usePinchZoom } from '../hooks/usePinchZoom';
 import type { Zoom } from '../hooks/useZoom';
 import type { Holiday, HolidaySet } from '../lib/holidays';
-import { colorOf, insertStay, placeName, pushStays, reorderStays, type Stay } from '../lib/storage';
+import { t, useLocale } from '../lib/i18n';
+import { colorOf, countryOf, insertStay, placeName, pushStays, reorderStays, type Stay } from '../lib/storage';
 import { clamp } from '../lib/util';
 import {
   MONTHS,
@@ -13,6 +14,7 @@ import {
   currentWeekIndex,
   dayOfBoundary,
   daysOf,
+  monthName,
   rangeLabel,
   slotsOf,
   weeksLabel,
@@ -59,6 +61,7 @@ const stayCol = (r: DayRange) => {
 // The year at a glance: one horizontal timeline of 53 weeks, each split into two half-week slots.
 export default function YearView(props: Props) {
   const { stays, zoom, holidaySets, pending, onCreate, onEdit, onChange, onOpenMonth, onHoverStay, onHoverHoliday, onDragging } = props;
+  useLocale();
   const [drag, setDrag] = useState<Drag | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const thisWeek = useMemo(() => currentWeekIndex(), []);
@@ -239,13 +242,13 @@ export default function YearView(props: Props) {
         : stays;
 
   // One strip per country under the stays; back-to-back stays in the same country share a strip.
-  const countryBars: { id: string; country: string; color: string; s: number; e: number }[] = [];
+  const countryBars: { id: string; country: string; city: string; color: string; s: number; e: number }[] = [];
   for (const stay of [...visible].sort((a, b) => a.startDay - b.startDay)) {
     if (!stay.country) continue;
     const { s, e } = slotsOf(stay);
     const last = countryBars[countryBars.length - 1];
     if (last && last.country === stay.country && last.e === s) last.e = e;
-    else countryBars.push({ id: stay.id, country: stay.country, color: colorOf(stay), s, e });
+    else countryBars.push({ id: stay.id, country: stay.country, city: '', color: colorOf(stay), s, e });
   }
 
   return (
@@ -257,11 +260,11 @@ export default function YearView(props: Props) {
           onPointerMove={onPanMove}
           onPointerUp={onPanEnd}
           onPointerCancel={onPanEnd}
-          title="拖曳可左右移動時間軸，點月份可看該月"
+          title={t('year.panHint')}
         >
           {MONTHS.map((m) => (
             <div key={m.month} className="month" data-month={m.month} style={{ gridColumn: `${m.startIndex * 2 + 1} / span ${m.span * 2}` }}>
-              {m.month + 1} 月
+              {monthName(m.month)}
             </div>
           ))}
         </div>
@@ -323,7 +326,7 @@ export default function YearView(props: Props) {
                 <span className="handle" data-edge="l" />
                 <span className="label">
                   <strong>{placeName(s)}</strong>
-                  <small>{s.id === activeId ? rangeLabel(s) : `${weeks}${s.note ? `・${s.note.replace(/\s+/g, ' ')}` : ''}`}</small>
+                  <small>{s.id === activeId ? rangeLabel(s) : `${weeks}${s.note ? `${t('sep')}${s.note.replace(/\s+/g, ' ')}` : ''}`}</small>
                 </span>
                 <span className="handle" data-edge="r" />
               </div>
@@ -331,7 +334,7 @@ export default function YearView(props: Props) {
           })}
           {drag?.kind === 'select' && (
             <div className="selection" style={slotCol(drag.lo, drag.hi + 1)}>
-              {(drag.hi - drag.lo + 1) / 2} 週
+              {t('unit.weeks', { n: (drag.hi - drag.lo + 1) / 2 })}
             </div>
           )}
           {pending && <div className="selection" style={stayCol(pending)} />}
@@ -343,10 +346,10 @@ export default function YearView(props: Props) {
                 key={bar.id}
                 className="country-bar"
                 style={{ ...slotCol(bar.s, bar.e), '--c': bar.color } as CSSProperties}
-                title={bar.country}
+                title={countryOf(bar)}
               >
                 <Flag country={bar.country} />
-                <span>{bar.country}</span>
+                <span>{countryOf(bar)}</span>
               </div>
             ))}
           </div>

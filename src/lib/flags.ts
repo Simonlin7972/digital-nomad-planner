@@ -1,21 +1,25 @@
-// Country names: the list offered in the editor, and the mapping from a (possibly free-text) name to the
-// ISO code used by the flag-icons classes. Names come from the browser's own locale data, in Taiwan usage.
+// Countries: the list offered in the editor, how a stay's country is stored, and how it is shown.
+//
+// A stay stores its country as a lower-case ISO code ("th") when it is a listed country, as a region id
+// ("south-america") for the few broader areas, and otherwise as whatever text was typed. Names are produced
+// from the browser's own locale data, so they follow the current language.
+import { getLocale, type Locale } from './i18n';
 
 export type CountryOption = {
-  name: string; // what gets stored on a stay, e.g. "泰國"
-  en: string;
-  code: string | null; // lower-case ISO code for the flag; null for regions without one
-  keywords: string[]; // extra lower-case terms that should find this option
+  value: string; // what gets stored on a stay
+  name: string; // shown, in the current language
+  sub: string; // the name in the other language
+  code: string | null; // ISO code for the flag; null where there is none
 };
 
-// Other spellings people type. Keys are lower-case; they resolve flags for free text and feed the search.
+type Entry = { value: string; code: string | null; zh: string; en: string; keywords: string[] };
+
+// Other spellings people type. Keys are lower-case; values are entry values.
 const ALIASES: Record<string, string> = {
-  歐盟: 'eu',
-  europe: 'eu',
+  歐盟: 'europe',
+  eu: 'europe',
   韓國: 'kr',
-  南韓: 'kr',
   korea: 'kr',
-  北韓: 'kp',
   澳大利亞: 'au',
   新西蘭: 'nz',
   usa: 'us',
@@ -40,27 +44,28 @@ const ALIASES: Record<string, string> = {
 };
 
 // Shorter everyday names than the official ones the locale data gives.
-const NAME_OVERRIDES: Record<string, string> = { HK: '香港', MO: '澳門' };
+const ZH_OVERRIDES: Record<string, string> = { HK: '香港', MO: '澳門' };
+const EN_OVERRIDES: Record<string, string> = { HK: 'Hong Kong', MO: 'Macau' };
 
-// Codes the locale data knows that are not places you can plan a stay in: retired or duplicate codes,
-// military outposts, pseudo-locales, and blocs (Europe is offered as a region below instead).
-const NOT_COUNTRIES = new Set(['AC', 'CP', 'CQ', 'DG', 'EA', 'EU', 'EZ', 'FX', 'IC', 'QO', 'SU', 'TA', 'UN', 'XA', 'XB', 'ZZ']);
+// Codes the locale data knows that are not places you can plan a stay in: military outposts, pseudo-locales
+// and blocs (Europe is offered as a region below instead).
+const NOT_COUNTRIES = new Set(['AC', 'CP', 'CQ', 'DG', 'EA', 'EU', 'EZ', 'IC', 'QO', 'TA', 'UN', 'XA', 'XB', 'ZZ']);
 
 // Broader areas, for stays that are not pinned to one country.
-const REGIONS: CountryOption[] = [
-  { name: '歐洲', en: 'Europe', code: 'eu', keywords: ['歐盟', 'eu'] },
-  { name: '亞洲', en: 'Asia', code: null, keywords: [] },
-  { name: '東南亞', en: 'Southeast Asia', code: null, keywords: [] },
-  { name: '中東', en: 'Middle East', code: null, keywords: [] },
-  { name: '北美洲', en: 'North America', code: null, keywords: [] },
-  { name: '中美洲', en: 'Central America', code: null, keywords: [] },
-  { name: '南美洲', en: 'South America', code: null, keywords: [] },
-  { name: '非洲', en: 'Africa', code: null, keywords: [] },
-  { name: '大洋洲', en: 'Oceania', code: null, keywords: [] },
+const REGIONS: Entry[] = [
+  { value: 'europe', code: 'eu', zh: '歐洲', en: 'Europe', keywords: [] },
+  { value: 'asia', code: null, zh: '亞洲', en: 'Asia', keywords: [] },
+  { value: 'southeast-asia', code: null, zh: '東南亞', en: 'Southeast Asia', keywords: [] },
+  { value: 'middle-east', code: null, zh: '中東', en: 'Middle East', keywords: [] },
+  { value: 'north-america', code: null, zh: '北美洲', en: 'North America', keywords: [] },
+  { value: 'central-america', code: null, zh: '中美洲', en: 'Central America', keywords: [] },
+  { value: 'south-america', code: null, zh: '南美洲', en: 'South America', keywords: [] },
+  { value: 'africa', code: null, zh: '非洲', en: 'Africa', keywords: [] },
+  { value: 'oceania', code: null, zh: '大洋洲', en: 'Oceania', keywords: [] },
 ];
 
-// Shown at the top of the unfiltered list, ahead of the stroke-ordered full list.
-const COMMON = ['台灣', '日本', '南韓', '泰國', '越南', '馬來西亞', '印尼', '新加坡', '澳洲', '美國', '葡萄牙', '西班牙'];
+// Shown at the top of the unfiltered list, ahead of the alphabetical full list.
+const COMMON = ['tw', 'jp', 'kr', 'th', 'vn', 'my', 'id', 'sg', 'au', 'us', 'pt', 'es'];
 
 // The locale data still names retired codes (DD East Germany, VD North Vietnam, BU Burma…), often with the
 // same name as their successor. Canonicalising a locale replaces those, so a code that changes is not current.
@@ -72,84 +77,113 @@ function isCurrentCode(upper: string): boolean {
   }
 }
 
-type Data = { options: CountryOption[]; codeByName: Map<string, string> };
+type Data = { entries: Entry[]; byValue: Map<string, Entry>; byName: Map<string, Entry> };
 let data: Data | null = null;
 
 function build(): Data {
-  const options: CountryOption[] = [];
-  const codeByName = new Map<string, string>();
+  const entries: Entry[] = [];
   const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   try {
     const names = (locale: string) => new Intl.DisplayNames([locale], { type: 'region', fallback: 'none' });
     const zhTW = names('zh-Hant-TW');
     const zhCN = names('zh-Hans');
-    const en = names('en');
+    const english = names('en');
     for (const a of A) {
       for (const b of A) {
         const upper = a + b;
         const zh = zhTW.of(upper);
-        const english = en.of(upper);
-        if (!zh || !english || NOT_COUNTRIES.has(upper) || !isCurrentCode(upper)) continue;
+        const en = english.of(upper);
+        if (!zh || !en || NOT_COUNTRIES.has(upper) || !isCurrentCode(upper)) continue;
         const code = upper.toLowerCase();
-        const name = NAME_OVERRIDES[upper] ?? zh;
-        const simplified = zhCN.of(upper);
-        const keywords = [zh, simplified ?? '', code].map((k) => k.toLowerCase());
-        options.push({ name, en: english, code, keywords });
-        for (const key of [name, zh, english, simplified ?? '']) {
-          if (key && !codeByName.has(key.toLowerCase())) codeByName.set(key.toLowerCase(), code);
-        }
+        entries.push({
+          value: code,
+          code,
+          zh: ZH_OVERRIDES[upper] ?? zh,
+          en: EN_OVERRIDES[upper] ?? en,
+          // The official names stay searchable where a shorter one is shown, as does the Simplified name.
+          keywords: [zh, en, zhCN.of(upper) ?? ''].map((k) => k.toLowerCase()),
+        });
       }
     }
   } catch {
-    // Intl.DisplayNames unavailable: only regions and aliases remain, and the field still accepts free text
+    // Intl.DisplayNames unavailable: only the regions remain, and the field still accepts free text
   }
-  for (const [alias, code] of Object.entries(ALIASES)) {
-    codeByName.set(alias, code);
-    options.find((o) => o.code === code)?.keywords.push(alias);
+  entries.push(...REGIONS);
+
+  const byValue = new Map(entries.map((e) => [e.value, e]));
+  const byName = new Map<string, Entry>();
+  for (const e of entries) {
+    for (const key of [e.zh, e.en, ...e.keywords]) {
+      if (key && !byName.has(key.toLowerCase())) byName.set(key.toLowerCase(), e);
+    }
   }
-  options.sort((x, y) => x.name.localeCompare(y.name, 'zh-Hant-TW'));
-  for (const region of REGIONS) {
-    options.push(region);
-    if (region.code) codeByName.set(region.name.toLowerCase(), region.code);
+  for (const [alias, value] of Object.entries(ALIASES)) {
+    const entry = byValue.get(value);
+    if (!entry) continue;
+    byName.set(alias, entry);
+    entry.keywords.push(alias);
   }
-  return { options, codeByName };
+  return { entries, byValue, byName };
 }
 
 const get = () => (data ??= build());
 
+// The entry a stored value or a typed name refers to, if any.
+function find(country: string): Entry | undefined {
+  const key = country.trim().toLowerCase();
+  const { byValue, byName } = get();
+  return byValue.get(key) ?? byName.get(key);
+}
+
+const nameIn = (e: Entry, locale: Locale) => (locale === 'en' ? e.en : e.zh);
+
+// What to store for a typed or picked country: its code or region id when recognised, else the text itself.
+export function normalizeCountry(country: string): string {
+  return find(country)?.value ?? country.trim();
+}
+
+// What to show for a stored country, in the given language (the current one by default).
+export function countryLabel(country: string, locale: Locale = getLocale()): string {
+  const entry = find(country);
+  return entry ? nameIn(entry, locale) : country;
+}
+
 export function flagCode(country: string): string | null {
-  return get().codeByName.get(country.trim().toLowerCase()) ?? null;
+  return find(country)?.code ?? null;
 }
 
-// The listed (Chinese) name for an ISO code, e.g. "th" -> "泰國".
-export function countryNameOf(code: string): string | null {
-  return get().options.find((o) => o.code === code && o.keywords.includes(code))?.name ?? null;
-}
-
-export function isListedCountry(name: string): boolean {
-  return get().options.some((o) => o.name === name.trim());
+export function isListedCountry(country: string): boolean {
+  return Boolean(find(country));
 }
 
 // Options for the country picker. An empty query lists everything: countries already in the plan, then a few
-// common ones, then the rest;
-// otherwise matches on the Chinese name, English name, code or an alias, best matches first.
+// common ones, then the rest in name order; otherwise matches on the name in either language, the code or an
+// alias, best matches first.
 export function searchCountries(query: string, recent: string[]): CountryOption[] {
-  const { options } = get();
+  const locale = getLocale();
+  const { entries, byValue } = get();
+  const other: Locale = locale === 'en' ? 'zh' : 'en';
+  const option = (e: Entry): CountryOption => ({ value: e.value, name: nameIn(e, locale), sub: nameIn(e, other), code: e.code });
+
   const q = query.trim().toLowerCase();
   if (!q) {
-    const first = [...new Set([...recent, ...COMMON])].flatMap((name) => options.find((o) => o.name === name) ?? []);
-    return [...first, ...options.filter((o) => !first.includes(o))];
+    const first = [...new Set([...recent.map(normalizeCountry), ...COMMON])].flatMap((v) => byValue.get(v) ?? []);
+    const regions = entries.filter((e) => REGIONS.includes(e) && !first.includes(e));
+    const rest = entries
+      .filter((e) => !first.includes(e) && !REGIONS.includes(e))
+      .sort((x, y) => nameIn(x, locale).localeCompare(nameIn(y, locale), locale === 'en' ? 'en' : 'zh-Hant-TW'));
+    return [...first, ...rest, ...regions].map(option);
   }
-  const rank = (o: CountryOption) => {
-    const terms = [o.name.toLowerCase(), o.en.toLowerCase(), ...o.keywords];
-    if (terms.some((t) => t === q)) return 0;
-    if (terms.some((t) => t.startsWith(q))) return 1;
-    if (terms.some((t) => t.includes(q))) return 2;
+  const rank = (e: Entry) => {
+    const terms = [e.zh.toLowerCase(), e.en.toLowerCase(), e.value, ...e.keywords];
+    if (terms.some((term) => term === q)) return 0;
+    if (terms.some((term) => term.startsWith(q))) return 1;
+    if (terms.some((term) => term.includes(q))) return 2;
     return -1;
   };
-  return options
-    .map((o) => ({ o, r: rank(o) }))
+  return entries
+    .map((e) => ({ e, r: rank(e) }))
     .filter((x) => x.r >= 0)
     .sort((x, y) => x.r - y.r)
-    .map((x) => x.o);
+    .map((x) => option(x.e));
 }

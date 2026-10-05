@@ -1,3 +1,5 @@
+import { getLocale, t } from './i18n';
+
 export const YEAR = 2027;
 
 export type Week = {
@@ -44,7 +46,31 @@ export const MONTHS: MonthSpan[] = WEEKS.reduce<MonthSpan[]>((acc, w) => {
 }, []);
 
 const pad = (n: number) => String(n).padStart(2, '0');
-const fmt = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;
+const EN_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const EN_MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const EN_WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const ZH_WEEKDAYS = ['一', '二', '三', '四', '五', '六', '日'];
+
+// All date text goes through these, so it follows the current language: "1/4" or "Jan 4".
+const fmt = (d: Date) => (getLocale() === 'en' ? `${EN_MONTHS[d.getMonth()]} ${d.getDate()}` : `${d.getMonth() + 1}/${d.getDate()}`);
+
+// Monday-first weekday names; `index` 0 is Monday.
+export const weekdayName = (index: number) => (getLocale() === 'en' ? EN_WEEKDAYS : ZH_WEEKDAYS)[index];
+// Column headers for calendars: 一 … 日, or Mo … Su.
+export const weekdayHeaders = () => (getLocale() === 'en' ? EN_WEEKDAYS.map((d) => d.slice(0, 2)) : ZH_WEEKDAYS);
+
+// "2 月" / "Feb": the short label on the timeline and in headings.
+export const monthName = (month: number) => (getLocale() === 'en' ? EN_MONTHS[month] : `${month + 1} 月`);
+// "2027 年 2 月" / "February 2027": the title of a calendar page.
+export const monthTitle = (year: number, month: number) =>
+  getLocale() === 'en' ? `${EN_MONTHS_LONG[month]} ${year}` : `${year} 年 ${month + 1} 月`;
+// "2027/7/5（一）" / "Jul 5, 2027 (Mon)": one date written out in full.
+export function fullDate(d: Date): string {
+  const weekday = weekdayName((d.getDay() + 6) % 7);
+  return getLocale() === 'en'
+    ? `${EN_MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()} (${weekday})`
+    : `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}（${weekday}）`;
+}
 
 export function isoOfDay(day: number): string {
   const d = addDays(DAY0, day);
@@ -80,8 +106,7 @@ export function rangeLabel(r: DayRange): string {
   return `${fmt(addDays(DAY0, r.startDay))} – ${fmt(addDays(DAY0, r.endDay))}`;
 }
 
-const WEEKDAYS = '一二三四五六日';
-const fmtLong = (day: number) => `${fmt(addDays(DAY0, day))}(${WEEKDAYS[day % 7]})`;
+const fmtLong = (day: number) => `${fmt(addDays(DAY0, day))}${getLocale() === 'en' ? ' ' : ''}(${weekdayName(day % 7)})`;
 
 // Like rangeLabel, with weekdays; a single day isn't repeated.
 export function longRangeLabel(r: DayRange): string {
@@ -106,7 +131,7 @@ export function todayIndex(now = new Date()): number | null {
 export const daysOf = (r: DayRange) => r.endDay - r.startDay + 1;
 
 export function weeksLabel(days: number): string {
-  return `${days <= 0 ? 0 : Math.max(0.5, Math.round(days / 3.5) / 2)} 週`;
+  return t('unit.weeks', { n: days <= 0 ? 0 : Math.max(0.5, Math.round(days / 3.5) / 2) });
 }
 
 export function currentWeekIndex(now = new Date()): number | null {

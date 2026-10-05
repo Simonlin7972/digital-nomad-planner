@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import { geocode, loadGeocodeCache, type LngLat } from '../lib/geocode';
+import { cityLabel } from '../lib/cities';
+import { countryLabel } from '../lib/flags';
 import type { Stay } from '../lib/storage';
 
 export type Coords = Record<string, LngLat | null>;
 
 // The text sent to the geocoder, and the key a place's coordinates are stored under.
-export const placeQuery = (s: Pick<Stay, 'country' | 'city'>) => [s.city, s.country].filter(Boolean).join(', ');
+// Always the English names for listed places, so the lookup and its cache don't depend on the UI language.
+export const placeQuery = (s: Pick<Stay, 'country' | 'city'>) =>
+  [cityLabel(s.country, s.city, 'en'), countryLabel(s.country, 'en')].filter(Boolean).join(', ');
 
 // Coordinates for every place in the plan, looked up (and cached) as places appear.
 export function useCoords(stays: Stay[]): { coords: Coords; failed: boolean } {

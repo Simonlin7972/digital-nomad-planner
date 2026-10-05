@@ -51,6 +51,8 @@
 .stays .edit:focus-visible { opacity: 1; }
 @media (hover: none) { .stays .edit { opacity: 1; } }
 .stays .when { flex: none; width: 176px; color: var(--muted); font-variant-numeric: tabular-nums; }
+/* English dates ("Dec 28 (Mon) – Jan 12 (Tue)") run wider */
+:root[lang='en'] .stays .when { width: 238px; }
 .stays li > * { flex: none; }
 .stays .city { color: var(--text); }
 .stays .city.lead { font-weight: 600; }

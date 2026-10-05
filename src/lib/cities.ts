@@ -1,8 +1,10 @@
-import { countryNameOf, flagCode } from './flags';
+import { normalizeCountry } from './flags';
+import { getLocale, type Locale } from './i18n';
 
 // A hand-picked list of cities people commonly base themselves in, keyed by ISO country code. It is a typing
 // aid, not a gazetteer: the city field accepts anything, and places missing here just have to be typed out.
-// Each entry is [Traditional Chinese (Taiwan usage), English].
+// Each entry is [Traditional Chinese (Taiwan usage), English]. A stay stores a listed city by its English name
+// and shows it in the current language; anything else is stored and shown as typed.
 const CITIES: Record<string, [string, string][]> = {
   tw: [['台北', 'Taipei'], ['新北', 'New Taipei'], ['桃園', 'Taoyuan'], ['新竹', 'Hsinchu'], ['台中', 'Taichung'], ['台南', 'Tainan'], ['高雄', 'Kaohsiung'], ['基隆', 'Keelung'], ['嘉義', 'Chiayi'], ['宜蘭', 'Yilan'], ['花蓮', 'Hualien'], ['台東', 'Taitung'], ['屏東', 'Pingtung'], ['墾丁', 'Kenting'], ['南投', 'Nantou'], ['澎湖', 'Penghu'], ['金門', 'Kinmen'], ['馬祖', 'Matsu']],
   jp: [['東京', 'Tokyo'], ['大阪', 'Osaka'], ['京都', 'Kyoto'], ['橫濱', 'Yokohama'], ['名古屋', 'Nagoya'], ['福岡', 'Fukuoka'], ['札幌', 'Sapporo'], ['神戶', 'Kobe'], ['奈良', 'Nara'], ['廣島', 'Hiroshima'], ['仙台', 'Sendai'], ['金澤', 'Kanazawa'], ['沖繩', 'Okinawa'], ['那霸', 'Naha'], ['北海道', 'Hokkaido'], ['函館', 'Hakodate'], ['鎌倉', 'Kamakura'], ['長野', 'Nagano'], ['熊本', 'Kumamoto'], ['鹿兒島', 'Kagoshima'], ['高松', 'Takamatsu'], ['松山', 'Matsuyama'], ['輕井澤', 'Karuizawa'], ['箱根', 'Hakone'], ['石垣島', 'Ishigaki']],
@@ -74,46 +76,79 @@ const CITIES: Record<string, [string, string][]> = {
   ke: [['奈洛比', 'Nairobi']],
 };
 
-export type CityOption = { name: string; en: string; country: string }; // country: Chinese name, '' if unknown
+export type CityOption = {
+  value: string; // what gets stored on a stay: the English name for a listed city
+  name: string; // shown, in the current language
+  sub: string; // the name in the other language
+  country: string; // stored country value (ISO code); '' if unknown
+};
+
+type Entry = { zh: string; en: string; country: string };
 
 // Lower-case and strip accents, so "malaga" finds Málaga.
 const fold = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 
-let all: CityOption[] | null = null;
-const everyCity = () =>
-  (all ??= Object.entries(CITIES).flatMap(([code, list]) => {
-    const country = countryNameOf(code) ?? '';
-    return list.map(([name, en]) => ({ name, en, country }));
-  }));
+let all: Entry[] | null = null;
+const everyCity = () => (all ??= Object.entries(CITIES).flatMap(([country, list]) => list.map(([zh, en]) => ({ zh, en, country }))));
 
-// Options for the city picker. With a recognised country chosen, only that country's cities are offered;
-// otherwise every city is, each tagged with its country. Cities already used in the plan come first.
+const nameIn = (e: Entry, locale: Locale) => (locale === 'en' ? e.en : e.zh);
+
+// The listed city a stored value or typed name refers to. Names repeat across countries (聖地牙哥 is both
+// San Diego and Santiago), so the stay's country decides when it is known.
+function find(country: string, city: string): Entry | undefined {
+  const name = city.trim();
+  if (!name) return undefined;
+  const code = normalizeCountry(country);
+  const matches = everyCity().filter((c) => c.zh === name || fold(c.en) === fold(name));
+  return matches.find((c) => c.country === code) ?? (CITIES[code] ? undefined : matches[0]);
+}
+
+// What to store for a typed or picked city: the listed city's English name when recognised, else the text.
+export function normalizeCity(country: string, city: string): string {
+  return find(country, city)?.en ?? city.trim();
+}
+
+// What to show for a stored city, in the given language (the current one by default).
+export function cityLabel(country: string, city: string, locale: Locale = getLocale()): string {
+  const entry = find(country, city);
+  return entry ? nameIn(entry, locale) : city;
+}
+
+// Options for the city picker. With a country that has listed cities, only those are offered; otherwise every
+// city is, each tagged with its country. Cities already used in the plan come first.
 export function searchCities(query: string, country: string, recent: { city: string; country: string }[]): CityOption[] {
-  const code = flagCode(country);
-  const scoped = Boolean(code && CITIES[code]);
-  const pool = scoped ? everyCity().filter((c) => flagCode(c.country) === code) : everyCity();
+  const locale = getLocale();
+  const other: Locale = locale === 'en' ? 'zh' : 'en';
+  const code = normalizeCountry(country);
+  const scoped = Boolean(CITIES[code]);
+  const pool = scoped ? everyCity().filter((c) => c.country === code) : everyCity();
+  const option = (e: Entry): CityOption => ({ value: e.en, name: nameIn(e, locale), sub: nameIn(e, other), country: e.country });
 
   const used: CityOption[] = [];
+  const usedEntries = new Set<Entry>();
   for (const r of recent) {
-    if (!r.city || (scoped && flagCode(r.country) !== code)) continue;
-    if (used.some((u) => u.name === r.city && u.country === r.country)) continue;
-    const known = pool.find((c) => c.name === r.city && (!r.country || c.country === r.country));
-    used.push(known ?? { name: r.city, en: '', country: r.country });
+    const rCountry = normalizeCountry(r.country);
+    if (!r.city || (scoped && rCountry !== code)) continue;
+    const known = find(r.country, r.city);
+    if (known ? usedEntries.has(known) : used.some((u) => u.value === r.city && u.country === rCountry)) continue;
+    if (known) usedEntries.add(known);
+    // A city the user typed themselves has only the one name.
+    used.push(known ? option(known) : { value: r.city, name: r.city, sub: '', country: rCountry });
   }
-  const options = [...used, ...pool.filter((c) => !used.includes(c))];
+  const options = [...used, ...pool.filter((c) => !usedEntries.has(c)).map(option)];
 
   const q = fold(query.trim());
   if (!q) return options;
-  const rank = (c: CityOption) => {
-    const terms = [fold(c.name), fold(c.en)];
-    if (terms.some((t) => t === q)) return 0;
-    if (terms.some((t) => t && t.startsWith(q))) return 1;
-    if (terms.some((t) => t && t.includes(q))) return 2;
+  const rank = (o: CityOption) => {
+    const terms = [fold(o.name), fold(o.sub), fold(o.value)];
+    if (terms.some((term) => term === q)) return 0;
+    if (terms.some((term) => term && term.startsWith(q))) return 1;
+    if (terms.some((term) => term && term.includes(q))) return 2;
     return -1;
   };
   return options
-    .map((c) => ({ c, r: rank(c) }))
+    .map((o) => ({ o, r: rank(o) }))
     .filter((x) => x.r >= 0)
     .sort((x, y) => x.r - y.r)
-    .map((x) => x.c);
+    .map((x) => x.o);
 }

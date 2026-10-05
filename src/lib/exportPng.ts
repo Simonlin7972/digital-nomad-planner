@@ -1,8 +1,8 @@
+import { daysText, getLocale, t } from './i18n';
 import { colorOf, placeFull, placeName, type Stay } from './storage';
-import { MONTHS, SLOTS, WEEKS, YEAR, daysOf, rangeLabel, slotsOf, weeksLabel } from './weeks';
+import { MONTHS, SLOTS, WEEKS, YEAR, daysOf, monthName, rangeLabel, slotsOf, weeksLabel } from './weeks';
 
 const FONT = '"975HazyGo", -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
-const TITLE = `${YEAR} 數位遊牧計畫`;
 const SCALE = 2;
 const PAD = 40;
 const SLOT_W = 20;
@@ -28,7 +28,9 @@ function ellipsize(ctx: CanvasRenderingContext2D, text: string, max: number): st
 // Draws the whole year at a fixed width, so the image doesn't depend on the window size or scroll position.
 export async function renderPng(stays: Stay[]): Promise<Blob> {
   // Canvas text falls back silently if the web font hasn't been fetched yet, so load every glyph we'll draw first.
-  const text = `${TITLE}0123456789/–・週天月 ${stays.map((s) => `${placeFull(s)}${s.note ?? ''}`).join('')}`;
+  const title = t('app.title', { year: YEAR });
+  // Every character the image can contain: the title, digits and punctuation, unit words, month names, places.
+  const text = `${title}0123456789/–()（）${t('sep')}${t('unit.weeks', { n: '' })}${daysText(2)}${MONTHS.map((m) => monthName(m.month)).join('')}${stays.map((s) => `${placeFull(s)}${s.note ?? ''}`).join('')}`;
   await Promise.all([`13px ${FONT}`, `600 13px ${FONT}`].map((font) => document.fonts.load(font, text))).catch(() => undefined);
   const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
   const trackW = SLOTS * SLOT_W;
@@ -51,7 +53,7 @@ export async function renderPng(stays: Stay[]): Promise<Blob> {
 
   ctx.fillStyle = TEXT;
   ctx.font = `600 28px ${FONT}`;
-  ctx.fillText(TITLE, PAD, PAD + 28);
+  ctx.fillText(title, PAD, PAD + 28);
 
   // Track background, week lines and dates
   ctx.fillStyle = SUBTLE;
@@ -80,7 +82,7 @@ export async function renderPng(stays: Stay[]): Promise<Blob> {
 
   ctx.font = `600 13px ${FONT}`;
   ctx.fillStyle = TEXT;
-  for (const m of MONTHS) ctx.fillText(`${m.month + 1} 月`, PAD + m.startIndex * 2 * SLOT_W + 6, monthsY + 14);
+  for (const m of MONTHS) ctx.fillText(monthName(m.month), PAD + m.startIndex * 2 * SLOT_W + 6, monthsY + 14);
 
   // Stays
   for (const stay of sorted) {
@@ -101,7 +103,7 @@ export async function renderPng(stays: Stay[]): Promise<Blob> {
     ctx.fillText(ellipsize(ctx, placeName(stay), w - 20), x + 12, y + h / 2 - 2);
     ctx.globalAlpha = 0.9;
     ctx.font = `11px ${FONT}`;
-    const sub = `${weeksLabel(daysOf(stay))}${stay.note ? `・${stay.note.replace(/\s+/g, ' ')}` : ''}`;
+    const sub = `${weeksLabel(daysOf(stay))}${stay.note ? `${t('sep')}${stay.note.replace(/\s+/g, ' ')}` : ''}`;
     ctx.fillText(ellipsize(ctx, sub, w - 20), x + 12, y + h / 2 + 14);
     ctx.restore();
   }
@@ -119,7 +121,7 @@ export async function renderPng(stays: Stay[]): Promise<Blob> {
     ctx.font = `13px ${FONT}`;
     ctx.fillStyle = MUTED;
     ctx.fillText(rangeLabel(stay), x + 20, y + 15);
-    let cx = x + 130;
+    let cx = x + (getLocale() === 'en' ? 170 : 130); // English dates ("Dec 28 – Jan 12") run wider
     ctx.font = `600 13px ${FONT}`;
     ctx.fillStyle = TEXT;
     const name = ellipsize(ctx, placeFull(stay), 180);
@@ -127,7 +129,7 @@ export async function renderPng(stays: Stay[]): Promise<Blob> {
     cx += ctx.measureText(name).width + 10;
     ctx.font = `13px ${FONT}`;
     ctx.fillStyle = MUTED;
-    const meta = `${weeksLabel(daysOf(stay))}・${daysOf(stay)} 天`;
+    const meta = `${weeksLabel(daysOf(stay))}${t('sep')}${daysText(daysOf(stay))}`;
     ctx.fillText(meta, cx, y + 15);
     cx += ctx.measureText(meta).width + 12;
     const note = stay.note?.replace(/\s+/g, ' ');

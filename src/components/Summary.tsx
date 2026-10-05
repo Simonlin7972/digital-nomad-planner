@@ -1,5 +1,8 @@
 import { Fragment, useMemo } from 'react';
 import { flightStats, type Coords } from '../hooks/useCoords';
+import { cityLabel } from '../lib/cities';
+import { countryLabel } from '../lib/flags';
+import { daysText, t, tr, useLocale } from '../lib/i18n';
 import type { Stay } from '../lib/storage';
 import { TOTAL_DAYS, daysOf, weeksLabel } from '../lib/weeks';
 import { Flag } from './Flag';
@@ -7,6 +10,7 @@ import './Summary.css';
 
 // Totals for the whole year: time planned, places visited, a flight estimate, and days per country and city.
 export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
+  useLocale();
   // Days per country, each with its cities; stays without a country sit in a '' group.
   const totals = useMemo(() => {
     const groups = new Map<string, { days: number; cities: Map<string, number> }>();
@@ -32,15 +36,15 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
 
   return (
     <div className="panel">
-      <h2>摘要</h2>
+      <h2>{t('summary.title')}</h2>
       <p className="stat">
-        已安排 <b>{weeksLabel(plannedDays)}</b>・未安排 <b>{weeksLabel(TOTAL_DAYS - plannedDays)}</b>
+        {tr('summary.time', { planned: <b>{weeksLabel(plannedDays)}</b>, free: <b>{weeksLabel(TOTAL_DAYS - plannedDays)}</b> })}
         <br />
-        去了 <b>{countryCount}</b> 個國家・<b>{cityCount}</b> 個城市
+        {tr('summary.places', { countries: <b>{countryCount}</b>, cities: <b>{cityCount}</b> })}
         <br />
-        <span title="依行程順序、兩地直線距離估算；300 公里內視為陸路不計，未含轉機">
-          約 <b>{flights.legs}</b> 個航段・飛行約 <b>{Math.round(flights.hours)}</b> 小時
-          {flights.unknown > 0 && `（${flights.unknown} 段查無座標未計）`}
+        <span title={t('summary.flightsHint')}>
+          {tr('summary.flights', { legs: <b>{flights.legs}</b>, hours: <b>{Math.round(flights.hours)}</b> })}
+          {flights.unknown > 0 && t('summary.flightsSkipped', { n: flights.unknown })}
         </span>
       </p>
       <ul className="totals">
@@ -49,19 +53,19 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
             {g.country && (
               <li className="country">
                 <Flag country={g.country} />
-                {g.country}
+                {countryLabel(g.country)}
                 <span>
                   {weeksLabel(g.days)}
-                  <small>（{g.days} 天）</small>
+                  <small>{t('paren', { x: daysText(g.days) })}</small>
                 </span>
               </li>
             )}
             {g.cities.map(([city, days]) => (
               <li key={city} className={g.country ? 'city' : undefined}>
-                {city || '其他'}
+                {city ? cityLabel(g.country, city) : t('other')}
                 <span>
                   {weeksLabel(days)}
-                  <small>（{days} 天）</small>
+                  <small>{t('paren', { x: daysText(days) })}</small>
                 </span>
               </li>
             ))}

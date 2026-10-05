@@ -13,7 +13,8 @@ import { useHistory } from './hooks/useHistory';
 import { useZoom } from './hooks/useZoom';
 import { renderPng } from './lib/exportPng';
 import { download } from './lib/files';
-import { HOLIDAY_SETS, type Holiday, type HolidaySet } from './lib/holidays';
+import { holidaySets as allHolidaySets, type Holiday, type HolidaySet } from './lib/holidays';
+import { t, useLocale } from './lib/i18n';
 import { loadHolidayToggles, loadView, saveHolidayToggles, saveView } from './lib/prefs';
 import { load, pushStays, sanitize, save, serialize, type ColorKey, type Stay } from './lib/storage';
 import { MOD, clamp } from './lib/util';
@@ -26,6 +27,7 @@ const VIEW_FADE_MS = 140; // keep in sync with .view in styles/base.css
 
 // Owns the plan and the page-level state, and wires the pieces together. The pieces own their interactions.
 export default function App() {
+  const locale = useLocale();
   // Every change to the plan goes through setStays so it lands on the undo stack.
   const { present: stays, set: setStays, undo, redo, canUndo, canRedo } = useHistory<Stay[]>(load);
   const [editing, setEditing] = useState<Editing | null>(null);
@@ -50,6 +52,10 @@ export default function App() {
   useEffect(() => save(stays), [stays]);
   useEffect(() => saveHolidayToggles(holidayOn), [holidayOn]);
   useEffect(() => saveView(view), [view]);
+  useEffect(() => {
+    document.documentElement.lang = locale === 'en' ? 'en' : 'zh-Hant';
+    document.title = t('app.title', { year: YEAR });
+  }, [locale]);
 
   const busy = Boolean(dragging || editing || helpOpen);
   useEffect(() => {
@@ -97,26 +103,26 @@ export default function App() {
     try {
       download(await renderPng(stays), 'png');
     } catch {
-      alert('無法產生 PNG，請再試一次。');
+      alert(t('alert.pngFailed'));
     }
   }
 
   async function importJson(file: File) {
     try {
       const next = sanitize(JSON.parse(await file.text()));
-      if (next.length === 0) return alert('檔案裡沒有可用的行程。');
-      if (stays.length > 0 && !confirm(`匯入會取代目前的 ${stays.length} 段行程，確定嗎？`)) return;
+      if (next.length === 0) return alert(t('alert.importEmpty'));
+      if (stays.length > 0 && !confirm(t('alert.importConfirm', { n: stays.length }))) return;
       setStays(next);
     } catch {
-      alert('無法讀取這個檔案，請確認是先前匯出的 JSON。');
+      alert(t('alert.importFailed'));
     }
   }
 
   function clearAll() {
-    if (confirm('確定清空全部行程？這個動作無法復原。')) setStays([]);
+    if (confirm(t('alert.clearConfirm'))) setStays([]);
   }
 
-  const holidaySets = HOLIDAY_SETS.filter((set) => holidayOn[set.key]);
+  const holidaySets = allHolidaySets().filter((set) => holidayOn[set.key]);
   const pending = editing && !editing.id ? editing : null;
   // No card mid-drag or behind the editor; it would only get in the way.
   const hoveredStay = stayCard && !dragging && !editing ? stays.find((s) => s.id === stayCard.id) : undefined;
@@ -126,7 +132,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <h1>{YEAR} 數位遊牧計畫</h1>
+        <h1>{t('app.title', { year: YEAR })}</h1>
         <Toolbar
           canUndo={canUndo}
           canRedo={canRedo}
@@ -192,8 +198,8 @@ export default function App() {
       </section>
 
       <section className="panel map-panel">
-        <h2>地圖</h2>
-        <Suspense fallback={<p className="map-status">載入地圖中…</p>}>
+        <h2>{t('map.title')}</h2>
+        <Suspense fallback={<p className="map-status">{t('map.loading')}</p>}>
           <MapView stays={stays} coords={coords} failed={coordsFailed} />
         </Suspense>
       </section>

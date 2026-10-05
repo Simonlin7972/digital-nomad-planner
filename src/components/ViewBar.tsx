@@ -1,7 +1,8 @@
 import type { CSSProperties } from 'react';
 import { Minus } from '@phosphor-icons/react/dist/csr/Minus';
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus';
-import { HOLIDAY_SETS } from '../lib/holidays';
+import { holidaySets } from '../lib/holidays';
+import { t, useLocale } from '../lib/i18n';
 import { ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, type HolidayToggles, type View } from '../lib/prefs';
 import './ViewBar.css';
 
@@ -16,17 +17,18 @@ type Props = {
 
 // Controls above the calendar: year/month switch, holiday toggles and (in the year view) the zoom.
 export function ViewBar({ mode, onMode, holidayOn, onToggleHoliday, zoom, onZoom }: Props) {
+  useLocale();
   return (
     <div className="timeline-bar">
-      <div className="segmented" role="tablist" aria-label="檢視">
+      <div className="segmented" role="tablist" aria-label={t('view.label')}>
         {(['year', 'month'] as const).map((m) => (
           <button key={m} role="tab" aria-selected={mode === m} onClick={() => onMode(m)}>
-            {m === 'year' ? '年' : '月'}
+            {t(m === 'year' ? 'view.year' : 'view.month')}
           </button>
         ))}
       </div>
       <div className="toggles">
-        {HOLIDAY_SETS.map((set) => (
+        {holidaySets().map((set) => (
           <button
             key={set.key}
             role="switch"
@@ -42,7 +44,7 @@ export function ViewBar({ mode, onMode, holidayOn, onToggleHoliday, zoom, onZoom
       </div>
       {mode === 'year' && (
         <div className="zoombar">
-          <button onClick={() => onZoom(zoom - ZOOM_STEP)} disabled={zoom <= ZOOM_MIN} aria-label="縮小" title="縮小">
+          <button onClick={() => onZoom(zoom - ZOOM_STEP)} disabled={zoom <= ZOOM_MIN} aria-label={t('zoom.out')} title={t('zoom.out')}>
             <Minus size={14} weight="bold" />
           </button>
           <input
@@ -52,15 +54,15 @@ export function ViewBar({ mode, onMode, holidayOn, onToggleHoliday, zoom, onZoom
             step={ZOOM_STEP}
             value={zoom}
             onChange={(e) => onZoom(Number(e.target.value))}
-            aria-label="時間軸縮放"
+            aria-label={t('zoom.label')}
             style={{ '--pct': `${((zoom - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN)) * 100}%` } as CSSProperties}
           />
-          <button onClick={() => onZoom(zoom + ZOOM_STEP)} disabled={zoom >= ZOOM_MAX} aria-label="放大" title="放大">
+          <button onClick={() => onZoom(zoom + ZOOM_STEP)} disabled={zoom >= ZOOM_MAX} aria-label={t('zoom.in')} title={t('zoom.in')}>
             <Plus size={14} weight="bold" />
           </button>
           <span className="zoom-value">{Math.round(zoom * 100)}%</span>
           <button className="reset" onClick={() => onZoom(ZOOM_MIN)} disabled={zoom === ZOOM_MIN}>
-            符合寬度
+            {t('zoom.fit')}
           </button>
         </div>
       )}
