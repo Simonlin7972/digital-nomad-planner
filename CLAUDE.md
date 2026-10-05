@@ -35,7 +35,7 @@ A Stop hook (`.claude/hooks/docs-check.sh`) blocks once when code under `src/` o
 - **The year view is approximate, the data is exact.** The timeline has two half-week slots per week; each end of a stay snaps to the nearest slot boundary for drawing only (`slotsOf`). Never round the stored dates to fit the display.
 - **Stays never overlap.** Every path that changes stays must keep this true.
 - **All plan changes go through `setStays` in `App.tsx`.** It pushes onto the undo stack. Do not write to `localStorage` or mutate stays any other way.
-- **Position logic is pure and lives in `src/storage.ts`.** `reorderStays` (dragging a whole stay: list-style reorder) and `pushStays` (stretching an edge: shove neighbours). During a drag they are recomputed from the original stays on every pointer move, so no drag state accumulates.
+- **Position logic is pure and lives in `src/storage.ts`.** `reorderStays` (dragging a whole stay: list-style reorder), `pushStays` (stretching an edge: shove neighbours) and `insertStay` (alt-drag: drop a copy and make room for it). During a drag they are recomputed from the original stays on every pointer move, so no drag state accumulates.
 - **Imports are sanitised.** `sanitize` drops malformed or overlapping entries and accepts two legacy formats. New fields on `Stay` need handling in `serialize`, `sanitize`, the editor, and the README data-format section.
 - **The PNG export is drawn separately** in `src/exportPng.ts` on a canvas. New visual elements do not appear there unless added.
 - **Coordinates** come from Nominatim via `src/geocode.ts` (rate-limited, cached) and are shared through the `useCoords` hook.

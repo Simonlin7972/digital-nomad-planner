@@ -15,7 +15,7 @@ import { Flag } from './Flag';
 import MonthView from './MonthView';
 import { flightStats, useCoords } from './useCoords';
 import { HOLIDAY_SETS, type Holiday, type HolidaySet } from './holidays';
-import { PALETTE, colorKeyOf, colorOf, defaultColor, placeFull, placeName, load, overlaps, sanitize, save, serialize, pushStays, reorderStays, cleanTicket, ticketLines, type Ticket, type ColorKey, type Stay } from './storage';
+import { PALETTE, colorKeyOf, colorOf, defaultColor, placeFull, placeName, load, overlaps, sanitize, save, serialize, insertStay, pushStays, reorderStays, cleanTicket, ticketLines, type Ticket, type ColorKey, type Stay } from './storage';
 import {
   MONTHS,
   SLOTS,
@@ -37,10 +37,19 @@ import {
 
 type Drag =
   | { kind: 'select'; anchor: number; lo: number; hi: number } // slots, inclusive
-  | (DayRange & { kind: 'move'; id: string; grabSlot: number; orig: DayRange; moved: boolean })
+  // copy: alt-drag. The original stays put and a duplicate is dropped where the pointer goes.
+  | (DayRange & { kind: 'move'; id: string; grabSlot: number; orig: DayRange; moved: boolean; copy: boolean })
   | (DayRange & { kind: 'resize'; id: string; edge: 'l' | 'r'; grabSlot: number; moved: boolean });
 
 type Editing = DayRange & { id: string | null };
+
+const COPY_ID = '__copy__'; // id of the preview stay while alt-dragging
+
+// The duplicate an alt-drag would create. A flight belongs to one trip, so the ticket is not carried over.
+function copyOf(stays: Stay[], drag: DayRange & { id: string }, id: string): Stay | null {
+  const source = stays.find((s) => s.id === drag.id);
+  return source ? { ...source, ticket: undefined, id, startDay: drag.startDay, endDay: drag.endDay } : null;
+}
 type StayDetails = Pick<Stay, 'country' | 'city' | 'companions' | 'ticket' | 'note'>;
 
 type History = { past: Stay[][]; present: Stay[]; future: Stay[][] };
@@ -185,6 +194,21 @@ export default function App() {
     pan.current = null;
     setPanning(false);
   }
+
+  // Alt held: stays show a copy cursor, hinting that a drag will duplicate.
+  const [altDown, setAltDown] = useState(false);
+  useEffect(() => {
+    const sync = (e: KeyboardEvent) => setAltDown(e.altKey);
+    const clear = () => setAltDown(false);
+    window.addEventListener('keydown', sync);
+    window.addEventListener('keyup', sync);
+    window.addEventListener('blur', clear);
+    return () => {
+      window.removeEventListener('keydown', sync);
+      window.removeEventListener('keyup', sync);
+      window.removeEventListener('blur', clear);
+    };
+  }, []);
 
   const busy = Boolean(drag || editing);
   useEffect(() => {
@@ -352,10 +376,11 @@ export default function App() {
     if (stayEl) {
       const stay = stays.find((s) => s.id === stayEl.dataset.stay);
       if (!stay) return;
-      const edge = target.dataset.edge as 'l' | 'r' | undefined;
+      // With alt held the whole block copies, wherever it is grabbed.
+      const edge = e.altKey ? undefined : (target.dataset.edge as 'l' | 'r' | undefined);
       const range = { startDay: stay.startDay, endDay: stay.endDay };
       const base = { id: stay.id, grabSlot: slot, moved: false, ...range };
-      setDrag(edge ? { kind: 'resize', edge, ...base } : { kind: 'move', orig: range, ...base });
+      setDrag(edge ? { kind: 'resize', edge, ...base } : { kind: 'move', orig: range, copy: e.altKey, ...base });
     } else {
       if (!slotFree(slot)) return;
       setDrag({ kind: 'select', anchor: slot, lo: slot, hi: slot });
@@ -386,7 +411,7 @@ export default function App() {
         const startDay = clamp(raw, 0, TOTAL_DAYS - len);
         return { startDay, endDay: startDay + len - 1 };
       };
-      // The drag only records where the pointer wants the stay; reorderStays decides where it actually lands.
+      // The drag only records where the pointer wants the stay; reorderStays / insertStay decide where it lands.
       const next = rangeAt(slot - drag.grabSlot);
       if (next.startDay === drag.startDay) return;
       setDrag({ ...drag, ...next, moved: true });
@@ -417,6 +442,9 @@ export default function App() {
     if (drag.kind === 'select') {
       const range = fit({ startDay: dayOfBoundary(drag.lo), endDay: dayOfBoundary(drag.hi + 1) - 1 });
       if (range) setEditing({ id: null, ...range });
+    } else if (drag.kind === 'move' && drag.copy) {
+      // A copy dropped where it started would only pile onto the original, so that does nothing.
+      if (drag.moved) setStays((prev) => insertStay(prev, copyOf(prev, drag, crypto.randomUUID())!) ?? prev);
     } else if (drag.moved) {
       setStays((prev) => (drag.kind === 'move' ? reorderStays(prev, drag.id, drag) : (pushStays(prev, drag.id, drag) ?? prev)));
     } else if (drag.kind === 'move') {
@@ -477,10 +505,18 @@ export default function App() {
   }
 
   // What the timeline draws mid-drag: a moved stay reorders past its neighbours, a resized one pushes them.
-  const activeId = drag && drag.kind !== 'select' && drag.moved ? drag.id : null;
-  const visible =
-    drag?.kind === 'move'
-      ? reorderStays(stays, drag.id, drag)
+  const copying = drag?.kind === 'move' && drag.copy && drag.moved ? drag : null;
+  const ghost = copying && copyOf(stays, copying, COPY_ID);
+  const copyPreview = ghost && insertStay(stays, ghost);
+  // The ghost is still drawn when there is no room for it, flagged so it reads as "can't drop here".
+  const copyBlocked = Boolean(ghost && !copyPreview);
+  const activeId = ghost ? COPY_ID : drag && drag.kind !== 'select' && drag.moved ? drag.id : null;
+  const visible = ghost
+    ? (copyPreview ?? [...stays, ghost])
+    : drag?.kind === 'move'
+      ? drag.copy
+        ? stays
+        : reorderStays(stays, drag.id, drag)
       : drag?.kind === 'resize'
         ? (pushStays(stays, drag.id, drag) ?? stays)
         : stays;
@@ -648,7 +684,7 @@ export default function App() {
           ))}
           <div
             ref={trackRef}
-            className={`row track${drag ? ' dragging' : ''}`}
+            className={`row track${drag ? ' dragging' : ''}${altDown ? ' alt' : ''}`}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
@@ -670,7 +706,7 @@ export default function App() {
                 <div
                   key={s.id}
                   data-stay={s.id}
-                  className={`stay${s.id === activeId ? ' active' : ''}`}
+                  className={`stay${s.id === activeId ? ' active' : ''}${s.id === COPY_ID && copyBlocked ? ' blocked' : ''}`}
                   style={{ ...stayCol(s), background: colorOf(s) }}
                   onMouseEnter={(e) => {
                     const r = e.currentTarget.getBoundingClientRect();
@@ -782,9 +818,12 @@ export default function App() {
                 <li key={s.id}>
                   <i style={{ background: colorOf(s) }} />
                   <span className="when">{longRangeLabel(s)}</span>
-                  <strong>{placeName(s)}</strong>
-                  {s.city && s.country && <span className="weeks">{s.country}</span>}
-                  <span className="weeks">{weeksLabel(daysOf(s))}・{daysOf(s)} 天</span>
+                  <Flag country={s.country} />
+                  {s.country && <strong>{s.country}</strong>}
+                  {s.city && <span className={s.country ? 'city' : 'city lead'}>{s.city}</span>}
+                  <span className="weeks">
+                    {weeksLabel(daysOf(s))}（{daysOf(s)} 天）
+                  </span>
                   {s.companions && <span className="weeks">跟 {s.companions}</span>}
                   {s.ticket && (
                     <button
@@ -808,7 +847,11 @@ export default function App() {
                   >
                     <PencilSimple size={18} weight="bold" />
                   </button>
-                  {s.note && <span className="note">{s.note}</span>}
+                  {s.note && (
+                    <span className="note" title={s.note}>
+                      {s.note.replace(/\s+/g, ' ')}
+                    </span>
+                  )}
                 </li>
               ))}
             </ol>

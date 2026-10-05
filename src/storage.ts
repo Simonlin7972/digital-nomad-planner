@@ -109,6 +109,41 @@ export function reorderStays(stays: Stay[], id: string, desired: DayRange): Stay
   return cur.map((s) => (s.id === id ? { ...s, startDay, endDay: startDay + len(me) - 1 } : s));
 }
 
+// Drops a new stay at its own dates and makes room for it, each displaced stay shoving the next. Stays centred
+// after the new one move later and the rest earlier; if that runs off one end of the year, everything in the way
+// goes the other way instead. Null only when neither direction has room.
+export function insertStay(stays: Stay[], added: Stay): Stay[] | null {
+  const centre = (r: DayRange) => (r.startDay + r.endDay) / 2;
+  const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
+
+  const place = (goesLater: (s: Stay) => boolean): Stay[] | null => {
+    const next = new Map<string, DayRange>();
+    let edge = added.endDay + 1;
+    for (const s of sorted.filter(goesLater)) {
+      if (s.startDay >= edge) break;
+      const endDay = edge + (s.endDay - s.startDay);
+      if (endDay >= TOTAL_DAYS) return null;
+      next.set(s.id, { startDay: edge, endDay });
+      edge = endDay + 1;
+    }
+    edge = added.startDay - 1;
+    for (const s of sorted.filter((o) => !goesLater(o)).reverse()) {
+      if (s.endDay <= edge) break;
+      const startDay = edge - (s.endDay - s.startDay);
+      if (startDay < 0) return null;
+      next.set(s.id, { startDay, endDay: edge });
+      edge = startDay - 1;
+    }
+    return [...stays.map((s) => (next.has(s.id) ? { ...s, ...next.get(s.id)! } : s)), added];
+  };
+
+  return (
+    place((s) => centre(s) >= centre(added)) ??
+    place((s) => s.endDay >= added.startDay) ?? // everything in the way moves later
+    place((s) => s.startDay > added.endDay) // everything in the way moves earlier
+  );
+}
+
 // Stays are stored with ISO dates so exported files stay readable.
 export function serialize(stays: Stay[]) {
   return {

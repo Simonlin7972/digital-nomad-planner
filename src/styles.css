@@ -316,6 +316,9 @@ button.danger:hover:not(:disabled) { border-color: transparent; background: var(
 .stay:hover { box-shadow: 0 4px 12px rgb(0 0 0 / 0.22); transform: translateY(-1px); }
 .stay.active { opacity: 0.9; box-shadow: 0 8px 20px rgb(0 0 0 / 0.3); transform: translateY(-2px); z-index: 2; }
 .track.dragging .stay { cursor: grabbing; transition: none; }
+.track.alt:not(.dragging) .stay { cursor: copy; }
+.track.alt:not(.dragging) .stay .handle { cursor: copy; }
+.stay.blocked { opacity: 0.45; outline: 2px dashed var(--danger); outline-offset: 2px; }
 
 .stay .handle {
   flex: 0 0 auto;
@@ -579,14 +582,17 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
   position: relative;
   padding: 14px 56px 14px 12px;
   margin: 0 -12px;
-  flex-wrap: wrap;
+  /* one line per stay: the note takes whatever width is left and is cut with an ellipsis */
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  min-height: 50px;
   transition: background 0.12s;
 }
 .stays li:first-child { border-top-color: transparent; }
 .stays li:hover { background: var(--subtle); border-radius: var(--radius); border-top-color: transparent; }
 .stays li:hover + li { border-top-color: transparent; }
 /* ticket button: always visible on stays with a flight booked */
-.stays .ticket { width: 30px; height: 30px; padding: 0; border: 0; background: none; display: grid; place-items: center; color: var(--text); }
+.stays .ticket { width: 26px; height: 22px; border-radius: 6px; padding: 0; border: 0; background: none; display: grid; place-items: center; color: var(--text); }
 .stays .ticket:hover { background: var(--line); }
 /* edit button: revealed on row hover or keyboard focus; always shown where there is no hover */
 .stays .edit {
@@ -603,10 +609,13 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
 .stays li:hover .edit,
 .stays .edit:focus-visible { opacity: 1; }
 @media (hover: none) { .stays .edit { opacity: 1; } }
-.stays .when { width: 176px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stays .when { flex: none; width: 176px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stays li > * { flex: none; }
+.stays .city { color: var(--text); }
+.stays .city.lead { font-weight: 600; }
 .stays strong { font-weight: 600; }
 .stays .weeks { color: var(--muted); }
-.stays .note { color: var(--muted); flex-basis: 100%; padding-left: 20px; white-space: pre-wrap; line-height: 1.5; }
+.stays li > .note { flex: 1 1 0; min-width: 0; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
 .empty { margin: 0; color: var(--muted); font-size: 14px; }
 
 /* Map */
@@ -726,4 +735,7 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
   .app { padding: 0 16px 40px; }
   .topbar { padding-top: 20px; }
   .panel { min-width: 0; width: 100%; }
+  /* too narrow for one line per stay */
+  .stays li { flex-wrap: wrap; white-space: normal; }
+  .stays li > .note { flex-basis: 100%; }
 }
