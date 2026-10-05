@@ -16,3 +16,10 @@
 .totals li.country span { color: var(--text); }
 /* lines up with the country name, past its flag */
 .totals li.city { padding-left: 30px; color: var(--muted); }
+
+/* Day-count rules (Schengen 90/180, Taiwan 183) */
+.rules { margin: -4px 0 16px; padding-bottom: 16px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+.rules li { padding: 3px 0; cursor: help; }
+.rules b { color: var(--text); font-weight: 600; }
+.rules li.over, .rules li.over b { color: var(--danger); }
+.rules li span { display: flex; align-items: center; gap: 6px; font-weight: 600; margin-top: 2px; }

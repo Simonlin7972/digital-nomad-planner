@@ -24,6 +24,7 @@ There are no tests and no linter. `tsc --noEmit` is the only automated check, so
 Whenever a change adds, removes or alters behaviour, update in the same piece of work:
 
 - **README.md** — features, controls, data format, project structure, known limits, third-party resources
+- **README.en.md** — the English translation of README.md; mirror every README.md change there, section for section
 - **MVP.md** — the spec for the affected area, the decision table if a decision changed, and one line in the changelog
 - **CLAUDE.md** — only when a convention, invariant or workflow described here changes
 
@@ -42,6 +43,8 @@ A Stop hook (`.claude/hooks/docs-check.sh`) blocks once when code under `src/` o
 - **Places are stored language-neutrally.** A stay's `country` is an ISO code or region id and its `city` the listed city's English name; unlisted values are kept as typed. Show them with `countryOf` / `cityOf` / `placeName` / `placeFull` from `lib/storage.ts`, never the raw field. `normalizeCountry` / `normalizeCity` convert typed or legacy names on save and on load.
 - **Country names come from the browser.** `src/lib/flags.ts` builds the list from `Intl.DisplayNames` plus a few regions and aliases. The pickers (`src/components/Combobox.tsx`) still accept free text, so never assume a stay's country or city is on a list.
 - **The city list is a typing aid.** `src/lib/cities.ts` holds a hand-written `[Chinese, English]` list per ISO code. It is deliberately incomplete and carries no coordinates; unlisted cities are normal and get no warning.
+- **Stay rules are derived, never stored.** `src/lib/stayRules.ts` computes gaps, the Schengen 90/180 count and Taiwan's 183 days from the stays on every render. The Schengen list is ISO codes, so it only sees countries picked from the list.
+- **The backup reminder is not plan data.** `src/lib/backup.ts` keeps its own `dnp-backup` record (fingerprint of the last export or import). Call `markBackedUp` from any new path that writes the plan to a file the user keeps.
 - **Coordinates** come from Nominatim via `src/lib/geocode.ts` (rate-limited, cached) and are shared through the `useCoords` hook.
 
 ## Conventions

@@ -4,7 +4,6 @@ import { ArrowCounterClockwise } from '@phosphor-icons/react/dist/csr/ArrowCount
 import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
 import { Image as ImageIcon } from '@phosphor-icons/react/dist/csr/Image';
 import { Question } from '@phosphor-icons/react/dist/csr/Question';
-import { Trash } from '@phosphor-icons/react/dist/csr/Trash';
 import { UploadSimple } from '@phosphor-icons/react/dist/csr/UploadSimple';
 import { Translate } from '@phosphor-icons/react/dist/csr/Translate';
 import { setLocale, t, useLocale } from '../lib/i18n';
@@ -21,11 +20,10 @@ type Props = {
   onSavePng: () => void;
   onExport: () => void;
   onImport: (file: File) => void;
-  onClear: () => void;
 };
 
 // The row of plan-wide actions in the page header.
-export function Toolbar({ canUndo, canRedo, hasStays, onHelp, onUndo, onRedo, onSavePng, onExport, onImport, onClear }: Props) {
+export function Toolbar({ canUndo, canRedo, hasStays, onHelp, onUndo, onRedo, onSavePng, onExport, onImport }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const locale = useLocale();
   return (
@@ -53,10 +51,6 @@ export function Toolbar({ canUndo, canRedo, hasStays, onHelp, onUndo, onRedo, on
       <button onClick={() => fileRef.current?.click()}>
         <UploadSimple size={16} weight="bold" />
         {t('toolbar.import')}
-      </button>
-      <button onClick={onClear} disabled={!hasStays}>
-        <Trash size={16} weight="bold" />
-        {t('toolbar.clear')}
       </button>
       {/* Labelled in the language it switches to, so it can be found by someone who can't read the current one. */}
       <button onClick={() => setLocale(locale === 'en' ? 'zh' : 'en')} title={t('toolbar.languageHint')} lang={locale === 'en' ? 'zh-Hant' : 'en'}>

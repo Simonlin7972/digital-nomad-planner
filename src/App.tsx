@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
+import { BackupReminder } from './components/BackupReminder';
 import { Editor, type Editing, type StayDetails } from './components/Editor';
 import { HelpDialog } from './components/HelpDialog';
 import { HolidayCard, StayCard, TicketCard, type Anchor } from './components/HoverCards';
@@ -8,6 +9,7 @@ import { Summary } from './components/Summary';
 import { Toolbar } from './components/Toolbar';
 import { ViewBar } from './components/ViewBar';
 import YearView from './components/YearView';
+import { useBackupReminder } from './hooks/useBackupReminder';
 import { useCoords } from './hooks/useCoords';
 import { useHistory } from './hooks/useHistory';
 import { useZoom } from './hooks/useZoom';
@@ -40,6 +42,7 @@ export default function App() {
   const [holidayCard, setHolidayCard] = useState<({ holiday: Holiday; set: HolidaySet } & Anchor) | null>(null);
   const zoom = useZoom();
   const { coords, failed: coordsFailed } = useCoords(stays);
+  const backup = useBackupReminder(stays);
 
   // The view on screen trails view.mode by one fade-out, so the old view can leave before the new one enters.
   const [shownMode, setShownMode] = useState(view.mode);
@@ -97,6 +100,7 @@ export default function App() {
   function exportJson() {
     const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
     download(new Blob([JSON.stringify(serialize(sorted), null, 2)], { type: 'application/json' }), 'json');
+    backup.markBackedUp(stays);
   }
 
   async function savePng() {
@@ -113,13 +117,10 @@ export default function App() {
       if (next.length === 0) return alert(t('alert.importEmpty'));
       if (stays.length > 0 && !confirm(t('alert.importConfirm', { n: stays.length }))) return;
       setStays(next);
+      backup.markBackedUp(next);
     } catch {
       alert(t('alert.importFailed'));
     }
-  }
-
-  function clearAll() {
-    if (confirm(t('alert.clearConfirm'))) setStays([]);
   }
 
   const holidaySets = allHolidaySets().filter((set) => holidayOn[set.key]);
@@ -143,9 +144,10 @@ export default function App() {
           onSavePng={() => void savePng()}
           onExport={exportJson}
           onImport={(file) => void importJson(file)}
-          onClear={clearAll}
         />
       </header>
+
+      {backup.remind && <BackupReminder daysSince={backup.daysSince} onExport={exportJson} onSnooze={backup.snooze} />}
 
       <ViewBar
         mode={view.mode}
@@ -192,6 +194,7 @@ export default function App() {
           stays={stays}
           month={view.mode === 'month' ? view.month : null}
           onEdit={edit}
+          onCreate={(range) => setEditing({ id: null, ...range })}
           ticketCardId={ticketCard?.id ?? null}
           onTicket={setTicketCard}
         />

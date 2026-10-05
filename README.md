@@ -6,7 +6,7 @@
 
 ![整年時間軸與行程清單（範例資料）](docs/overview.png)
 
-> A single-page planner for a year of digital nomading. Drag across a 53-week timeline to block out where you'll be, refine exact dates in a month view, and see the route on a map. Everything stays in your browser — no account, no backend. The interface is available in Traditional Chinese and English (switch from the toolbar); this README is in Chinese.
+> A single-page planner for a year of digital nomading. Drag across a 53-week timeline to block out where you'll be, refine exact dates in a month view, and see the route on a map. Everything stays in your browser — no account, no backend. The interface is available in Traditional Chinese and English (switch from the toolbar). **[English README](README.en.md)**
 
 ---
 
@@ -60,7 +60,9 @@
 ### 總覽
 
 - **摘要**：已安排／未安排週數、去了幾個國家與城市、估計航段數與飛行時數、依國家分組的停留週數與天數
-- **行程列表**：一段行程一列——日期、國旗與國家、城市、週數（天數）、跟誰去、備註；可依 Q1–Q4 篩選；有機票的行程顯示票券圖示
+- **停留天數**：摘要裡算出申根區任 180 天內最多待幾天（上限 90，超過會標出從哪天開始），以及 2027 年排在台灣幾天（183 天是稅務居住者的門檻）。只算排進時間軸的日子
+- **行程列表**：一段行程一列——日期、國旗與國家、城市、週數（天數）、跟誰去、備註；可依 Q1–Q4 篩選；有機票的行程顯示票券圖示；申根超待的行程顯示警示圖示
+- **空檔**：行程之間還沒排的日子也列在行程列表裡，按 `+` 直接在那段空檔新增行程
 - **地圖**：依時間順序標出每個地點並連成路線
 - **國定假日**：可開關台灣、澳洲 2027 年國定假日，疊在時間軸與月曆上
 
@@ -72,6 +74,7 @@
 - JSON 匯出／匯入，檔名帶匯出當天日期（例：`nomad-plan-2027_2026-10-05.json`）
 - 保存 PNG：整年時間軸加行程清單，固定尺寸
 - 所有變更自動儲存
+- 備份提醒：行程改過之後超過 7 天沒有匯出，頁首出現提醒，可直接匯出或延後 3 天
 
 ---
 
@@ -146,6 +149,7 @@ npm run dev
 | `dnp-view` | 目前檢視（年／月）與月份 |
 | `dnp-holidays` | 假日開關狀態 |
 | `dnp-lang` | 介面語言 |
+| `dnp-backup` | 上次匯出（或匯入）的時間與行程指紋，用來決定何時出現備份提醒 |
 
 清除瀏覽器資料、換瀏覽器或換電腦都會看不到行程，請用「匯出」備份。
 
@@ -221,8 +225,9 @@ src/
     ViewBar             年／月切換、假日開關、縮放控制
     YearView            年檢視時間軸，含拖曳、伸縮、複製的指標處理
     MonthView           月檢視月曆
-    Summary             摘要面板
-    StayList            行程列表與季度篩選
+    Summary             摘要面板（含申根與台灣停留天數）
+    StayList            行程列表、空檔列與季度篩選
+    BackupReminder      頁首下方的備份提醒
     Editor              新增／編輯行程的視窗
     HelpDialog          「如何使用」說明視窗
     HoverCards          行程、機票、假日的浮動資訊卡
@@ -237,10 +242,13 @@ src/
     usePinchZoom        觸控板、觸控與滾輪的縮放手勢
     useCoords           地點座標、距離與飛行估算
     useScrollLock       視窗開啟時鎖住背景捲動
+    useBackupReminder   追蹤多久沒匯出，決定是否提醒
   lib/                  與畫面無關的邏輯與資料
     weeks.ts            日期模型：週、日索引、半週格、月份範圍、標籤格式
     storage.ts          資料型別、讀寫、匯入清理、換序／推擠／插入演算法、配色
     prefs.ts            檢視、假日開關、縮放等偏好的讀寫
+    stayRules.ts        空檔、申根 90/180、台灣 183 天的計算
+    backup.ts           備份提醒的狀態與判斷
     flags.ts            國家清單、搜尋、名稱 → ISO 代碼對照
     cities.ts           內建城市清單（中英文）與搜尋
     holidays.ts         2027 國定假日資料
@@ -250,6 +258,7 @@ src/
     util.ts             小工具
     i18n.tsx            翻譯字典、目前語言、`t()`
   styles/base.css       設計變數、頁面底、按鈕與面板等共用樣式
+README.en.md            英文版 README（內容與本檔同步）
 MVP.md                  產品規格與決策紀錄
 CLAUDE.md               給 Claude Code 的專案須知
 .claude/                Claude Code 設定：預覽啟動、文件同步檢查 hook
@@ -282,6 +291,10 @@ CLAUDE.md               給 Claude Code 的專案須知
 
 **飛行時數是估算。** 依行程順序取相鄰兩地的直線距離，以時速 850 公里加每段 0.5 小時計算；300 公里內視為陸路不計。不含轉機，也不含從家出發與回家。
 
+**停留天數規則是純計算，只看時間軸上的資料。** `lib/stayRules.ts` 依國碼判斷申根國（2025 年的 29 個正式成員，不含摩納哥等開放邊境的小國，也不含「歐洲」這類區域），對每個待在申根的日子往前回推 180 天計數。時間軸從 2026-12-28 開始，之前的日子當作不在申根。台灣只算 1/1–12/31 排在台灣的行程，未安排的日子不算（即使你可能在家）。結果只是提醒，實際以各國官方規定為準。
+
+**備份提醒不屬於行程。** `dnp-backup` 記住上次匯出或匯入時行程的指紋（對匯出格式做 FNV-1a 雜湊，與行程順序無關）。行程跟指紋不同時開始計時，滿 7 天才提醒；復原回到匯出時的狀態就停止計時。它不進復原紀錄，也不會寫進匯出檔。
+
 **PNG 是另外畫的。** `lib/exportPng.ts` 用 canvas 重新繪製，不是截取畫面，所以輸出尺寸固定、不受視窗與縮放影響，但新增的畫面元素不會自動出現在 PNG 裡。
 
 ---
@@ -289,7 +302,7 @@ CLAUDE.md               給 Claude Code 的專案須知
 ## 已知限制
 
 - **年份寫死 2027。** 常數在 `lib/weeks.ts` 的 `YEAR`；假日資料也只有 2027 年
-- **介面語言只有繁體中文與英文**；README 與規格文件只有中文
+- **介面語言只有繁體中文與英文**；規格文件（`MVP.md`）只有中文
 - **你自己輸入的文字不會翻譯**：清單外的國家／城市、備註、同行者，在兩種語言下都照原樣顯示
 - **以桌機為主。** 窄螢幕可用但未最佳化
 - **沒有自動化測試**
@@ -303,6 +316,8 @@ CLAUDE.md               給 Claude Code 的專案須知
 - **字體依賴 emfont 線上服務**，離線時退回系統字體
 - **澳洲假日只含全國性假日**，各州專屬假日未列
 - **復原紀錄不跨重新整理**
+- **停留天數只是估算**：不知道 2026-12-28 之前的行程，也不知道哪天實際入出境；同一天換地點只會算在其中一段
+- **申根國家清單寫死在程式裡**，成員國變動時要手動更新
 
 ---
 
@@ -311,10 +326,10 @@ CLAUDE.md               給 Claude Code 的專案須知
 尚未排程，歡迎討論：
 
 - 年份可切換、多年度
-- 更多語言、英文版 README
+- 更多語言
 - 城市資料庫與搜尋，取代純文字輸入
 - 季節資訊層：各地最佳月份、該避開的月份（例如清邁 11 月水燈節、2–3 月霾害）
-- 簽證停留天數計算（例如申根 90/180）
+- 其他國家的簽證天數規則（目前只有申根 90/180）
 - 月檢視支援整條拖曳
 - 一段行程多張機票、住宿與預算
 - 選用的雲端同步
@@ -352,7 +367,7 @@ CLAUDE.md               給 Claude Code 的專案須知
 - 新元件放 `src/components/`，樣式寫在同名的 `.css` 並由該元件自己 import；跨元件共用的才放 `styles/base.css`
 - 新增會對外連線的功能，請在本文件的[資料與隱私](#資料與隱私)補上說明
 - 介面文字一律放進 `src/lib/i18n.tsx` 的字典，中英文都要補；不要在元件裡寫死字串
-- 功能有變動時，請同步更新 `README.md` 與 `MVP.md`（以及在慣例改變時更新 `CLAUDE.md`）。用 Claude Code 開發時，`.claude/hooks/docs-check.sh` 會在結束前檢查這件事
+- 功能有變動時，請同步更新 `README.md`、`README.en.md` 與 `MVP.md`（以及在慣例改變時更新 `CLAUDE.md`）。用 Claude Code 開發時，`.claude/hooks/docs-check.sh` 會在結束前檢查這件事
 
 ---
 

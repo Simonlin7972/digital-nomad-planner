@@ -1,10 +1,12 @@
 import { Fragment, useMemo } from 'react';
+import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
 import { flightStats, type Coords } from '../hooks/useCoords';
 import { cityLabel } from '../lib/cities';
 import { countryLabel } from '../lib/flags';
 import { daysText, t, tr, useLocale } from '../lib/i18n';
 import type { Stay } from '../lib/storage';
-import { TOTAL_DAYS, daysOf, weeksLabel } from '../lib/weeks';
+import { checkSchengen, taiwanDays } from '../lib/stayRules';
+import { TOTAL_DAYS, YEAR, dateOfDay, daysOf, fullDate, weeksLabel } from '../lib/weeks';
 import { Flag } from './Flag';
 import './Summary.css';
 
@@ -33,6 +35,8 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
   const cityCount = totals.reduce((n, g) => n + g.cities.filter(([city]) => city).length, 0);
   const flights = useMemo(() => flightStats(stays, coords), [stays, coords]);
   const plannedDays = stays.reduce((n, s) => n + daysOf(s), 0);
+  const schengen = useMemo(() => checkSchengen(stays), [stays]);
+  const twDays = taiwanDays(stays);
 
   return (
     <div className="panel">
@@ -47,6 +51,24 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
           {flights.unknown > 0 && t('summary.flightsSkipped', { n: flights.unknown })}
         </span>
       </p>
+      {(schengen.days > 0 || twDays > 0) && (
+        <ul className="rules">
+          {schengen.days > 0 && (
+            <li title={t('rules.schengenHint')} className={schengen.firstOver === null ? undefined : 'over'}>
+              {tr('rules.schengen', { peak: <b>{schengen.peak}</b> })}
+              {schengen.firstOver !== null && (
+                <span>
+                  <Warning size={16} weight="bold" />
+                  {t('rules.schengenOver', { date: fullDate(dateOfDay(schengen.firstOver)) })}
+                </span>
+              )}
+            </li>
+          )}
+          {twDays > 0 && (
+            <li title={t('rules.taiwanHint')}>{tr('rules.taiwan', { days: <b>{daysText(twDays)}</b>, year: YEAR })}</li>
+          )}
+        </ul>
+      )}
       <ul className="totals">
         {totals.map((g) => (
           <Fragment key={g.country}>

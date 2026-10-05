@@ -45,6 +45,12 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         <>
           <b>點一下</b>行程可以編輯：日期、顏色、跟誰去、機票、備註，或刪除。
         </>,
+        <>
+          下方行程列表會列出還沒排的<b>空檔</b>，按右邊的 <b>+</b> 直接排一段。
+        </>,
+        <>
+          摘要會算<b>申根 90/180 天</b>與<b>台灣 183 天</b>；申根超過上限的行程，列表上會出現警示圖示。只算排進時間軸的日子，實際規定以官方為準。
+        </>,
       ],
     },
     {
@@ -82,6 +88,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         <>
           <b>匯出</b>：把全部行程存成一個 JSON 檔。建議排到一個段落就匯出一次當備份。
         </>,
+        <>行程改過之後超過一週沒有匯出，頁首會出現備份提醒；按「稍後提醒」三天內不再出現。</>,
         <>
           <b>匯入</b>：讀回匯出的檔案。會<b>取代</b>目前的行程，匯入前會先問你。
         </>,
@@ -99,7 +106,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           <kbd>{undo}</kbd> 復原、<kbd>{redo}</kbd> 重做，最多 100 步。
         </>,
         <>
-          復原紀錄在重新整理頁面後就沒有了；<b>清空</b>之後若已重新整理，只能靠匯出的備份救回。
+          復原紀錄在重新整理頁面後就沒有了。<b>匯入</b>或大幅調整前先匯出一份，之後才救得回來。
         </>,
       ],
     },
@@ -123,6 +130,13 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         </>,
         <>
           <b>Click</b> a stay to edit its dates, color, companions, flight and note, or to delete it.
+        </>,
+        <>
+          The itinerary below lists the <b>free stretches</b> between stays; press the <b>+</b> beside one to plan a stay there.
+        </>,
+        <>
+          The summary counts <b>Schengen days (90 in 180)</b> and <b>days in Taiwan (183)</b>; stays that break the Schengen limit get a
+          warning in the itinerary. Only planned days are counted, and official rules always take precedence.
         </>,
       ],
     },
@@ -164,6 +178,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         <>
           <b>Export</b> saves the whole plan as a JSON file. Export whenever you reach a good stopping point.
         </>,
+        <>If the plan has changed and gone a week without an export, a reminder appears under the header. “Remind me later” hides it for three days.</>,
         <>
           <b>Import</b> loads an exported file. It <b>replaces</b> the current plan, and asks first.
         </>,
@@ -181,7 +196,8 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           <kbd>{undo}</kbd> to undo, <kbd>{redo}</kbd> to redo, up to 100 steps.
         </>,
         <>
-          Undo history is lost when the page reloads. After <b>Clear</b> and a reload, only an exported backup can bring the plan back.
+          Undo history is lost when the page reloads. Export a copy before an <b>Import</b> or a big rearrangement, so there is
+          something to go back to.
         </>,
       ],
     },

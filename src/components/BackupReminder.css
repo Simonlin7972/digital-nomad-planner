@@ -1,0 +1,18 @@
+.backup-reminder {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: -12px 0 24px;
+  padding: 12px 12px 12px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  font-size: 14px;
+  animation: rise 0.25s ease-out;
+}
+.backup-reminder svg { flex: none; }
+.backup-reminder p { flex: 1 1 240px; margin: 0; color: var(--muted); line-height: 1.5; }
+.backup-reminder b { color: var(--text); font-weight: 600; margin-right: 6px; }
+.backup-reminder button { padding: 8px 14px; }

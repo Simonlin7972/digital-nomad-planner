@@ -66,3 +66,10 @@
   .stays li { flex-wrap: wrap; white-space: normal; }
   .stays li > .note { flex-basis: 100%; }
 }
+
+/* Schengen overstay marker */
+.stays .warn { display: grid; place-items: center; color: var(--danger); cursor: help; }
+
+/* Unplanned stretches between stays: quieter rows with a hollow dot, the add button where edit would be */
+.stays li.gap { color: var(--muted); min-height: 44px; padding-block: 11px; }
+.stays li.gap i { background: none; border: 1.5px dashed var(--line-strong); }
