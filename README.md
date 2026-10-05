@@ -221,6 +221,7 @@ npm run dev
 ```
 index.html              入口頁，載入字體與 favicon
 public/favicon.svg      16×16 像素風地球圖示
+public/og.png           分享連結時的預覽圖（1200×630）
 docs/overview.png       README 用的範例圖（由 app 的「分享」下載）
 src/
   main.tsx              React 掛載點；決定樣式載入順序

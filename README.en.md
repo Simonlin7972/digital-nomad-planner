@@ -224,6 +224,7 @@ Older formats still load: week-based `startWeek`/`endWeek`, a single `location` 
 ```
 index.html              Entry page; loads the font and favicon
 public/favicon.svg      16×16 pixel-art globe
+public/og.png           Link-preview image (1200×630)
 docs/overview.png       Sample image for the README (downloaded from the app's Share dialog)
 src/
   main.tsx              React mount point; sets the stylesheet order
