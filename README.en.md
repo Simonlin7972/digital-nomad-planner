@@ -35,7 +35,7 @@ The interface is available in Traditional Chinese and English; switch from the t
 
 ### Year view (timeline)
 
-- One horizontal timeline of the 53 weeks of 2027, one cell per week, each split into two half-weeks
+- One horizontal timeline of a whole year (53 weeks in 2027), one cell per week, each split into two half-weeks
 - Drag across empty cells → enter a country and city → a stay appears
 - Dragging a whole stay **reorders** it: once it is halfway past a neighbour the two swap, and so on down the line
 - Dragging a stay's edge **resizes and pushes**: growing shoves neighbours along, using up gaps first
@@ -66,10 +66,11 @@ The interface is available in Traditional Chinese and English; switch from the t
 - **Summary**: weeks planned and free, countries and cities visited, an estimate of flights and hours in the air, and weeks and days per country and city
 - **Days of stay**: the summary works out the most days spent in the Schengen area within any 180 days (the limit is 90; when exceeded it says from which date), and the days planned in Taiwan during 2027 (183 days is the tax-residency threshold). Only days on the timeline are counted
 - **Itinerary**: one line per stay — dates, flag and country, city, weeks (days), companions, note; filter by Q1–Q4; stays with a flight show a ticket icon; stays that overrun the Schengen limit show a warning icon
-- **Seasons**: about 58 popular nomad bases (Chiang Mai, Bali, Lisbon, Mexico City…) carry a best / fine / avoid rating for each month, with reasons. The editor shows a twelve-month strip; stays that land in months to avoid (Chiang Mai's burning season in March–April, Dubai's summer) get a warning on the block, in the itinerary and on the hover card
+- **Seasons**: about 63 popular nomad bases (Chiang Mai, Bali, Lisbon, Mexico City…) carry a best / fine / avoid rating for each month, with reasons. The editor has a "When to go" button that opens the twelve months and reasons (it flags a poor season even when closed); stays that land in months to avoid (Chiang Mai's burning season in March–April, Dubai's summer) get a warning on the block, in the itinerary and on the hover card
 - **Free stretches**: unplanned days between stays are listed in the itinerary too; press `+` to add a stay in that gap
 - **Map**: every place in visit order, joined into a route
-- **Public holidays**: toggle Taiwan's and Australia's 2027 holidays, drawn over the timeline and calendar
+- **Year**: the drop-down beside the view tabs switches between 2026, 2027 and 2028; each year keeps its own plan. Dragging the month row past December (or January) and letting go moves to the next (or previous) year
+- **Public holidays**: toggle Taiwan's and Australia's 2026 and 2027 holidays, drawn over the timeline and calendar (no holiday data for 2028 yet)
 
 ### Also
 
@@ -129,6 +130,7 @@ The live site and a local copy use separate browser storage (different addresses
 | Drag a stay's edge | Resize, pushing neighbours | Resize, pushing neighbours |
 | Hover a stay | Show its details | Show its details |
 | Drag the month row | Pan the timeline | — |
+| Drag the month row past the start or end of the year and let go | Move to the previous or next year | — |
 | Click a month | Open that month | — |
 | Pinch / `Ctrl`+wheel / `Alt`+wheel | Zoom the timeline | — |
 
@@ -151,13 +153,14 @@ Undo and redo shortcuts are left alone while you are typing in a field, while th
 
 | Key | Contents |
 | --- | --- |
-| `dnp-plan-2027` | The plan itself |
+| `dnp-plan-2026`, `dnp-plan-2027`, `dnp-plan-2028` | The plan for each year |
+| `dnp-year` | The year being planned |
 | `dnp-geocode` | Cached coordinates for place names |
 | `dnp-zoom` | Timeline zoom level |
 | `dnp-view` | Current view (year or month) and month |
 | `dnp-holidays` | Which holiday sets are on |
 | `dnp-lang` | Interface language |
-| `dnp-backup` | Time of the last export (or import) and a fingerprint of the plan, used to decide when to show the backup reminder |
+| `dnp-backup`, `dnp-backup-<year>` | Time of the last export (or import) and a fingerprint of the plan, used to decide when to show the backup reminder; 2027 uses `dnp-backup`, other years one each |
 
 Clearing browser data, or using a different browser or computer, means the plan won't be there. Use Export (in the `⋯` menu) to keep a backup.
 
@@ -214,7 +217,7 @@ Names are accepted on import too: `"country": "泰國"`, `"Thailand"` and `"city
 
 Imports are sanitised (`sanitize`): entries that are malformed, out of range, or that overlap an earlier entry are skipped rather than failing the whole file.
 
-Dates can range from 2026-12-28 to 2028-01-02, the 53 full weeks that cover 2027.
+Dates can range over the full weeks of the year's timeline: from the Monday of the week containing 1 January to the Sunday of the week containing 31 December. For 2027 that is 2026-12-28 to 2028-01-02 (53 weeks). `year` is the year the file was exported from; on import, stays outside the current year's range are skipped.
 
 Older formats still load: week-based `startWeek`/`endWeek`, a single `location` field (treated as the city), and countries and cities stored by name rather than code.
 
@@ -240,6 +243,7 @@ src/
     BackupReminder      Backup reminder under the header
     Editor              Dialog for adding and editing a stay
     HelpDialog          The "How to use" guide
+    YearSelect          The year drop-down
     SeasonStrip         The twelve-month season strip in the editor
     ShareDialog         Share: PNG preview, download, system share sheet
     MobileItinerary     The read-only phone itinerary (now / next, stay cards)
@@ -268,7 +272,7 @@ src/
     backup.ts           Backup reminder state and rules
     flags.ts            Country list, search, name → ISO code
     cities.ts           Built-in city list (Chinese and English) and search
-    holidays.ts         2027 public holiday data
+    holidays.ts         2026 and 2027 public holiday data
     geocode.ts          Nominatim lookups, rate limiting, cache
     exportPng.ts        Draws the PNG on a canvas
     files.ts            File names and download
@@ -291,7 +295,7 @@ Built with Vite, React 19 and TypeScript. There is no router, state library, UI 
 
 Knowing these before reading the code will save time.
 
-**Dates are day indexes.** Day 0 is 2026-12-28, the Monday of the week containing 1 January 2027. In memory a stay is `{ startDay, endDay }`, inclusive; it becomes ISO strings only when saved. Because day 0 is a Monday, `day % 7` is the weekday.
+**Dates are day indexes.** Day 0 is the Monday of the week containing 1 January of the chosen year (2026-12-28 for 2027). The year is kept in `dnp-year`. Switching calls `setYear`, which rebuilds the date model (`lib/weeks.ts` exports live bindings, so other modules see the new values) and remounts the whole page component keyed by year, so nothing needs a reload and nothing derived from the old year survives. In memory a stay is `{ startDay, endDay }`, inclusive; it becomes ISO strings only when saved. Because day 0 is a Monday, `day % 7` is the weekday.
 
 **The year view is approximate; the data is always exact.** The timeline splits each week into two half-week slots (Monday–Thursday, Friday–Sunday). Each end of a stay is drawn at the nearest slot boundary, but the stored dates don't change. So a stay moved to start on a Wednesday in the month view still draws from Monday or Friday in the year view.
 
@@ -313,7 +317,7 @@ Knowing these before reading the code will save time.
 
 **The backup reminder isn't part of the plan.** `dnp-backup` remembers a fingerprint of the plan at the last export or import (an FNV-1a hash of the export format, independent of stay order). The clock starts when the plan differs from that fingerprint and the reminder shows after 7 days; undoing back to the exported state stops it. It isn't in the undo history and isn't written to exports.
 
-**Season data is fixed and hand-written.** `lib/seasons.ts` has one entry per city: twelve monthly ratings (0 avoid, 1 fine, 2 best) and reasons tied to months, keyed by how stays store places (ISO code / English city name), with `ALIASES` for a few neighbouring places. It is general guidance (climate, monsoons, smoke, heat, crowds), not a forecast, and calls no API. To add a city, add an entry in the same shape and make sure every month rated 0 has an avoid reason and every month rated 2 a best reason.
+**Season data is fixed and hand-written.** `lib/seasons.ts` has one entry per city: twelve monthly ratings (0 avoid, 1 fine, 2 best), typical daily highs and lows per month (rounded climate normals, shown after each reason as "19 to 36°C"), and reasons tied to months, keyed by how stays store places (ISO code / English city name), with `ALIASES` for a few neighbouring places. It is general guidance (climate, monsoons, smoke, heat, crowds), not a forecast, and calls no API. To add a city, add an entry in the same shape and make sure every month rated 0 has an avoid reason and every month rated 2 a best reason.
 
 **The PNG is drawn separately.** `lib/exportPng.ts` redraws the year on a canvas rather than capturing the screen, so the output has a fixed size regardless of window and zoom — but new on-screen elements don't appear in it unless they are added there too.
 
@@ -321,7 +325,7 @@ Knowing these before reading the code will save time.
 
 ## Known limits
 
-- **The year is fixed at 2027.** The constant is `YEAR` in `lib/weeks.ts`; the holiday data is also for 2027 only
+- **Only 2026, 2027 and 2028** (`YEARS` in `lib/weeks.ts`); holiday data exists for 2026 and 2027 only; switching year clears the undo history
 - **Two interface languages**, Traditional Chinese and English; the product spec (`MVP.md`) is in Chinese only
 - **What you type isn't translated**: unlisted countries and cities, notes and companions show as typed in both languages
 - **Editing is desktop-only.** Phones (720px and narrower) get a read-only layout; a tablet or laptop window narrower than 720px does too
@@ -330,14 +334,14 @@ Knowing these before reading the code will save time.
 - **A copied stay doesn't carry the flight details** (a flight belongs to one trip)
 - **One flight per stay**
 - **The shared image doesn't include the map**
-- **Season data covers about 58 cities** and is general guidance; a given year's weather can differ. Season warnings aren't in the shared image
+- **Season data covers about 63 cities** and is general guidance; a given year's weather can differ. Season warnings aren't in the shared image
 - **Place names on the map are in the local script and English**, as the base map provides
 - **The built-in city list is limited** (about 330); smaller places have to be typed, and the Chinese names are hand-picked and may differ from the spelling you're used to
 - **Place lookup depends on Nominatim.** Places it can't find don't appear on the map and are left out of the flight estimate
 - **The typefaces depend on the emfont and Google Fonts services**; offline, the page falls back to system fonts
 - **Australian holidays are national ones only**; state holidays aren't listed
 - **Undo history doesn't survive a reload**
-- **Day counts are estimates**: they know nothing of travel before 2026-12-28 or of actual entry and exit days, and a day on which you change places counts toward only one stay
+- **Day counts are estimates**: they know nothing of travel before the timeline starts (2026-12-28 for 2027) or of actual entry and exit days, and a day on which you change places counts toward only one stay
 - **The Schengen country list is hard-coded** and needs a manual update when membership changes
 
 ---
@@ -346,7 +350,7 @@ Knowing these before reading the code will save time.
 
 Not scheduled; discussion welcome.
 
-- Selectable year, multiple years
+- Holiday data for 2028; more years
 - More languages
 - A real city database with search, instead of a short list plus free text
 - Season data for more cities, and a season band on the timeline
@@ -373,7 +377,7 @@ The full product spec and decision history are in [MVP.md](MVP.md) (Chinese).
 | [975HazyGo](https://font.emtech.cc/fonts/975HazyGo) (via emfont) | Interface typeface | See the license shown on the font's page |
 | [Pixelify Sans](https://fonts.google.com/specimen/Pixelify+Sans) (via Google Fonts) | Tagline typeface | OFL-1.1 |
 
-The 2027 holiday data was compiled by hand. Taiwan's long weekends follow press reports of the government's 2027 office calendar; the Dragon Boat Festival, Mid-Autumn Festival and Teachers' Day are single days worked out from the calendar. Australia lists national holidays only. None of the dates were checked one by one against the original official notices, so treat the official sources as authoritative.
+The 2026 and 2027 holiday data was compiled by hand. Taiwan's holidays follow press reports of the government's 2026 and 2027 office calendars (for 2027, the Dragon Boat Festival, Mid-Autumn Festival and Teachers' Day are single days worked out from the calendar). Australia lists national holidays only. None of the dates were checked one by one against the original official notices, so treat the official sources as authoritative.
 
 If you deploy this publicly with real traffic, note that Nominatim's public server allows one request per second and isn't meant for heavy use; switch to a self-hosted or paid geocoder.
 

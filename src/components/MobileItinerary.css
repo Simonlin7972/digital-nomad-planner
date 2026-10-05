@@ -1,5 +1,6 @@
 /* Phone layout: a "now / next" card, then one card per stay with everything written out */
 .mobile { display: flex; flex-direction: column; gap: 16px; }
+.mobile-year { display: flex; }
 .mobile .panel { padding: 20px 16px; }
 
 .now { display: flex; flex-direction: column; gap: 16px; }

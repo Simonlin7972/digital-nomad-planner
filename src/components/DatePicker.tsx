@@ -111,10 +111,10 @@ export function DatePicker({ value, onChange, min, max, rangeWith, openAt, align
         aria-label={label}
         onClick={toggle}
       >
+        <CalendarBlank size={16} weight="bold" />
         <span className={selected ? undefined : 'empty'}>
           {selected ? fullDate(selected) : (placeholder ?? t('date.placeholder'))}
         </span>
-        <CalendarBlank size={16} weight="bold" />
       </button>
       {open && (
         <div className={`datepicker-pop ${align}`} id={popId} role="dialog" aria-label={label}>

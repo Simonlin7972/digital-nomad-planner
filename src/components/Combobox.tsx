@@ -1,7 +1,9 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { cityLabel, searchCities } from '../lib/cities';
-import { countryLabel, isListedCountry, searchCountries } from '../lib/flags';
+import { GlobeHemisphereWest } from '@phosphor-icons/react/dist/csr/GlobeHemisphereWest';
+import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin';
+import { countryLabel, flagCode, isListedCountry, searchCountries } from '../lib/flags';
 import { t, useLocale } from '../lib/i18n';
 import { Flag } from './Flag';
 import './Combobox.css';
@@ -22,12 +24,24 @@ type Props<T extends Option> = {
   placeholder: string;
   emptyText: string;
   hint?: ReactNode; // shown under the field while the list is closed
+  icon: ReactNode; // at the start of the field
   autoFocus?: boolean;
 };
 
 // Text field with a searchable list, so names are picked rather than typed out. Free text is always accepted:
 // the plan may hold older or unusual entries, and no list of places is complete.
-function Combobox<T extends Option>({ value, display, onChange, onPick, search, placeholder, emptyText, hint, autoFocus }: Props<T>) {
+function Combobox<T extends Option>({
+  value,
+  display,
+  onChange,
+  onPick,
+  search,
+  placeholder,
+  emptyText,
+  hint,
+  icon,
+  autoFocus,
+}: Props<T>) {
   const [open, setOpen] = useState(false);
   // Until the user types, the field shows the whole list rather than just what matches the current value.
   const [typed, setTyped] = useState(false);
@@ -74,41 +88,44 @@ function Combobox<T extends Option>({ value, display, onChange, onPick, search, 
 
   return (
     <div className="combo">
-      <input
-        role="combobox"
-        aria-expanded={open}
-        aria-controls={listId}
-        aria-autocomplete="list"
-        aria-activedescendant={open && options[active] ? `${listId}-${active}` : undefined}
-        autoFocus={autoFocus}
-        autoComplete="off"
-        value={text}
-        placeholder={placeholder}
-        maxLength={40}
-        onChange={(e) => {
-          // Typed text is held as-is; it is matched against the list when the stay is saved.
-          onChange(e.target.value);
-          setDraft(e.target.value);
-          setTyped(true);
-          setArmed(true);
-          setOpen(true);
-          setActive(0);
-        }}
-        onFocus={(e) => {
-          e.target.select();
-          setTyped(false);
-          setArmed(false);
-          setActive(search('').findIndex((o) => o.value === value.trim()));
-        }}
-        // Focus alone doesn't open the list (the editor focuses a field as it opens); a click, typing or an
-        // arrow key does.
-        onClick={() => setOpen(true)}
-        onBlur={() => {
-          setOpen(false);
-          setDraft(null);
-        }}
-        onKeyDown={onKeyDown}
-      />
+      <div className="combo-input">
+        <span className="field-icon">{icon}</span>
+        <input
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={listId}
+          aria-autocomplete="list"
+          aria-activedescendant={open && options[active] ? `${listId}-${active}` : undefined}
+          autoFocus={autoFocus}
+          autoComplete="off"
+          value={text}
+          placeholder={placeholder}
+          maxLength={40}
+          onChange={(e) => {
+            // Typed text is held as-is; it is matched against the list when the stay is saved.
+            onChange(e.target.value);
+            setDraft(e.target.value);
+            setTyped(true);
+            setArmed(true);
+            setOpen(true);
+            setActive(0);
+          }}
+          onFocus={(e) => {
+            e.target.select();
+            setTyped(false);
+            setArmed(false);
+            setActive(search('').findIndex((o) => o.value === value.trim()));
+          }}
+          // Focus alone doesn't open the list (the editor focuses a field as it opens); a click, typing or an
+          // arrow key does.
+          onClick={() => setOpen(true)}
+          onBlur={() => {
+            setOpen(false);
+            setDraft(null);
+          }}
+          onKeyDown={onKeyDown}
+        />
+      </div>
       {open && (
         <ul className="combo-list" role="listbox" id={listId} ref={listRef}>
           {options.map((o, i) => (
@@ -148,7 +165,8 @@ export function CountryCombobox(props: {
   const locale = useLocale();
   const recentKey = recent.join('|');
   const search = useMemo(
-    () => (query: string) => searchCountries(query, recent).map((o) => ({ value: o.value, name: o.name, sub: o.sub, flag: o.value })),
+    () => (query: string) =>
+      searchCountries(query, recent).map((o) => ({ value: o.value, name: o.name, sub: o.sub, flag: o.value })),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- recentKey stands in for the array; names follow the locale
     [recentKey, locale],
   );
@@ -162,6 +180,8 @@ export function CountryCombobox(props: {
       placeholder={t('country.placeholder')}
       emptyText={t('country.empty')}
       hint={unlisted && <small className="combo-hint">{t('country.unlisted', { name: value.trim() })}</small>}
+      // Once the field names a country with a flag, the flag replaces the globe.
+      icon={flagCode(value) ? <Flag country={value} /> : <GlobeHemisphereWest size={16} weight="bold" />}
       autoFocus={autoFocus}
     />
   );
@@ -201,6 +221,7 @@ export function CityCombobox(props: {
       search={search}
       placeholder={t('city.placeholder')}
       emptyText={t('city.empty')}
+      icon={<MapPin size={16} weight="bold" />}
     />
   );
 }

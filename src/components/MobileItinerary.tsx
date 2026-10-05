@@ -7,6 +7,7 @@ import { noteText, seasonWarning } from '../lib/seasons';
 import { checkSchengen, gapsOf } from '../lib/stayRules';
 import { DAY0, dateOfDay, daysOf, longRangeLabel, todayIndex, weeksLabel } from '../lib/weeks';
 import { Flag } from './Flag';
+import { YearSelect } from './YearSelect';
 import './MobileItinerary.css';
 
 // The phone layout: nothing to drag, just where you are, where you go next, and every stay written out in
@@ -28,6 +29,9 @@ export function MobileItinerary({ stays }: { stays: Stay[] }) {
 
   return (
     <section className="mobile">
+      <div className="mobile-year">
+        <YearSelect />
+      </div>
       {(current || next) && (
         <div className="panel now">
           {current && (

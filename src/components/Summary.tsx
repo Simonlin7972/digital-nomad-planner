@@ -54,7 +54,7 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
       {(schengen.days > 0 || twDays > 0) && (
         <ul className="rules">
           {schengen.days > 0 && (
-            <li title={t('rules.schengenHint')} className={schengen.firstOver === null ? undefined : 'over'}>
+            <li title={t('rules.schengenHint', { start: fullDate(dateOfDay(0)) })} className={schengen.firstOver === null ? undefined : 'over'}>
               {tr('rules.schengen', { peak: <b>{schengen.peak}</b> })}
               {schengen.firstOver !== null && (
                 <span>

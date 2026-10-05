@@ -41,7 +41,8 @@ export type Stay = DayRange & {
   note?: string;
 };
 
-const KEY = `dnp-plan-${YEAR}`;
+// Each year has its own plan; the key follows the year being planned.
+const planKey = () => `dnp-plan-${YEAR}`;
 
 export function overlaps(a: DayRange, b: DayRange) {
   return a.startDay <= b.endDay && b.startDay <= a.endDay;
@@ -214,7 +215,7 @@ export function sanitize(data: unknown): Stay[] {
 
 export function load(): Stay[] {
   try {
-    const text = localStorage.getItem(KEY);
+    const text = localStorage.getItem(planKey());
     return text ? sanitize(JSON.parse(text)) : [];
   } catch {
     return [];
@@ -223,7 +224,7 @@ export function load(): Stay[] {
 
 export function save(stays: Stay[]) {
   try {
-    localStorage.setItem(KEY, JSON.stringify(serialize(stays)));
+    localStorage.setItem(planKey(), JSON.stringify(serialize(stays)));
   } catch {
     // storage unavailable (private mode / quota) — keep working in memory
   }

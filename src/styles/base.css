@@ -113,7 +113,8 @@ button.danger:hover:not(:disabled) { border-color: transparent; background: var(
   background: #fff;
   transition: transform 0.15s;
 }
-.toggle[aria-checked='true'] { border-color: var(--text); }
+/* switched on: the same 2px dark ring, inside the edge, that fields and open menus use */
+.toggle[aria-checked='true'] { outline: 2px solid var(--text); outline-offset: -1px; border-color: transparent; }
 .toggle[aria-checked='true'] .knob { background: var(--c); }
 .toggle[aria-checked='true'] .knob::after { transform: translateX(12px); }
 
@@ -121,6 +122,11 @@ button.danger:hover:not(:disabled) { border-color: transparent; background: var(
 .view { animation: view-in 0.2s ease-out; transition: opacity 0.14s ease-in, transform 0.14s ease-in; }
 .view.leaving { opacity: 0; transform: translateY(4px); pointer-events: none; }
 @keyframes view-in { from { opacity: 0; transform: translateY(4px); } }
+/* Year change: the new year slides in from the side the drag (or the picker) moved towards */
+.view.year-in-next { animation: year-in-next 0.32s cubic-bezier(0.3, 0.7, 0.2, 1); }
+.view.year-in-prev { animation: year-in-prev 0.32s cubic-bezier(0.3, 0.7, 0.2, 1); }
+@keyframes year-in-next { from { opacity: 0; transform: translateX(48px); } }
+@keyframes year-in-prev { from { opacity: 0; transform: translateX(-48px); } }
 
 /* Panels */
 .panels {

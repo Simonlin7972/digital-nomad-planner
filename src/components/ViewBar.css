@@ -1,5 +1,6 @@
 .timeline-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; margin-bottom: 16px; }
 .toggles { display: flex; gap: 8px; flex-wrap: wrap; }
+.view-pick { display: flex; align-items: center; gap: 8px; }
 
 /* View switch: two equal tabs over a white pill (.thumb) that slides to the selected one */
 .segmented {

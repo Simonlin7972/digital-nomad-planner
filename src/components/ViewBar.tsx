@@ -4,6 +4,7 @@ import { Plus } from '@phosphor-icons/react/dist/csr/Plus';
 import { holidaySets } from '../lib/holidays';
 import { t, useLocale } from '../lib/i18n';
 import { ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, type HolidayToggles, type View } from '../lib/prefs';
+import { YearSelect } from './YearSelect';
 import './ViewBar.css';
 
 type Props = {
@@ -20,14 +21,17 @@ export function ViewBar({ mode, onMode, holidayOn, onToggleHoliday, zoom, onZoom
   useLocale();
   return (
     <div className="timeline-bar">
-      <div className="segmented" role="tablist" aria-label={t('view.label')} style={{ '--i': mode === 'year' ? 0 : 1 } as CSSProperties}>
-        {/* The white pill behind the selected tab; it slides between tabs instead of each tab painting its own. */}
-        <span className="thumb" aria-hidden />
-        {(['year', 'month'] as const).map((m) => (
-          <button key={m} role="tab" aria-selected={mode === m} onClick={() => onMode(m)}>
-            {t(m === 'year' ? 'view.year' : 'view.month')}
-          </button>
-        ))}
+      <div className="view-pick">
+        <YearSelect />
+        <div className="segmented" role="tablist" aria-label={t('view.label')} style={{ '--i': mode === 'year' ? 0 : 1 } as CSSProperties}>
+          {/* The white pill behind the selected tab; it slides between tabs instead of each tab painting its own. */}
+          <span className="thumb" aria-hidden />
+          {(['year', 'month'] as const).map((m) => (
+            <button key={m} role="tab" aria-selected={mode === m} onClick={() => onMode(m)}>
+              {t(m === 'year' ? 'view.year' : 'view.month')}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="toggles">
         {holidaySets().map((set) => (

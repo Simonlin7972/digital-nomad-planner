@@ -49,7 +49,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           下方行程列表會列出還沒排的<b>空檔</b>，按右邊的 <b>+</b> 直接排一段。
         </>,
         <>
-          熱門城市在編輯視窗會顯示<b>適合的季節</b>（推薦／普通／避開）；排到該避開的月份，色塊和列表會出現警示。
+          熱門城市在編輯視窗有<b>適合的季節</b>按鈕，點開看各月推薦／普通／避開；排到該避開的月份，色塊和列表會出現警示。
         </>,
         <>
           摘要會算<b>申根 90/180 天</b>與<b>台灣 183 天</b>；申根超過上限的行程，列表上會出現警示圖示。只算排進時間軸的日子，實際規定以官方為準。
@@ -64,6 +64,9 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           <b>年</b>檢視看整年大方向，以半週為單位；<b>月</b>檢視是月曆，可以精準到每一天。
         </>,
         <>點時間軸上的月份，直接跳到那個月。</>,
+        <>
+          分頁左邊可以切換<b>年份</b>（2026／2027／2028），每年各存一份行程。按住月份列拖過 12 月再繼續拉，放開就到下一年（往 1 月拉則回上一年）。
+        </>,
         <>
           年檢視可以放大：用上方滑桿、觸控板兩指開合，或按住 <kbd>{alt}</kbd> 滾動滾輪。放大後按住月份列可以左右拖。
         </>,
@@ -138,7 +141,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           The itinerary below lists the <b>free stretches</b> between stays; press the <b>+</b> beside one to plan a stay there.
         </>,
         <>
-          For popular cities the editor shows <b>when to go</b> (best / fine / avoid); a stay in a month to avoid gets a warning on its block
+          For popular cities the editor has a <b>When to go</b> button that opens each month's rating (best / fine / avoid); a stay in a month to avoid gets a warning on its block
           and in the itinerary.
         </>,
         <>
@@ -155,6 +158,10 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           The <b>Year</b> view shows the whole year in half-week steps; the <b>Month</b> view is a calendar, precise to the day.
         </>,
         <>Click a month on the timeline to jump straight to it.</>,
+        <>
+          The drop-down beside the tabs switches the <b>year</b> (2026 / 2027 / 2028); each year keeps its own plan. Drag the month row past
+          December and keep pulling, then let go, to move to the next year (or past January for the previous one).
+        </>,
         <>
           Zoom the year view with the slider, a trackpad pinch, or by holding <kbd>{alt}</kbd> and scrolling. When zoomed in, drag the
           month row to pan.

@@ -1,0 +1,48 @@
+/* Year picker: a pill the same height as the year/month switch beside it, opening a menu like the toolbar's ⋯ */
+.year-select { position: relative; }
+.year-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 33px;
+  padding: 0 12px 0 14px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.year-button svg { color: var(--muted); transition: transform 0.15s; }
+.year-button[aria-expanded='true'] svg { transform: rotate(180deg); }
+.year-button[aria-expanded='true'] { outline: 2px solid var(--text); outline-offset: -1px; border-color: transparent; }
+
+.year-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+  padding: 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  animation: fade 0.12s ease-out;
+}
+.year-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-size: 14px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.year-menu button[aria-checked='true'] { font-weight: 600; }
+.year-menu button:hover:not(:disabled),
+.year-menu button:focus-visible { background: var(--subtle); outline: none; }
+.year-menu button:active:not(:disabled) { transform: none; }

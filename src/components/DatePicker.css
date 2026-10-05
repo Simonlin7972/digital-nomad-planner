@@ -5,8 +5,8 @@
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 12px;
   padding: 12px;
   border: 1px solid #b0b0b0;
   border-radius: 8px;

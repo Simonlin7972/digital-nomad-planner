@@ -1,11 +1,13 @@
 // Remembers what was last exported, so the page can nudge when the plan has gone a while without a backup.
 // Kept per browser like the other preferences; it is not part of the plan, the export or the undo history.
 import { serialize, type Stay } from './storage';
+import { YEAR } from './weeks';
 
 export const REMIND_AFTER_DAYS = 7; // unbacked changes this old bring up the reminder
 export const SNOOZE_DAYS = 3;
 const DAY_MS = 86_400_000;
-const KEY = 'dnp-backup';
+// One record per year, like the plans. 2027's record predates multiple years and kept the plain key.
+const key = () => (YEAR === 2027 ? 'dnp-backup' : `dnp-backup-${YEAR}`);
 
 export type BackupState = {
   hash: string | null; // fingerprint of the plan as last exported or imported
@@ -19,7 +21,7 @@ const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : n
 
 export function loadBackup(): BackupState {
   try {
-    const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null') as Record<string, unknown> | null;
+    const raw = JSON.parse(localStorage.getItem(key()) ?? 'null') as Record<string, unknown> | null;
     if (!raw || typeof raw !== 'object') return EMPTY;
     return {
       hash: typeof raw.hash === 'string' ? raw.hash : null,
@@ -34,7 +36,7 @@ export function loadBackup(): BackupState {
 
 export function saveBackup(state: BackupState) {
   try {
-    localStorage.setItem(KEY, JSON.stringify(state));
+    localStorage.setItem(key(), JSON.stringify(state));
   } catch {
     // storage unavailable: the reminder just won't remember
   }

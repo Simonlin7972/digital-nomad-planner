@@ -60,7 +60,7 @@ const zh = {
   'summary.flightsHint': '依行程順序、兩地直線距離估算；300 公里內視為陸路不計，未含轉機',
   'rules.schengen': '申根區：任 180 天內最多 {peak} 天（上限 90）',
   'rules.schengenOver': '{date}起超過 90 天',
-  'rules.schengenHint': '每一天往前回推 180 天，計算待在申根國家的天數；不含 2026/12/28 之前，也不計「歐洲」這類區域',
+  'rules.schengenHint': '每一天往前回推 180 天，計算待在申根國家的天數；不含時間軸開始（{start}）之前，也不計「歐洲」這類區域',
   'rules.taiwan': '台灣：{year} 年內 {days}（滿 183 天為稅務居住者）',
   'rules.taiwanHint': '只算排在台灣的行程，未安排的日子不算；以課稅年度 1/1–12/31 計',
 
@@ -160,6 +160,11 @@ const zh = {
   'season.fine': '普通',
   'season.avoid': '避開',
   'season.disclaimer': '一般性參考，非天氣預報',
+  'season.temp': '約 {lo}～{hi}°C',
+  'season.basis': '以{city}為準',
+
+  'year.label': '年份',
+  'year.release': '放開切到 {year}',
   'season.warn': '這段時間建議避開：{why}',
   'season.warnShort': '季節不佳',
 
@@ -226,7 +231,7 @@ const en: Record<keyof typeof zh, string> = {
   'summary.flightsHint': 'Estimated from straight-line distance between consecutive stays; hops under 300 km count as ground travel, and layovers are ignored',
   'rules.schengen': 'Schengen: up to {peak} days in any 180 (limit 90)',
   'rules.schengenOver': 'Over 90 from {date}',
-  'rules.schengenHint': 'For each day, counts the days spent in Schengen countries over the 180 days ending on it. Days before Dec 28, 2026 and broad regions such as "Europe" are not counted',
+  'rules.schengenHint': 'For each day, counts the days spent in Schengen countries over the 180 days ending on it. Days before the timeline starts ({start}) and broad regions such as "Europe" are not counted',
   'rules.taiwan': 'Taiwan: {days} in {year} (183 makes you a tax resident)',
   'rules.taiwanHint': 'Counts stays planned in Taiwan only, not unplanned days, over the tax year Jan 1–Dec 31',
 
@@ -326,6 +331,11 @@ const en: Record<keyof typeof zh, string> = {
   'season.fine': 'Fine',
   'season.avoid': 'Avoid',
   'season.disclaimer': 'General guidance, not a forecast',
+  'season.temp': '{lo} to {hi}°C',
+  'season.basis': 'based on {city}',
+
+  'year.label': 'Year',
+  'year.release': 'Release for {year}',
   'season.warn': 'Best avoided at this time: {why}',
   'season.warnShort': 'Poor season',
 

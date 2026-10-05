@@ -4,7 +4,7 @@ Guidance for Claude Code working in this repository.
 
 ## What this is
 
-A single-page planner for a year of digital nomading (2027). Vite + React 19 + TypeScript, no backend; all data lives in the browser's `localStorage`. The UI is in Traditional Chinese and English.
+A single-page planner for a year of digital nomading (2026, 2027 or 2028; 2027 by default). Vite + React 19 + TypeScript, no backend; all data lives in the browser's `localStorage`. The UI is in Traditional Chinese and English.
 
 - Product behaviour and decisions: [MVP.md](MVP.md)
 - Setup, data format, structure, design notes: [README.md](README.md)
@@ -33,7 +33,7 @@ A Stop hook (`.claude/hooks/docs-check.sh`) blocks once when code under `src/` o
 ## Architecture you need to know
 
 - **Layout.** `src/App.tsx` owns the plan and page-level state and wires things together. `src/components/` holds the UI (each with its `.css` beside it), `src/hooks/` the stateful helpers, `src/lib/` everything that isn't UI. Views own their own drag state and report results through callbacks; they never hold the plan.
-- **Dates are day indexes.** Day 0 is 2026-12-28, the Monday of the week containing 1 Jan 2027, so `day % 7` is the weekday. A stay is `{ startDay, endDay }` inclusive in memory and ISO strings on disk. Helpers are in `src/lib/weeks.ts`.
+- **Dates are day indexes.** Day 0 is the Monday of the week containing 1 Jan of `YEAR` (2026-12-28 for 2027), so `day % 7` is the weekday. `YEAR` and the date model built from it (`WEEKS`, `DAY0`, `TOTAL_DAYS`, `SLOTS`, `MONTHS`) are live `let` exports of `lib/weeks.ts`; `setYear` rebuilds them, saves `dnp-year` and notifies, and `App` remounts the page keyed by year. So never copy them into module-level constants (compute per call, as `storage.ts` does with `planKey()`), and never reload the page to change year. Never hard-code a year: use `YEAR`, `DAY0`, `monthRange`. Each year has its own plan (`dnp-plan-<year>`). Holiday data exists for 2026 and 2027; `holidaySets` returns none for other years, and clips holidays to the timeline so the borrowed days at either end show their neighbours' holidays. A stay is `{ startDay, endDay }` inclusive in memory and ISO strings on disk. Helpers are in `src/lib/weeks.ts`.
 - **The year view is approximate, the data is exact.** The timeline has two half-week slots per week; each end of a stay snaps to the nearest slot boundary for drawing only (`slotsOf`). Never round the stored dates to fit the display.
 - **Stays never overlap.** Every path that changes stays must keep this true.
 - **All plan changes go through `setStays` in `App.tsx`** (from `useHistory`). It pushes onto the undo stack. Do not write to `localStorage` or mutate stays any other way.
@@ -45,8 +45,8 @@ A Stop hook (`.claude/hooks/docs-check.sh`) blocks once when code under `src/` o
 - **Country names come from the browser.** `src/lib/flags.ts` builds the list from `Intl.DisplayNames` plus a few regions and aliases. The pickers (`src/components/Combobox.tsx`) still accept free text, so never assume a stay's country or city is on a list.
 - **The city list is a typing aid.** `src/lib/cities.ts` holds a hand-written `[Chinese, English]` list per ISO code. It is deliberately incomplete and carries no coordinates; unlisted cities are normal and get no warning.
 - **Stay rules are derived, never stored.** `src/lib/stayRules.ts` computes gaps, the Schengen 90/180 count and Taiwan's 183 days from the stays on every render. The Schengen list is ISO codes, so it only sees countries picked from the list.
-- **The backup reminder is not plan data.** `src/lib/backup.ts` keeps its own `dnp-backup` record (fingerprint of the last export or import). Call `markBackedUp` from any new path that writes the plan to a file the user keeps.
-- **Season data is fixed and hand-written** in `src/lib/seasons.ts`, keyed by stored `country/city`. Keep it consistent: twelve ratings per city, every month rated 0 covered by an `avoid` note and every month rated 2 by a `best` note. No weather API.
+- **The backup reminder is not plan data.** `src/lib/backup.ts` keeps its own record per year (`dnp-backup` for 2027, `dnp-backup-<year>` otherwise) (fingerprint of the last export or import). Call `markBackedUp` from any new path that writes the plan to a file the user keeps.
+- **Season data is fixed and hand-written** in `src/lib/seasons.ts`, keyed by stored `country/city`. Keep it consistent: twelve ratings and twelve highs and lows per city (highs above lows), every month rated 0 covered by an `avoid` note and every month rated 2 by a `best` note. No weather API.
 - **Coordinates** come from Nominatim via `src/lib/geocode.ts` (rate-limited, cached) and are shared through the `useCoords` hook.
 
 ## Conventions
@@ -69,7 +69,7 @@ A Stop hook (`.claude/hooks/docs-check.sh`) blocks once when code under `src/` o
 ## Verifying changes
 
 - Use the preview (`.claude/launch.json`, name `dev`) and check behaviour in the browser, not just types.
-- The preview shares one `localStorage` with whoever is using that browser. Before seeding test data, check `dnp-plan-2027` is empty, and remove what you added afterwards. Never clear existing plan data.
+- The preview shares one `localStorage` with whoever is using that browser. Before seeding test data, check `dnp-plan-<year>` (and `dnp-year`) are as you found them, and remove what you added afterwards. Never clear existing plan data.
 - Pointer interactions can be exercised with synthetic `PointerEvent`s; stub `Element.prototype.setPointerCapture` first, since capture fails for synthetic pointer ids.
 - Say plainly what was verified by simulation and what was not tried with a real mouse, trackpad or touch screen.
 

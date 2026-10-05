@@ -1,4 +1,18 @@
-/* Season guide in the editor: twelve month cells, then the reasons */
+/* Season guide in the editor: a small toggle, then twelve month cells and the reasons */
+.season { align-items: flex-start; }
+.season-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 6px 12px;
+  font-size: 12px;
+}
+.season-toggle .caret { transition: transform 0.15s; color: var(--muted); }
+.season-toggle[aria-expanded='true'] .caret { transform: rotate(180deg); }
+.season-flag { display: inline-flex; align-items: center; gap: 4px; color: var(--danger); }
+.season > :not(.season-toggle) { align-self: stretch; }
+.season-months { margin-top: 4px; }
+
 .season-months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; }
 .season-months li {
   height: 26px;
@@ -31,3 +45,6 @@
 .season-legend i.fine { background: var(--line-strong); }
 .season-legend i.avoid { background: color-mix(in srgb, var(--danger) 40%, transparent); }
 .season-legend span { margin-left: auto; }
+/* typical night-to-day temperatures for the note's months */
+.season-notes .temp { margin-left: 8px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.season-basis { font-weight: 400; color: var(--muted); }

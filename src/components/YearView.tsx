@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
+import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft';
+import { ArrowRight } from '@phosphor-icons/react/dist/csr/ArrowRight';
 import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
 import { usePinchZoom } from '../hooks/usePinchZoom';
 import type { Zoom } from '../hooks/useZoom';
@@ -44,7 +46,14 @@ type Props = {
   onHoverStay: (card: ({ id: string } & Anchor) | null) => void;
   onHoverHoliday: (card: ({ holiday: Holiday; set: HolidaySet } & Anchor) | null) => void;
   onDragging: (active: boolean) => void;
+  prevYear: number | null; // the years either side, if there are any to pull through to
+  nextYear: number | null;
+  onYearEdge: (dir: 1 | -1) => void; // pulled far enough past an end: switch to the neighbouring year
+  startAtEnd: boolean; // arrived from the following year, so show December first
 };
+
+// How far (px) the month row has to be pulled past the end of the timeline before letting go switches year.
+const PULL_TRIGGER = 140;
 
 const COPY_ID = '__copy__'; // id of the preview stay while alt-dragging
 
@@ -63,6 +72,7 @@ const stayCol = (r: DayRange) => {
 // The year at a glance: one horizontal timeline of 53 weeks, each split into two half-week slots.
 export default function YearView(props: Props) {
   const { stays, zoom, holidaySets, pending, onCreate, onEdit, onChange, onOpenMonth, onHoverStay, onHoverHoliday, onDragging } = props;
+  const { prevYear, nextYear, onYearEdge, startAtEnd } = props;
   useLocale();
   const [drag, setDrag] = useState<Drag | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -78,14 +88,28 @@ export default function YearView(props: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- report changes only; the callback identity is irrelevant
   }, [dragging]);
 
-  // Dragging the month header pans the (zoomed) timeline; a plain click opens that month.
+  // Coming back from the following year, start at December, where the drag left off.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (startAtEnd && el) el.scrollLeft = el.scrollWidth;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on arrival
+  }, []);
+
+  // Dragging the month header pans the (zoomed) timeline; a plain click opens that month. Pulling on past either
+  // end stretches the timeline a little and, once far enough, letting go moves to the neighbouring year.
   const pan = useRef<{ x: number; left: number; month: number | null; moved: boolean } | null>(null);
   const [panning, setPanning] = useState(false);
+  const [pull, setPull] = useState(0); // px past the end; positive is past December, negative past January
   function onPanStart(e: ReactPointerEvent<HTMLDivElement>) {
     const el = scrollRef.current;
     if (e.button !== 0 || !el) return;
     const label = (e.target as HTMLElement).closest<HTMLElement>('[data-month]');
-    pan.current = { x: e.clientX, left: el.scrollLeft, month: label ? Number(label.dataset.month) : null, moved: false };
+    pan.current = {
+      x: e.clientX,
+      left: el.scrollLeft,
+      month: label ? Number(label.dataset.month) : null,
+      moved: false,
+    };
     setPanning(true);
     e.currentTarget.setPointerCapture(e.pointerId);
     e.preventDefault();
@@ -94,14 +118,22 @@ export default function YearView(props: Props) {
     if (!pan.current || !scrollRef.current) return;
     const dx = e.clientX - pan.current.x;
     if (Math.abs(dx) > 4) pan.current.moved = true;
-    scrollRef.current.scrollLeft = pan.current.left - dx;
+    const el = scrollRef.current;
+    const want = pan.current.left - dx;
+    const max = el.scrollWidth - el.clientWidth;
+    el.scrollLeft = want;
+    setPull(want > max && nextYear !== null ? want - max : want < 0 && prevYear !== null ? want : 0);
   }
   function onPanEnd() {
     const p = pan.current;
     if (p && !p.moved && p.month !== null) onOpenMonth(p.month);
+    if (Math.abs(pull) >= PULL_TRIGGER) onYearEdge(pull > 0 ? 1 : -1);
     pan.current = null;
     setPanning(false);
+    setPull(0);
   }
+  const pullYear = pull > 0 ? nextYear : pull < 0 ? prevYear : null;
+  const pullReady = Math.abs(pull) >= PULL_TRIGGER;
 
   // Alt held: stays show a copy cursor, hinting that a drag will duplicate.
   const [altDown, setAltDown] = useState(false);
@@ -178,9 +210,7 @@ export default function YearView(props: Props) {
       const rangeAt = (delta: number): DayRange => {
         // Whole-week moves keep the exact dates; half-week moves snap the start to a slot boundary.
         const raw =
-          delta % 2 === 0
-            ? drag.orig.startDay + (delta / 2) * 7
-            : dayOfBoundary(clamp(slotsOf(drag.orig).s + delta, 0, SLOTS - 1));
+          delta % 2 === 0 ? drag.orig.startDay + (delta / 2) * 7 : dayOfBoundary(clamp(slotsOf(drag.orig).s + delta, 0, SLOTS - 1));
         const startDay = clamp(raw, 0, TOTAL_DAYS - len);
         return { startDay, endDay: startDay + len - 1 };
       };
@@ -254,111 +284,134 @@ export default function YearView(props: Props) {
   }
 
   return (
-    <div className="scroll" ref={scrollRef}>
-      <div className="timeline" style={{ '--n': SLOTS, '--zoom': zoom.zoom } as CSSProperties}>
+    <div className="year-view">
+      {pullYear !== null && (
         <div
-          className={`row months${panning ? ' panning' : ''}`}
-          onPointerDown={onPanStart}
-          onPointerMove={onPanMove}
-          onPointerUp={onPanEnd}
-          onPointerCancel={onPanEnd}
-          title={t('year.panHint')}
+          className={`year-pull ${pull > 0 ? 'next' : 'prev'}${pullReady ? ' ready' : ''}`}
+          style={{ opacity: Math.min(1, Math.abs(pull) / PULL_TRIGGER) }}
+          aria-hidden
         >
-          {MONTHS.map((m) => (
-            <div key={m.month} className="month" data-month={m.month} style={{ gridColumn: `${m.startIndex * 2 + 1} / span ${m.span * 2}` }}>
-              {monthName(m.month)}
-            </div>
-          ))}
+          {pull < 0 && <ArrowLeft size={16} weight="bold" />}
+          {pullReady ? t('year.release', { year: pullYear }) : pullYear}
+          {pull > 0 && <ArrowRight size={16} weight="bold" />}
         </div>
-        {holidaySets.map((set) => (
-          <div key={set.key} className="lane" style={{ '--c': set.color } as CSSProperties} aria-label={set.label}>
-            {set.holidays.map((d) => (
+      )}
+      <div className="scroll" ref={scrollRef}>
+        <div
+          className={`timeline${pull ? ' pulling' : ''}`}
+          style={{ '--n': SLOTS, '--zoom': zoom.zoom, '--pull': `${-pull * 0.3}px` } as CSSProperties}
+        >
+          <div
+            className={`row months${panning ? ' panning' : ''}`}
+            onPointerDown={onPanStart}
+            onPointerMove={onPanMove}
+            onPointerUp={onPanEnd}
+            onPointerCancel={onPanEnd}
+            title={t('year.panHint')}
+          >
+            {MONTHS.map((m) => (
               <div
-                key={`${d.name}-${d.startDay}`}
-                className="holiday"
-                style={{ left: `${(d.startDay / TOTAL_DAYS) * 100}%`, width: `${(daysOf(d) / TOTAL_DAYS) * 100}%` }}
-                onMouseEnter={(e) => {
-                  // Anchor to the visible label, which can extend past a one-day bar.
-                  const r = (e.currentTarget.firstElementChild ?? e.currentTarget).getBoundingClientRect();
-                  onHoverHoliday({ holiday: d, set, x: r.left + r.width / 2, y: r.bottom });
-                }}
-                onMouseLeave={() => onHoverHoliday(null)}
+                key={m.month}
+                className="month"
+                data-month={m.month}
+                style={{ gridColumn: `${m.startIndex * 2 + 1} / span ${m.span * 2}` }}
               >
-                <span>{d.short}</span>
+                {monthName(m.month)}
               </div>
             ))}
           </div>
-        ))}
-        <div
-          ref={trackRef}
-          className={`row track${drag ? ' dragging' : ''}${altDown ? ' alt' : ''}`}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={() => setDrag(null)}
-        >
-          {WEEKS.map((w) => (
-            <div
-              key={w.index}
-              className={`cell${w.index === thisWeek ? ' today' : ''}${MONTHS.some((m) => m.startIndex === w.index) ? ' month-start' : ''}`}
-              style={{ gridColumn: `${w.index * 2 + 1} / span 2` }}
-              title={rangeLabel({ startDay: w.index * 7, endDay: w.index * 7 + 6 })}
-            >
-              <span>{w.start.getDate()}</span>
+          {holidaySets.map((set) => (
+            <div key={set.key} className="lane" style={{ '--c': set.color } as CSSProperties} aria-label={set.label}>
+              {set.holidays.map((d) => (
+                <div
+                  key={`${d.name}-${d.startDay}`}
+                  className="holiday"
+                  style={{ left: `${(d.startDay / TOTAL_DAYS) * 100}%`, width: `${(daysOf(d) / TOTAL_DAYS) * 100}%` }}
+                  onMouseEnter={(e) => {
+                    // Anchor to the visible label, which can extend past a one-day bar.
+                    const r = (e.currentTarget.firstElementChild ?? e.currentTarget).getBoundingClientRect();
+                    onHoverHoliday({ holiday: d, set, x: r.left + r.width / 2, y: r.bottom });
+                  }}
+                  onMouseLeave={() => onHoverHoliday(null)}
+                >
+                  <span>{d.short}</span>
+                </div>
+              ))}
             </div>
           ))}
-          {visible.map((s) => {
-            const weeks = weeksLabel(daysOf(s));
-            return (
+          <div
+            ref={trackRef}
+            className={`row track${drag ? ' dragging' : ''}${altDown ? ' alt' : ''}`}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={() => setDrag(null)}
+          >
+            {WEEKS.map((w) => (
               <div
-                key={s.id}
-                data-stay={s.id}
-                className={`stay${s.id === activeId ? ' active' : ''}${s.id === COPY_ID && copyBlocked ? ' blocked' : ''}`}
-                style={{ ...stayCol(s), background: colorOf(s) }}
-                onMouseEnter={(e) => {
-                  // No card mid-drag; it would only get in the way.
-                  if (drag) return;
-                  const r = e.currentTarget.getBoundingClientRect();
-                  // A wide block can run off-screen, so centre on the part that is visible.
-                  const x = (Math.max(r.left, 0) + Math.min(r.right, window.innerWidth)) / 2;
-                  onHoverStay({ id: s.id, x, y: r.bottom });
-                }}
-                onMouseLeave={() => onHoverStay(null)}
+                key={w.index}
+                className={`cell${w.index === thisWeek ? ' today' : ''}${MONTHS.some((m) => m.startIndex === w.index) ? ' month-start' : ''}`}
+                style={{ gridColumn: `${w.index * 2 + 1} / span 2` }}
+                title={rangeLabel({ startDay: w.index * 7, endDay: w.index * 7 + 6 })}
               >
-                <span className="handle" data-edge="l" />
-                <span className="label">
-                  <strong>
-                    {seasonWarning(s) && <Warning size={12} weight="bold" aria-label={t('season.warnShort')} />}
-                    {placeName(s)}
-                  </strong>
-                  <small>{s.id === activeId ? rangeLabel(s) : `${weeks}${s.note ? `${t('sep')}${s.note.replace(/\s+/g, ' ')}` : ''}`}</small>
-                </span>
-                <span className="handle" data-edge="r" />
+                <span>{w.start.getDate()}</span>
               </div>
-            );
-          })}
-          {drag?.kind === 'select' && (
-            <div className="selection" style={slotCol(drag.lo, drag.hi + 1)}>
-              {t('unit.weeks', { n: (drag.hi - drag.lo + 1) / 2 })}
+            ))}
+            {visible.map((s) => {
+              const weeks = weeksLabel(daysOf(s));
+              return (
+                <div
+                  key={s.id}
+                  data-stay={s.id}
+                  className={`stay${s.id === activeId ? ' active' : ''}${s.id === COPY_ID && copyBlocked ? ' blocked' : ''}`}
+                  style={{ ...stayCol(s), background: colorOf(s) }}
+                  onMouseEnter={(e) => {
+                    // No card mid-drag; it would only get in the way.
+                    if (drag) return;
+                    const r = e.currentTarget.getBoundingClientRect();
+                    // A wide block can run off-screen, so centre on the part that is visible.
+                    const x = (Math.max(r.left, 0) + Math.min(r.right, window.innerWidth)) / 2;
+                    onHoverStay({ id: s.id, x, y: r.bottom });
+                  }}
+                  onMouseLeave={() => onHoverStay(null)}
+                >
+                  <span className="handle" data-edge="l" />
+                  <span className="label">
+                    <strong>
+                      {seasonWarning(s) && <Warning size={12} weight="bold" aria-label={t('season.warnShort')} />}
+                      {placeName(s)}
+                    </strong>
+                    <small>
+                      {s.id === activeId ? rangeLabel(s) : `${weeks}${s.note ? `${t('sep')}${s.note.replace(/\s+/g, ' ')}` : ''}`}
+                    </small>
+                  </span>
+                  <span className="handle" data-edge="r" />
+                </div>
+              );
+            })}
+            {drag?.kind === 'select' && (
+              <div className="selection" style={slotCol(drag.lo, drag.hi + 1)}>
+                {t('unit.weeks', { n: (drag.hi - drag.lo + 1) / 2 })}
+              </div>
+            )}
+            {pending && <div className="selection" style={stayCol(pending)} />}
+          </div>
+          {countryBars.length > 0 && (
+            <div className="row countries">
+              {countryBars.map((bar) => (
+                <div
+                  key={bar.id}
+                  className="country-bar"
+                  style={{ ...slotCol(bar.s, bar.e), '--c': bar.color } as CSSProperties}
+                  title={countryOf(bar)}
+                >
+                  <Flag country={bar.country} />
+                  <span>{countryOf(bar)}</span>
+                </div>
+              ))}
             </div>
           )}
-          {pending && <div className="selection" style={stayCol(pending)} />}
         </div>
-        {countryBars.length > 0 && (
-          <div className="row countries">
-            {countryBars.map((bar) => (
-              <div
-                key={bar.id}
-                className="country-bar"
-                style={{ ...slotCol(bar.s, bar.e), '--c': bar.color } as CSSProperties}
-                title={countryOf(bar)}
-              >
-                <Flag country={bar.country} />
-                <span>{countryOf(bar)}</span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

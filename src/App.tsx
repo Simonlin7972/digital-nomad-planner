@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState, useSyncExternalStore } from 'react';
 import { BackupReminder } from './components/BackupReminder';
 import { MobileItinerary } from './components/MobileItinerary';
 import { ShareDialog } from './components/ShareDialog';
@@ -24,15 +24,22 @@ import { t, useLocale } from './lib/i18n';
 import { loadHolidayToggles, loadView, saveHolidayToggles, saveView } from './lib/prefs';
 import { load, pushStays, sanitize, save, serialize, type ColorKey, type Stay } from './lib/storage';
 import { MOD, clamp } from './lib/util';
-import type { DayRange } from './lib/weeks';
+import { YEAR, YEARS, getYear, setYear, subscribeYear, yearDirection, type DayRange } from './lib/weeks';
 
 // The map library is large; load it separately from the planner itself.
 const MapView = lazy(() => import('./components/MapView'));
 
 const VIEW_FADE_MS = 140; // keep in sync with .view in styles/base.css
 
-// Owns the plan and the page-level state, and wires the pieces together. The pieces own their interactions.
+// The page for one year. Changing year remounts it, so nothing derived from the old year's dates survives;
+// `entered` says which way the year changed, for the slide-in.
 export default function App() {
+  const year = useSyncExternalStore(subscribeYear, getYear);
+  return <Planner key={year} entered={yearDirection()} />;
+}
+
+// Owns the plan and the page-level state, and wires the pieces together. The pieces own their interactions.
+function Planner({ entered }: { entered: -1 | 0 | 1 }) {
   const locale = useLocale();
   // Every change to the plan goes through setStays so it lands on the undo stack.
   const { present: stays, set: setStays, undo, redo, canUndo, canRedo } = useHistory<Stay[]>(load);
@@ -122,6 +129,8 @@ export default function App() {
     }
   }
 
+  // The years either side of this one that can be pulled through to on the timeline.
+  const neighbour = (dir: 1 | -1) => ((YEARS as readonly number[]).includes(YEAR + dir) ? YEAR + dir : null);
   const holidaySets = allHolidaySets().filter((set) => holidayOn[set.key]);
   const pending = editing && !editing.id ? editing : null;
   // No card mid-drag or behind the editor; it would only get in the way.
@@ -173,7 +182,10 @@ export default function App() {
             onZoom={zoom.stepTo}
           />
 
-          <div key={shownMode} className={`view${shownMode !== view.mode ? ' leaving' : ''}`}>
+          <div
+            key={shownMode}
+            className={`view${shownMode !== view.mode ? ' leaving' : ''}${entered ? ` year-in-${entered > 0 ? 'next' : 'prev'}` : ''}`}
+          >
             {shownMode === 'month' ? (
               <MonthView
                 stays={stays}
@@ -199,6 +211,10 @@ export default function App() {
                 onHoverStay={setStayCard}
                 onHoverHoliday={setHolidayCard}
                 onDragging={setDragging}
+                prevYear={neighbour(-1)}
+                nextYear={neighbour(1)}
+                onYearEdge={(dir) => setYear(YEAR + dir)}
+                startAtEnd={entered === -1}
               />
             )}
           </div>

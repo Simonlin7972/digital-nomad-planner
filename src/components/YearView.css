@@ -13,7 +13,36 @@
 .timeline {
   width: calc(var(--zoom, 1) * 100%);
   min-width: calc(var(--n) * 11px * var(--zoom, 1));
+  /* pulled past either end: shifts a little against the drag, then springs back */
+  transform: translateX(var(--pull, 0px));
+  transition: transform 0.25s cubic-bezier(0.3, 0.7, 0.2, 1);
 }
+.timeline.pulling { transition: none; }
+
+/* Year change by pulling: a hint at the edge being pulled, turning dark once letting go will switch */
+.year-view { position: relative; }
+.year-pull {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transform: translateY(-50%);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.year-pull.next { right: 16px; }
+.year-pull.prev { left: 16px; }
+.year-pull.ready { background: var(--text); border-color: var(--text); color: #fff; }
 
 .row {
   display: grid;

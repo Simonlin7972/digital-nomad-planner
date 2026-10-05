@@ -1,6 +1,18 @@
 import { getLocale, t } from './i18n';
 
-export const YEAR = 2027;
+// The years that can be planned. Each has its own plan in storage; the chosen one is remembered per browser.
+export const YEARS = [2026, 2027, 2028] as const;
+const YEAR_KEY = 'dnp-year';
+
+function loadYear(): number {
+  try {
+    const saved = Number(localStorage.getItem(YEAR_KEY));
+    if ((YEARS as readonly number[]).includes(saved)) return saved;
+  } catch {
+    // storage unavailable: use the default
+  }
+  return 2027;
+}
 
 export type Week = {
   index: number;
@@ -15,7 +27,7 @@ function addDays(d: Date, days: number): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + days);
 }
 
-function buildWeeks(): Week[] {
+function buildWeeks(YEAR: number): Week[] {
   const jan1 = new Date(YEAR, 0, 1);
   const dec31 = new Date(YEAR, 11, 31);
   const sinceMonday = (jan1.getDay() + 6) % 7;
@@ -31,19 +43,56 @@ function buildWeeks(): Week[] {
   return weeks;
 }
 
-export const WEEKS = buildWeeks();
-export const WEEK_COUNT = WEEKS.length;
-export const DAY0 = WEEKS[0].start;
-export const TOTAL_DAYS = WEEK_COUNT * 7;
-// The timeline is laid out in half-week slots; stays keep exact dates and snap to slots for display.
-export const SLOTS = WEEK_COUNT * 2;
+function buildMonths(weeks: Week[]): MonthSpan[] {
+  return weeks.reduce<MonthSpan[]>((acc, w) => {
+    const last = acc[acc.length - 1];
+    if (last && last.month === w.month) last.span++;
+    else acc.push({ month: w.month, startIndex: w.index, span: 1 });
+    return acc;
+  }, []);
+}
 
-export const MONTHS: MonthSpan[] = WEEKS.reduce<MonthSpan[]>((acc, w) => {
-  const last = acc[acc.length - 1];
-  if (last && last.month === w.month) last.span++;
-  else acc.push({ month: w.month, startIndex: w.index, span: 1 });
-  return acc;
-}, []);
+// The date model for the year being planned. These are live bindings: setYear rebuilds them, and importers see
+// the new values. Anything that keeps state derived from them (the whole App) is remounted on a change; see
+// useYear.
+export let YEAR = loadYear();
+export let WEEKS = buildWeeks(YEAR);
+export let WEEK_COUNT = WEEKS.length;
+export let DAY0 = WEEKS[0].start;
+export let TOTAL_DAYS = WEEK_COUNT * 7;
+// The timeline is laid out in half-week slots; stays keep exact dates and snap to slots for display.
+export let SLOTS = WEEK_COUNT * 2;
+export let MONTHS = buildMonths(WEEKS);
+
+const listeners = new Set<() => void>();
+let direction: -1 | 0 | 1 = 0; // which way the last change went: 1 to a later year, -1 to an earlier one
+
+// Switches the year being planned: remembers it, rebuilds the date model and tells subscribers. The plan for the
+// year being left is already saved.
+export function setYear(year: number) {
+  if (year === YEAR || !(YEARS as readonly number[]).includes(year)) return;
+  direction = year > YEAR ? 1 : -1;
+  YEAR = year;
+  WEEKS = buildWeeks(year);
+  WEEK_COUNT = WEEKS.length;
+  DAY0 = WEEKS[0].start;
+  TOTAL_DAYS = WEEK_COUNT * 7;
+  SLOTS = WEEK_COUNT * 2;
+  MONTHS = buildMonths(WEEKS);
+  try {
+    localStorage.setItem(YEAR_KEY, String(year));
+  } catch {
+    // the choice just won't be remembered
+  }
+  listeners.forEach((notify) => notify());
+}
+
+export function subscribeYear(notify: () => void) {
+  listeners.add(notify);
+  return () => listeners.delete(notify);
+}
+export const getYear = () => YEAR;
+export const yearDirection = () => direction;
 
 const pad = (n: number) => String(n).padStart(2, '0');
 const EN_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
