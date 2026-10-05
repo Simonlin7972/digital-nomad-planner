@@ -1,0 +1,21 @@
+.combo { display: flex; flex-direction: column; gap: 6px; }
+.combo-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 248px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  z-index: 5;
+  padding: 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+}
+.combo-list li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; font-size: 14px; font-weight: 400; cursor: pointer; }
+.combo-list li.active { background: var(--subtle); }
+.combo-list li small { margin-left: auto; padding-left: 12px; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.combo-list li.none { color: var(--muted); cursor: default; }
+.combo-hint { font-size: 12px; font-weight: 400; color: var(--muted); }

@@ -1,8 +1,9 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
-import { searchCities } from './cities';
+import { searchCities } from '../lib/cities';
 import { Flag } from './Flag';
-import { isListedCountry, searchCountries } from './flags';
+import { isListedCountry, searchCountries } from '../lib/flags';
+import './Combobox.css';
 
 type Option = {
   key: string;

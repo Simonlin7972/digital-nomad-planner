@@ -1,4 +1,5 @@
-import { flagCode } from './flags';
+import { flagCode } from '../lib/flags';
+import './Flag.css';
 
 export function Flag({ country }: { country: string }) {
   const code = flagCode(country);

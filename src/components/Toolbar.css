@@ -1,0 +1,2 @@
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.actions button { display: inline-flex; align-items: center; gap: 6px; padding-left: 14px; }

@@ -3,10 +3,11 @@ import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 // Let Vite bundle the worker; MapLibre's own lookup breaks once the library is pre-bundled.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
-import type { LngLat } from './geocode';
-import { colorOf, placeFull, placeName, type Stay } from './storage';
-import { placeQuery, type Coords } from './useCoords';
-import { daysOf, rangeLabel, weeksLabel } from './weeks';
+import type { LngLat } from '../lib/geocode';
+import { colorOf, placeFull, placeName, type Stay } from '../lib/storage';
+import { placeQuery, type Coords } from '../hooks/useCoords';
+import { daysOf, rangeLabel, weeksLabel } from '../lib/weeks';
+import './MapView.css';
 
 maplibregl.setWorkerUrl(workerUrl);
 

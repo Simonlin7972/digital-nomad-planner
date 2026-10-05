@@ -1,0 +1,155 @@
+/* Design tokens, page chrome and the few elements every component shares. Component styles live next to
+   their components. */
+
+:root {
+  --bg: #faf9f6;
+  --dot: #d3cfc6;
+  --surface: #ffffff;
+  --subtle: #f7f7f7;
+  --text: #222222;
+  --muted: #6a6a6a;
+  --line: #ebebeb;
+  --line-strong: #dddddd;
+  --accent: #ff385c;
+  --accent-dark: #e00b41;
+  --danger: #c13515;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --shadow-card: 0 6px 16px rgb(0 0 0 / 0.08);
+  --shadow-pop: 0 8px 28px rgb(0 0 0 / 0.28);
+  /* 975HazyGo ships 400 and 600 only: 500 resolves to 400, and nothing asks for more than 600. */
+  font-family: '975HazyGo', -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', 'Helvetica Neue', sans-serif;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+/* Dot-grid paper behind everything: fixed to the viewport and fading out toward the bottom. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(circle, var(--dot) 1.1px, transparent 1.6px);
+  background-size: 22px 22px;
+  background-position: 11px 11px;
+  mask-image: linear-gradient(to bottom, #000 0%, rgb(0 0 0 / 0.55) 55%, rgb(0 0 0 / 0.25) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgb(0 0 0 / 0.55) 55%, rgb(0 0 0 / 0.25) 100%);
+  pointer-events: none;
+}
+
+.app {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 40px 56px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+  padding: 28px 0 24px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+h1 {
+  margin: 0;
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+}
+h2 { margin: 0 0 16px; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+
+button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s, background 0.15s, transform 0.1s;
+}
+button:hover:not(:disabled) { border-color: var(--text); background: var(--subtle); }
+button:active:not(:disabled) { transform: scale(0.96); }
+button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+button.primary { background: var(--text); border-color: var(--text); color: #fff; }
+button.primary:hover:not(:disabled) { background: #000; border-color: #000; }
+button.danger { border-color: transparent; background: none; color: var(--danger); text-decoration: underline; padding-inline: 8px; }
+button.danger:hover:not(:disabled) { border-color: transparent; background: var(--subtle); }
+
+/* Switch-style toggle button, used for the holiday sets and in the editor */
+.toggle { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px 8px 10px; font-weight: 500; }
+.toggle .knob {
+  position: relative;
+  width: 30px;
+  height: 18px;
+  border-radius: 999px;
+  background: #b0b0b0;
+  transition: background 0.15s;
+  flex: none;
+}
+.toggle .knob::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s;
+}
+.toggle[aria-checked='true'] { border-color: var(--text); }
+.toggle[aria-checked='true'] .knob { background: var(--c); }
+.toggle[aria-checked='true'] .knob::after { transform: translateX(12px); }
+
+/* Year/month cross-fade: the old view fades out, then the new one fades in */
+.view { animation: view-in 0.2s ease-out; transition: opacity 0.14s ease-in, transform 0.14s ease-in; }
+.view.leaving { opacity: 0; transform: translateY(4px); pointer-events: none; }
+@keyframes view-in { from { opacity: 0; transform: translateY(4px); } }
+
+/* Panels */
+.panels {
+  display: flex;
+  gap: 24px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  min-width: 280px;
+  box-shadow: var(--shadow-card);
+}
+.panel.grow { flex: 1; }
+
+ul, ol { list-style: none; margin: 0; padding: 0; }
+
+@keyframes fade { from { opacity: 0; } }
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+@media (max-width: 720px) {
+  .app { padding: 0 16px 40px; }
+  .topbar { padding-top: 20px; }
+  .panel { min-width: 0; width: 100%; }
+}

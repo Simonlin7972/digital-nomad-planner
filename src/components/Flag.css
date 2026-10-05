@@ -1,0 +1,10 @@
+.flag {
+  flex: none;
+  width: 20px;
+  height: 15px;
+  line-height: 15px;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08);
+  background-size: cover;
+}
+.flag.none { background: var(--subtle); }

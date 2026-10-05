@@ -1,0 +1,70 @@
+import type { ReactNode } from 'react';
+import { Ticket as TicketIcon } from '@phosphor-icons/react/dist/csr/Ticket';
+import type { Holiday, HolidaySet } from '../lib/holidays';
+import { placeFull, ticketLines, type Stay } from '../lib/storage';
+import { clamp } from '../lib/util';
+import { daysOf, longRangeLabel, weeksLabel } from '../lib/weeks';
+import { Flag } from './Flag';
+import './HoverCards.css';
+
+// Where a card hangs from: the horizontal centre and bottom edge of whatever is hovered, in viewport pixels.
+export type Anchor = { x: number; y: number };
+
+// Cards are fixed to the viewport, because the timeline's scroll container would clip anything positioned
+// inside it. They are kept clear of the window's side edges.
+function Card({ x, y, children }: Anchor & { children: ReactNode }) {
+  return (
+    <div className="hover-card" role="tooltip" style={{ left: clamp(x, 130, window.innerWidth - 130), top: y + 8 }}>
+      {children}
+    </div>
+  );
+}
+
+export function StayCard({ stay, ...anchor }: Anchor & { stay: Stay }) {
+  return (
+    <Card {...anchor}>
+      <strong className="place">
+        {stay.country && <Flag country={stay.country} />}
+        {placeFull(stay)}
+      </strong>
+      <span>{longRangeLabel(stay)}</span>
+      <span>
+        {daysOf(stay)} 天（約 {weeksLabel(daysOf(stay))}）
+      </span>
+      {stay.companions && <span>跟 {stay.companions}</span>}
+      {stay.ticket && (
+        <span className="with-icon">
+          <TicketIcon size={14} weight="bold" />
+          已買機票
+        </span>
+      )}
+      {stay.note && <span className="note">{stay.note}</span>}
+    </Card>
+  );
+}
+
+export function TicketCard({ stay, ...anchor }: Anchor & { stay: Stay }) {
+  if (!stay.ticket) return null;
+  return (
+    <Card {...anchor}>
+      <span className="set">機票・{placeFull(stay)}</span>
+      {ticketLines(stay.ticket).map((line, i) => (i === 0 ? <strong key={line}>{line}</strong> : <span key={line}>{line}</span>))}
+    </Card>
+  );
+}
+
+export function HolidayCard({ holiday, set, ...anchor }: Anchor & { holiday: Holiday; set: HolidaySet }) {
+  return (
+    <Card {...anchor}>
+      <span className="set" style={{ color: set.color }}>
+        {set.label}
+      </span>
+      <strong>{holiday.name}</strong>
+      <span>
+        {longRangeLabel(holiday)}
+        {daysOf(holiday) > 1 && `・${daysOf(holiday)} 天`}
+      </span>
+      {holiday.note && <span className="note">{holiday.note}</span>}
+    </Card>
+  );
+}

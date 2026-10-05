@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { geocode, loadGeocodeCache, type LngLat } from './geocode';
-import type { Stay } from './storage';
+import { geocode, loadGeocodeCache, type LngLat } from '../lib/geocode';
+import type { Stay } from '../lib/storage';
 
 export type Coords = Record<string, LngLat | null>;
 

@@ -5,7 +5,9 @@ import { Database } from '@phosphor-icons/react/dist/csr/Database';
 import { FloppyDisk } from '@phosphor-icons/react/dist/csr/FloppyDisk';
 import { HandGrabbing } from '@phosphor-icons/react/dist/csr/HandGrabbing';
 import { X } from '@phosphor-icons/react/dist/csr/X';
-import { useScrollLock } from './useScrollLock';
+import { useScrollLock } from '../hooks/useScrollLock';
+import './Dialog.css';
+import './HelpDialog.css';
 
 // A short guide to using the planner, and to where the data lives. `mod` is the platform's shortcut prefix.
 export function HelpDialog({ mod, onClose }: { mod: string; onClose: () => void }) {

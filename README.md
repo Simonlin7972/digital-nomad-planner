@@ -199,34 +199,51 @@ npm run dev
 ## 專案結構
 
 ```
-index.html            入口頁，載入字體與 favicon
-public/favicon.svg    16×16 像素風地球圖示
-docs/overview.png     README 用的範例圖（由 app 的「保存 PNG」產生）
+index.html              入口頁，載入字體與 favicon
+public/favicon.svg      16×16 像素風地球圖示
+docs/overview.png       README 用的範例圖（由 app 的「保存 PNG」產生）
 src/
-  main.tsx            React 掛載點
-  App.tsx             主畫面：狀態、年檢視時間軸、摘要、列表、編輯視窗
-  MonthView.tsx       月檢視月曆
-  MapView.tsx         地圖（延遲載入）
-  Flag.tsx            國旗元件
-  Combobox.tsx        國家與城市的搜尋選單
-  HelpDialog.tsx      「如何使用」說明視窗
-  useScrollLock.ts    視窗開啟時鎖住背景捲動
-  weeks.ts            日期模型：週、日索引、半週格、月份範圍、標籤格式
-  storage.ts          資料型別、讀寫、匯入清理、換序與推擠演算法、配色
-  holidays.ts         2027 國定假日資料
-  flags.ts            國家清單、搜尋、名稱 → ISO 代碼對照
-  cities.ts           內建城市清單（中英文）與搜尋
-  geocode.ts          Nominatim 查詢、限速、快取
-  useCoords.ts        座標 hook、距離與飛行估算
-  exportPng.ts        用 canvas 繪製 PNG
-  styles.css          全站樣式
-MVP.md                產品規格與決策紀錄
-.github/workflows/    推到 main 時自動部署到 GitHub Pages
-CLAUDE.md             給 Claude Code 的專案須知
-.claude/              Claude Code 設定：預覽啟動、文件同步檢查 hook
+  main.tsx              React 掛載點；決定樣式載入順序
+  App.tsx               組裝各元件，持有行程與頁面層級的狀態
+  components/           畫面元件，每個元件的樣式（.css）放在旁邊
+    Toolbar             頁首的動作按鈕（復原、匯出…）
+    ViewBar             年／月切換、假日開關、縮放控制
+    YearView            年檢視時間軸，含拖曳、伸縮、複製的指標處理
+    MonthView           月檢視月曆
+    Summary             摘要面板
+    StayList            行程列表與季度篩選
+    Editor              新增／編輯行程的視窗
+    HelpDialog          「如何使用」說明視窗
+    HoverCards          行程、機票、假日的浮動資訊卡
+    Combobox            國家與城市的搜尋選單
+    MapView             地圖（延遲載入）
+    Flag                國旗
+    Dialog.css          編輯與說明視窗共用的外框樣式
+  hooks/
+    useHistory          復原／重做堆疊
+    useZoom             時間軸縮放與錨點
+    usePinchZoom        觸控板、觸控與滾輪的縮放手勢
+    useCoords           地點座標、距離與飛行估算
+    useScrollLock       視窗開啟時鎖住背景捲動
+  lib/                  與畫面無關的邏輯與資料
+    weeks.ts            日期模型：週、日索引、半週格、月份範圍、標籤格式
+    storage.ts          資料型別、讀寫、匯入清理、換序／推擠／插入演算法、配色
+    prefs.ts            檢視、假日開關、縮放等偏好的讀寫
+    flags.ts            國家清單、搜尋、名稱 → ISO 代碼對照
+    cities.ts           內建城市清單（中英文）與搜尋
+    holidays.ts         2027 國定假日資料
+    geocode.ts          Nominatim 查詢、限速、快取
+    exportPng.ts        用 canvas 繪製 PNG
+    files.ts            下載檔案
+    util.ts             小工具
+  styles/base.css       設計變數、頁面底、按鈕與面板等共用樣式
+MVP.md                  產品規格與決策紀錄
+CLAUDE.md               給 Claude Code 的專案須知
+.claude/                Claude Code 設定：預覽啟動、文件同步檢查 hook
+.github/workflows/      推到 main 時自動部署到 GitHub Pages
 ```
 
-技術組成：Vite、React 19、TypeScript。沒有路由、狀態管理庫、UI 框架或拖拉套件；互動用原生 pointer events 實作。
+技術組成：Vite、React 19、TypeScript。沒有路由、狀態管理庫、UI 框架、CSS 預處理器或拖拉套件；互動用原生 pointer events 實作，樣式是純 CSS。
 
 ---
 
@@ -242,21 +259,21 @@ CLAUDE.md             給 Claude Code 的專案須知
 
 **行程不可重疊。** 同一天只能在一個地方。所有改動資料的路徑（建立、編輯、拖曳、匯入）都維持這個不變量。
 
-**所有資料變更都經過同一個 `setStays`。** 它負責把舊狀態推進復原堆疊，因此新功能只要走這條路就自動支援復原。
+**所有資料變更都經過同一個 `setStays`。** 它來自 `useHistory`，負責把舊狀態推進復原堆疊，因此新功能只要走這條路就自動支援復原。行程資料只由 `App.tsx` 持有；年檢視與月檢視各自管理自己的拖曳狀態，拖完才透過 callback 回報結果。
 
-**國家清單不是寫死的。** `flags.ts` 用瀏覽器的 `Intl.DisplayNames` 產生台灣用語的國家名稱（約 260 個），再加上幾個區域選項（歐洲、東南亞、南美洲等）與常見別名。選單挑出來的是名稱字串，存檔時存的就是這個字串，不是代碼。欄位仍接受清單外的文字（為了相容舊資料與特殊情況），但會提示「不在國家清單內」。
+**國家清單不是寫死的。** `lib/flags.ts` 用瀏覽器的 `Intl.DisplayNames` 產生台灣用語的國家名稱（約 260 個），再加上幾個區域選項（歐洲、東南亞、南美洲等）與常見別名。選單挑出來的是名稱字串，存檔時存的就是這個字串，不是代碼。欄位仍接受清單外的文字（為了相容舊資料與特殊情況），但會提示「不在國家清單內」。
 
-**城市清單是手工整理的。** `cities.ts` 內建約 330 個常被當作據點的城市，中英文名稱寫死在檔案裡，不是完整地名庫，也沒有座標。它只是輸入輔助：城市欄位接受任何文字，清單外的城市不會有任何警告。要增補城市，直接在該檔對應的國碼下加一筆 `['中文', 'English']`。國旗同樣由名稱對照出來；區域選項除了歐洲以外沒有旗。
+**城市清單是手工整理的。** `lib/cities.ts` 內建約 330 個常被當作據點的城市，中英文名稱寫死在檔案裡，不是完整地名庫，也沒有座標。它只是輸入輔助：城市欄位接受任何文字，清單外的城市不會有任何警告。要增補城市，直接在該檔對應的國碼下加一筆 `['中文', 'English']`。國旗同樣由名稱對照出來；區域選項除了歐洲以外沒有旗。
 
 **飛行時數是估算。** 依行程順序取相鄰兩地的直線距離，以時速 850 公里加每段 0.5 小時計算；300 公里內視為陸路不計。不含轉機，也不含從家出發與回家。
 
-**PNG 是另外畫的。** `exportPng.ts` 用 canvas 重新繪製，不是截取畫面，所以輸出尺寸固定、不受視窗與縮放影響，但新增的畫面元素不會自動出現在 PNG 裡。
+**PNG 是另外畫的。** `lib/exportPng.ts` 用 canvas 重新繪製，不是截取畫面，所以輸出尺寸固定、不受視窗與縮放影響，但新增的畫面元素不會自動出現在 PNG 裡。
 
 ---
 
 ## 已知限制
 
-- **年份寫死 2027。** 常數在 `weeks.ts` 的 `YEAR`；假日資料也只有 2027 年
+- **年份寫死 2027。** 常數在 `lib/weeks.ts` 的 `YEAR`；假日資料也只有 2027 年
 - **介面只有繁體中文**
 - **以桌機為主。** 窄螢幕可用但未最佳化
 - **沒有自動化測試**
@@ -315,7 +332,8 @@ CLAUDE.md             給 Claude Code 的專案須知
 
 - 送出前請確認 `npm run build` 通過
 - 改動資料的功能請走 `App.tsx` 的 `setStays`，以維持復原功能
-- 調整行程位置的邏輯請放在 `storage.ts` 的純函式裡，並維持「行程不重疊」
+- 調整行程位置的邏輯請放在 `lib/storage.ts` 的純函式裡，並維持「行程不重疊」
+- 新元件放 `src/components/`，樣式寫在同名的 `.css` 並由該元件自己 import；跨元件共用的才放 `styles/base.css`
 - 新增會對外連線的功能，請在本文件的[資料與隱私](#資料與隱私)補上說明
 - 介面文字目前為繁體中文
 - 功能有變動時，請同步更新 `README.md` 與 `MVP.md`（以及在慣例改變時更新 `CLAUDE.md`）。用 Claude Code 開發時，`.claude/hooks/docs-check.sh` 會在結束前檢查這件事

@@ -1,0 +1,25 @@
+.hover-card {
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 20;
+  width: max-content;
+  max-width: 240px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+  pointer-events: none;
+  animation: fade 0.12s ease-out;
+}
+.hover-card .with-icon { display: flex; align-items: center; gap: 6px; }
+.hover-card .set { font-size: 11px; font-weight: 600; }
+.hover-card strong { font-size: 14px; }
+.hover-card .place { display: flex; align-items: center; gap: 8px; }
+.hover-card .note { white-space: pre-wrap; }
+.hover-card .note { color: var(--muted); font-size: 12px; }

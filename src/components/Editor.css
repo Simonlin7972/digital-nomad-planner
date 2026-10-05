@@ -1,0 +1,43 @@
+.editor .range { margin: -4px 0 0; font-size: 13px; color: var(--muted); }
+.editor label,
+.editor .field { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text); }
+.editor input,
+.editor textarea {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text);
+  padding: 12px;
+  border: 1px solid #b0b0b0;
+  border-radius: 8px;
+  background: var(--surface);
+  resize: vertical;
+  min-width: 0;
+}
+.editor input::placeholder,
+.editor textarea::placeholder { color: #b0b0b0; }
+.editor input:focus,
+.editor textarea:focus { outline: 2px solid var(--text); outline-offset: -1px; border-color: transparent; }
+
+/* The country and city lists are positioned against this row, so they span both fields. */
+.editor .dates.place { position: relative; }
+
+.swatches { display: flex; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+.swatch {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.swatch:hover:not(:disabled) { border: 0; transform: scale(1.1); }
+.swatch.selected { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text); }
+.swatch:focus-visible { outline: 2px solid var(--text); outline-offset: 5px; }
+.editor .field > .toggle { align-self: flex-start; }
+.ticket-fields label { min-width: 0; }
+.ticket-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 6px; padding: 14px; border-radius: var(--radius); background: var(--subtle); }
+.ticket-fields .wide { grid-column: 1 / -1; }
+.editor .dates { display: flex; gap: 12px; }
+.editor .dates label { flex: 1; min-width: 0; }
+.editor .error { margin: -4px 0 0; font-size: 13px; color: var(--danger); }

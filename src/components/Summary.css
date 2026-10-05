@@ -1,0 +1,18 @@
+.stat { line-height: 1.9; margin: 0 0 16px; padding-bottom: 16px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+.stat b { color: var(--text); font-size: 18px; font-weight: 600; }
+
+.totals li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  padding: 6px 0;
+}
+.totals li span { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+.totals li small { font-size: 12px; font-weight: 400; color: var(--muted); }
+.totals li.country { font-weight: 600; margin-top: 10px; }
+.totals li.country:first-child { margin-top: 0; }
+.totals li .flag { margin-left: 0; }
+.totals li.country span { color: var(--text); }
+/* lines up with the country name, past its flag */
+.totals li.city { padding-left: 30px; color: var(--muted); }

@@ -3,9 +3,10 @@ import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import { CaretLeft } from '@phosphor-icons/react/dist/csr/CaretLeft';
 import { CaretRight } from '@phosphor-icons/react/dist/csr/CaretRight';
 import { Flag } from './Flag';
-import type { HolidaySet } from './holidays';
-import { colorOf, placeName, pushStays, type Stay } from './storage';
-import { TOTAL_DAYS, YEAR, dateOfDay, daysOf, monthRange, todayIndex, type DayRange } from './weeks';
+import type { HolidaySet } from '../lib/holidays';
+import { colorOf, placeName, pushStays, type Stay } from '../lib/storage';
+import { TOTAL_DAYS, YEAR, dateOfDay, daysOf, monthRange, todayIndex, type DayRange } from '../lib/weeks';
+import './MonthView.css';
 
 type Drag =
   | { kind: 'select'; anchor: number; lo: number; hi: number }
