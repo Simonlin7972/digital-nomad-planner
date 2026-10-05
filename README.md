@@ -216,6 +216,7 @@ src/
     HelpDialog          「如何使用」說明視窗
     HoverCards          行程、機票、假日的浮動資訊卡
     Combobox            國家與城市的搜尋選單
+    DatePicker          自製的日期選擇器（取代瀏覽器原生的）
     MapView             地圖（延遲載入）
     Flag                國旗
     Dialog.css          編輯與說明視窗共用的外框樣式

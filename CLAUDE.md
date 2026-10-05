@@ -54,6 +54,7 @@ A Stop hook (`.claude/hooks/docs-check.sh`) blocks once when code under `src/` o
 - Anything new that talks to the network must be listed under "資料與隱私" in the README.
 - `src/components/HelpDialog.tsx` is the in-app guide. When a control, shortcut, or how data is stored or exported changes, update its text too.
 - Dialogs call `useScrollLock()` so the page behind them doesn't scroll.
+- Dates are picked with `components/DatePicker.tsx` (ISO strings in and out), not `<input type="date">`.
 
 ## Verifying changes
 

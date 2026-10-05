@@ -4,6 +4,7 @@ import { useScrollLock } from '../hooks/useScrollLock';
 import { PALETTE, cleanTicket, colorKeyOf, defaultColor, overlaps, placeName, type ColorKey, type Stay, type Ticket } from '../lib/storage';
 import { TOTAL_DAYS, dayOfIso, daysOf, isoOfDay, rangeLabel, weeksLabel, type DayRange } from '../lib/weeks';
 import { CityCombobox, CountryCombobox } from './Combobox';
+import { DatePicker } from './DatePicker';
 import './Dialog.css';
 import './Editor.css';
 
@@ -40,8 +41,28 @@ export function Editor(props: {
   // null = follow the suggested colour for the typed place until the user picks one
   const [picked, setPicked] = useState<ColorKey | null>(stay ? colorKeyOf(stay) : null);
   const color = picked ?? defaultColor(place, others);
-  const [start, setStart] = useState(isoOfDay(editing.startDay));
-  const [end, setEnd] = useState(isoOfDay(editing.endDay));
+  const [startDay, setStartDay] = useState(editing.startDay);
+  const [endDay, setEndDay] = useState(editing.endDay);
+  // Picking a start after the end (or an end before the start) drags the other date along with it.
+  const pickStart = (day: number) => {
+    setStartDay(day);
+    if (day > endDay) setEndDay(day);
+  };
+  const pickEnd = (day: number) => {
+    setEndDay(day);
+    if (day < startDay) setStartDay(day);
+  };
+
+  // The stay's dates are limited to the days the plan covers.
+  const planDates = { min: isoOfDay(0), max: isoOfDay(TOTAL_DAYS - 1) };
+  const pickDay = (iso: string, pick: (day: number) => void) => {
+    const day = dayOfIso(iso);
+    if (day !== null) pick(day);
+  };
+  // The flight's departure is stored as one "YYYY-MM-DDTHH:MM" string and edited as a date plus a time.
+  const [depDate = '', depTime = ''] = (ticket.departure ?? '').split('T');
+  const setDeparture = (date: string, time: string) =>
+    setTicket((t) => ({ ...t, departure: date ? (time ? `${date}T${time}` : date) : '' }));
 
   useScrollLock();
 
@@ -51,22 +72,10 @@ export function Editor(props: {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const startDay = dayOfIso(start);
-  const endDay = dayOfIso(end);
-  let range: DayRange | null = null;
-  let error = '';
-  if (startDay === null || endDay === null) {
-    error = `日期需在 ${isoOfDay(0)} 到 ${isoOfDay(TOTAL_DAYS - 1)} 之間。`;
-  } else if (startDay > endDay) {
-    error = '結束日不能早於開始日。';
-  } else {
-    range = { startDay, endDay };
-    const clash = others.find((o) => overlaps(o, range!));
-    if (clash) {
-      error = `與「${placeName(clash)}」（${rangeLabel(clash)}）重疊。`;
-      range = null;
-    }
-  }
+  const dates: DayRange = { startDay, endDay };
+  const clash = others.find((o) => overlaps(o, dates));
+  const range = clash ? null : dates;
+  const error = clash ? `與「${placeName(clash)}」（${rangeLabel(clash)}）重疊。` : '';
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -117,14 +126,14 @@ export function Editor(props: {
           </div>
         </div>
         <div className="dates">
-          <label>
+          <div className="field">
             開始日
-            <input type="date" value={start} min={isoOfDay(0)} max={isoOfDay(TOTAL_DAYS - 1)} onChange={(e) => setStart(e.target.value)} />
-          </label>
-          <label>
+            <DatePicker {...planDates} value={isoOfDay(startDay)} onChange={(iso) => pickDay(iso, pickStart)} rangeWith={isoOfDay(endDay)} label="開始日" />
+          </div>
+          <div className="field">
             結束日
-            <input type="date" value={end} min={isoOfDay(0)} max={isoOfDay(TOTAL_DAYS - 1)} onChange={(e) => setEnd(e.target.value)} />
-          </label>
+            <DatePicker {...planDates} value={isoOfDay(endDay)} onChange={(iso) => pickDay(iso, pickEnd)} rangeWith={isoOfDay(startDay)} align="right" label="結束日" />
+          </div>
         </div>
         {error ? (
           <p className="error">{error}</p>
@@ -172,15 +181,24 @@ export function Editor(props: {
                 航班編號
                 <input {...ticketField('flightNo')} placeholder="例：BR211" />
               </label>
-              <label>
+              <div className="field wide">
                 起飛時間
-                <input {...ticketField('departure')} type="datetime-local" />
-              </label>
+                <div className="date-time">
+                  <DatePicker value={depDate} onChange={(date) => setDeparture(date, depTime)} openAt={isoOfDay(startDay)} label="起飛日期" />
+                  <input
+                    type="time"
+                    aria-label="起飛時刻"
+                    value={depTime}
+                    disabled={!depDate}
+                    onChange={(e) => setDeparture(depDate, e.target.value)}
+                  />
+                </div>
+              </div>
               <label>
                 訂位代號
                 <input {...ticketField('bookingRef')} placeholder="例：ABC123" />
               </label>
-              <label className="wide">
+              <label>
                 票價
                 <input {...ticketField('price')} placeholder="例：NT$ 8,500" />
               </label>
