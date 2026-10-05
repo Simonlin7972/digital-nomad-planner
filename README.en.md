@@ -1,4 +1,6 @@
-# 2027 Nomad Plan
+# 今天不在家工作
+
+**A Digital Nomad Planner** — the Chinese name means "not working from home today".
 
 [繁體中文](README.md) · **English**
 
@@ -72,6 +74,7 @@ The interface is available in Traditional Chinese and English; switch from the t
 
 - A built-in "How to use" guide: gestures, where data lives, backup and transfer
 - Traditional Chinese and English interface, switched from the toolbar; defaults to the browser's language and remembers your choice
+- A compact toolbar: undo and redo are icons; export, import and Save PNG live in the `⋯` menu
 - Undo and redo, up to 100 steps
 - JSON export and import; file names carry the export date (e.g. `nomad-plan-2027_2026-10-05.json`)
 - Save PNG: the year timeline plus the itinerary, at a fixed size
@@ -154,15 +157,16 @@ Undo and redo shortcuts are left alone while you are typing in a field, while th
 | `dnp-lang` | Interface language |
 | `dnp-backup` | Time of the last export (or import) and a fingerprint of the plan, used to decide when to show the backup reminder |
 
-Clearing browser data, or using a different browser or computer, means the plan won't be there. Use Export to keep a backup.
+Clearing browser data, or using a different browser or computer, means the plan won't be there. Use Export (in the `⋯` menu) to keep a backup.
 
-The page talks to three outside services:
+The page talks to four outside services:
 
 | Service | What is sent | Why |
 | --- | --- | --- |
 | [Nominatim](https://nominatim.openstreetmap.org/) (OpenStreetMap) | The "city, country" text for each place | To find coordinates for the map and the flight estimate. Each place is looked up once |
 | [OpenFreeMap](https://openfreemap.org/) | Map tile requests | The base map |
 | [emfont](https://font.emtech.cc/) | Font file requests | The interface typeface |
+| [Google Fonts](https://fonts.google.com/) | Font file requests | The pixel typeface of the English tagline under the title |
 
 Flight details such as booking references are stored in `localStorage` and are written into exported JSON. Keep that in mind before sharing an export.
 
@@ -224,7 +228,7 @@ src/
   main.tsx              React mount point; sets the stylesheet order
   App.tsx               Wires the pieces together; owns the plan and page-level state
   components/           UI components, each with its stylesheet (.css) beside it
-    Toolbar             Header actions (undo, export, …)
+    Toolbar             Header actions and the ⋯ menu (export, import, PNG)
     ViewBar             Year/month switch, holiday toggles, zoom
     YearView            The year timeline, including drag, resize and copy handling
     MonthView           The month calendar
@@ -317,7 +321,7 @@ Knowing these before reading the code will save time.
 - **Place names on the map are in the local script and English**, as the base map provides
 - **The built-in city list is limited** (about 330); smaller places have to be typed, and the Chinese names are hand-picked and may differ from the spelling you're used to
 - **Place lookup depends on Nominatim.** Places it can't find don't appear on the map and are left out of the flight estimate
-- **The typeface depends on the emfont service**; offline, the page falls back to system fonts
+- **The typefaces depend on the emfont and Google Fonts services**; offline, the page falls back to system fonts
 - **Australian holidays are national ones only**; state holidays aren't listed
 - **Undo history doesn't survive a reload**
 - **Day counts are estimates**: they know nothing of travel before 2026-12-28 or of actual entry and exit days, and a day on which you change places counts toward only one stay
@@ -354,6 +358,7 @@ The full product spec and decision history are in [MVP.md](MVP.md) (Chinese).
 | [Phosphor Icons](https://phosphoricons.com/) | Icons | MIT |
 | [flag-icons](https://github.com/lipis/flag-icons) | Flags | MIT |
 | [975HazyGo](https://font.emtech.cc/fonts/975HazyGo) (via emfont) | Interface typeface | See the license shown on the font's page |
+| [Pixelify Sans](https://fonts.google.com/specimen/Pixelify+Sans) (via Google Fonts) | Tagline typeface | OFL-1.1 |
 
 The 2027 holiday data was compiled by hand. Taiwan's long weekends follow press reports of the government's 2027 office calendar; the Dragon Boat Festival, Mid-Autumn Festival and Teachers' Day are single days worked out from the calendar. Australia lists national holidays only. None of the dates were checked one by one against the original official notices, so treat the official sources as authoritative.
 

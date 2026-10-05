@@ -20,7 +20,9 @@ export function ViewBar({ mode, onMode, holidayOn, onToggleHoliday, zoom, onZoom
   useLocale();
   return (
     <div className="timeline-bar">
-      <div className="segmented" role="tablist" aria-label={t('view.label')}>
+      <div className="segmented" role="tablist" aria-label={t('view.label')} style={{ '--i': mode === 'year' ? 0 : 1 } as CSSProperties}>
+        {/* The white pill behind the selected tab; it slides between tabs instead of each tab painting its own. */}
+        <span className="thumb" aria-hidden />
         {(['year', 'month'] as const).map((m) => (
           <button key={m} role="tab" aria-selected={mode === m} onClick={() => onMode(m)}>
             {t(m === 'year' ? 'view.year' : 'view.month')}

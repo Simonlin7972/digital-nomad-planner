@@ -20,7 +20,7 @@ import { t, useLocale } from './lib/i18n';
 import { loadHolidayToggles, loadView, saveHolidayToggles, saveView } from './lib/prefs';
 import { load, pushStays, sanitize, save, serialize, type ColorKey, type Stay } from './lib/storage';
 import { MOD, clamp } from './lib/util';
-import { YEAR, type DayRange } from './lib/weeks';
+import type { DayRange } from './lib/weeks';
 
 // The map library is large; load it separately from the planner itself.
 const MapView = lazy(() => import('./components/MapView'));
@@ -57,7 +57,7 @@ export default function App() {
   useEffect(() => saveView(view), [view]);
   useEffect(() => {
     document.documentElement.lang = locale === 'en' ? 'en' : 'zh-Hant';
-    document.title = t('app.title', { year: YEAR });
+    document.title = `${t('app.title')} — ${t('app.tagline')}`;
   }, [locale]);
 
   const busy = Boolean(dragging || editing || helpOpen);
@@ -133,7 +133,12 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <h1>{t('app.title', { year: YEAR })}</h1>
+        <div className="brand">
+          <h1>{t('app.title')}</h1>
+          <p className="tagline" lang="en">
+            {t('app.tagline')}
+          </p>
+        </div>
         <Toolbar
           canUndo={canUndo}
           canRedo={canRedo}

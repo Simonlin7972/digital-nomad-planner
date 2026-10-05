@@ -52,7 +52,8 @@ A Stop hook (`.claude/hooks/docs-check.sh`) blocks once when code under `src/` o
 - No UI framework, state library or drag-and-drop library. Interactions use native pointer events.
 - Styles are plain CSS using the custom properties on `:root`. A component's rules go in the `.css` file beside it, imported by that component; only tokens and things several components share go in `src/styles/base.css`. `main.tsx` imports base before `App` so component rules win ties.
 - The dialog shell class is `.editor` (in `components/Dialog.css`), shared by the stay editor and the help dialog.
-- Typeface is 975HazyGo with two weights only: 400 and 600. Do not introduce 500 or 700.
+- Typeface is 975HazyGo with two weights only: 400 and 600. Do not introduce 500 or 700. The one exception is the English tagline under the title (`.tagline`), set in Pixelify Sans 400 from Google Fonts; do not use that face anywhere else.
+- The product name is the same in both locales: `app.title` (今天不在家工作) and `app.tagline` (A Digital Nomad Planner). The year is not part of the name; the page header does not show it (the PNG export appends it to the tagline).
 - Icons are Phosphor at `weight="bold"`, imported per icon from `@phosphor-icons/react/dist/csr/<Name>`. Flags use `flag-icons` via `src/components/Flag.tsx`.
 - **Every UI string goes through `src/lib/i18n.tsx`.** Add the key to both the `zh` and `en` dictionaries and use `t(key, vars)` (or `tr()` when a placeholder is a React node). Never hard-code display text in a component. A component that shows text calls `useLocale()` once so it re-renders on a language switch. Date and length text comes from the helpers in `lib/weeks.ts` and `daysText()`, which already follow the locale.
 - Chinese strings are Traditional Chinese (Taiwan usage). Code, comments and commit messages are English.

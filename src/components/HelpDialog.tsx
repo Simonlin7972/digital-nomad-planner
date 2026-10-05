@@ -86,7 +86,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
       title: '備份與搬移',
       items: [
         <>
-          <b>匯出</b>：把全部行程存成一個 JSON 檔。建議排到一個段落就匯出一次當備份。
+          <b>匯出</b>、<b>匯入</b>、<b>保存 PNG</b> 都在工具列的 <b>⋯</b> 選單裡。<b>匯出</b>：把全部行程存成一個 JSON 檔。建議排到一個段落就匯出一次當備份。
         </>,
         <>行程改過之後超過一週沒有匯出，頁首會出現備份提醒；按「稍後提醒」三天內不再出現。</>,
         <>
@@ -176,7 +176,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
       title: 'Backup and transfer',
       items: [
         <>
-          <b>Export</b> saves the whole plan as a JSON file. Export whenever you reach a good stopping point.
+          <b>Export</b>, <b>Import</b> and <b>Save PNG</b> are in the <b>⋯</b> menu on the toolbar. <b>Export</b> saves the whole plan as a JSON file. Export whenever you reach a good stopping point.
         </>,
         <>If the plan has changed and gone a week without an export, a reminder appears under the header. “Remind me later” hides it for three days.</>,
         <>
@@ -240,6 +240,8 @@ export function HelpDialog({ mod, onClose }: { mod: string; onClose: () => void 
             </ul>
           </section>
         ))}
+        {/* Same line in both languages. */}
+        <p className="credit">Designed by Simon Lin with 🧡</p>
       </div>
     </div>
   );

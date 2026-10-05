@@ -1,2 +1,34 @@
 .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .actions button { display: inline-flex; align-items: center; gap: 6px; padding-left: 14px; }
+/* Icon-only buttons (undo, redo, ⋯): round, the same height as the labelled ones */
+.actions button.icon { width: 42px; height: 42px; padding: 0; justify-content: center; }
+
+/* ⋯ menu: file actions in a small drop-down under the button, aligned to its right edge */
+.more { position: relative; }
+.more-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  min-width: 168px;
+  padding: 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  animation: fade 0.12s ease-out;
+}
+.actions .more-menu button {
+  width: 100%;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  white-space: nowrap;
+}
+.actions .more-menu button:hover:not(:disabled),
+.actions .more-menu button:focus-visible { background: var(--subtle); outline: none; }
+.actions .more-menu button:active:not(:disabled) { transform: none; }

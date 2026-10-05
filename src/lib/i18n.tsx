@@ -6,7 +6,8 @@ import type { ReactNode } from 'react';
 export type Locale = 'zh' | 'en';
 
 const zh = {
-  'app.title': '{year} 數位遊牧計畫',
+  'app.title': '今天不在家工作',
+  'app.tagline': 'A Digital Nomad Planner',
 
   'unit.weeks': '{n} 週',
   'unit.day': '{n} 天',
@@ -24,6 +25,7 @@ const zh = {
   'toolbar.savePng': '保存 PNG',
   'toolbar.export': '匯出',
   'toolbar.import': '匯入',
+  'toolbar.more': '更多',
   'toolbar.shortcut': '{action}（{keys}）',
   'toolbar.language': 'English',
   'toolbar.languageHint': 'Switch to English',
@@ -144,7 +146,8 @@ const zh = {
 };
 
 const en: Record<keyof typeof zh, string> = {
-  'app.title': '{year} Nomad Plan',
+  'app.title': '今天不在家工作',
+  'app.tagline': 'A Digital Nomad Planner',
 
   'unit.weeks': '{n} wk',
   'unit.day': '{n} day',
@@ -162,6 +165,7 @@ const en: Record<keyof typeof zh, string> = {
   'toolbar.savePng': 'Save PNG',
   'toolbar.export': 'Export',
   'toolbar.import': 'Import',
+  'toolbar.more': 'More',
   'toolbar.shortcut': '{action} ({keys})',
   'toolbar.language': '中文',
   'toolbar.languageHint': '切換為中文',

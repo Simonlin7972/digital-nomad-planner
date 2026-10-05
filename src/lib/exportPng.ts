@@ -3,6 +3,7 @@ import { colorOf, placeFull, placeName, type Stay } from './storage';
 import { MONTHS, SLOTS, WEEKS, YEAR, daysOf, monthName, rangeLabel, slotsOf, weeksLabel } from './weeks';
 
 const FONT = '"975HazyGo", -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
+const TAGLINE_FONT = '16px "Pixelify Sans", monospace';
 const SCALE = 2;
 const PAD = 40;
 const SLOT_W = 20;
@@ -28,10 +29,14 @@ function ellipsize(ctx: CanvasRenderingContext2D, text: string, max: number): st
 // Draws the whole year at a fixed width, so the image doesn't depend on the window size or scroll position.
 export async function renderPng(stays: Stay[]): Promise<Blob> {
   // Canvas text falls back silently if the web font hasn't been fetched yet, so load every glyph we'll draw first.
-  const title = t('app.title', { year: YEAR });
+  const title = t('app.title');
+  const tagline = `${t('app.tagline')} · ${YEAR}`;
   // Every character the image can contain: the title, digits and punctuation, unit words, month names, places.
   const text = `${title}0123456789/–()（）${t('sep')}${t('unit.weeks', { n: '' })}${daysText(2)}${MONTHS.map((m) => monthName(m.month)).join('')}${stays.map((s) => `${placeFull(s)}${s.note ?? ''}`).join('')}`;
-  await Promise.all([`13px ${FONT}`, `600 13px ${FONT}`].map((font) => document.fonts.load(font, text))).catch(() => undefined);
+  await Promise.all([
+    ...[`13px ${FONT}`, `600 13px ${FONT}`].map((font) => document.fonts.load(font, text)),
+    document.fonts.load(TAGLINE_FONT, tagline),
+  ]).catch(() => undefined);
   const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
   const trackW = SLOTS * SLOT_W;
   const width = trackW + PAD * 2;
@@ -54,6 +59,10 @@ export async function renderPng(stays: Stay[]): Promise<Blob> {
   ctx.fillStyle = TEXT;
   ctx.font = `600 28px ${FONT}`;
   ctx.fillText(title, PAD, PAD + 28);
+  const titleW = ctx.measureText(title).width;
+  ctx.fillStyle = MUTED;
+  ctx.font = TAGLINE_FONT;
+  ctx.fillText(tagline, PAD + titleW + 14, PAD + 28);
 
   // Track background, week lines and dates
   ctx.fillStyle = SUBTLE;
