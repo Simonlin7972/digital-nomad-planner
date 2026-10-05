@@ -6,13 +6,16 @@ import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
 import { Image as ImageIcon } from '@phosphor-icons/react/dist/csr/Image';
 import { Minus } from '@phosphor-icons/react/dist/csr/Minus';
 import { PencilSimple } from '@phosphor-icons/react/dist/csr/PencilSimple';
+import { Question } from '@phosphor-icons/react/dist/csr/Question';
 import { Ticket as TicketIcon } from '@phosphor-icons/react/dist/csr/Ticket';
 import { Trash } from '@phosphor-icons/react/dist/csr/Trash';
 import { UploadSimple } from '@phosphor-icons/react/dist/csr/UploadSimple';
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus';
 import { renderPng } from './exportPng';
-import { CountryCombobox } from './CountryCombobox';
+import { CityCombobox, CountryCombobox } from './Combobox';
 import { Flag } from './Flag';
+import { HelpDialog } from './HelpDialog';
+import { useScrollLock } from './useScrollLock';
 import MonthView from './MonthView';
 import { flightStats, useCoords } from './useCoords';
 import { HOLIDAY_SETS, type Holiday, type HolidaySet } from './holidays';
@@ -211,7 +214,8 @@ export default function App() {
     };
   }, []);
 
-  const busy = Boolean(drag || editing);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const busy = Boolean(drag || editing || helpOpen);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey) || e.altKey || busy) return;
@@ -473,7 +477,10 @@ export default function App() {
   function download(blob: Blob, ext: string) {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `nomad-plan-${YEAR}.${ext}`;
+    // Stamp the file with the day it was saved (local time), so successive backups don't share a name.
+    const now = new Date();
+    const today = [now.getFullYear(), now.getMonth() + 1, now.getDate()].map((n) => String(n).padStart(2, '0')).join('-');
+    a.download = `nomad-plan-${YEAR}_${today}.${ext}`;
     a.click();
     URL.revokeObjectURL(a.href);
   }
@@ -544,6 +551,10 @@ export default function App() {
       <header className="topbar">
         <h1>{YEAR} 數位遊牧計畫</h1>
         <div className="actions">
+          <button onClick={() => setHelpOpen(true)}>
+            <Question size={16} weight="bold" />
+            如何使用
+          </button>
           <button onClick={undo} disabled={history.past.length === 0} title={`復原（${MOD}Z）`}>
             <ArrowCounterClockwise size={16} weight="bold" />
             復原
@@ -920,6 +931,8 @@ export default function App() {
         </div>
       )}
 
+      {helpOpen && <HelpDialog mod={MOD} onClose={() => setHelpOpen(false)} />}
+
       {editing && (
         <Editor
           key={editing.id ?? `new-${editing.startDay}-${editing.endDay}`}
@@ -949,16 +962,7 @@ function Editor(props: {
   const place = { country: country.trim(), city: city.trim() };
   const hasPlace = Boolean(place.country || place.city);
   const countries = [...new Set(others.map((s) => s.country).filter(Boolean))];
-  const cities = [
-    ...new Set(others.filter((s) => !place.country || s.country === place.country).map((s) => s.city).filter(Boolean)),
-  ];
-
-  function changeCity(value: string) {
-    setCity(value);
-    // A city used before brings its country along, unless one is already typed.
-    const known = others.find((s) => s.city === value.trim() && s.country);
-    if (known && !country.trim()) setCountry(known.country);
-  }
+  const usedCities = others.map((s) => ({ city: s.city, country: s.country }));
   const [note, setNote] = useState(stay?.note ?? '');
   const [companions, setCompanions] = useState(stay?.companions ?? '');
   const [hasTicket, setHasTicket] = useState(Boolean(stay?.ticket));
@@ -975,18 +979,7 @@ function Editor(props: {
   const [start, setStart] = useState(isoOfDay(editing.startDay));
   const [end, setEnd] = useState(isoOfDay(editing.endDay));
 
-  // The page behind the dialog must not scroll. Padding stands in for the scrollbar so nothing shifts sideways.
-  useEffect(() => {
-    const { style } = document.body;
-    const prev = { overflow: style.overflow, paddingRight: style.paddingRight };
-    const scrollbar = window.innerWidth - document.documentElement.clientWidth;
-    style.overflow = 'hidden';
-    if (scrollbar > 0) style.paddingRight = `${scrollbar}px`;
-    return () => {
-      style.overflow = prev.overflow;
-      style.paddingRight = prev.paddingRight;
-    };
-  }, []);
+  useScrollLock();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -1038,20 +1031,9 @@ function Editor(props: {
           </label>
           <label>
             城市
-            <input
-              value={city}
-              onChange={(e) => changeCity(e.target.value)}
-              placeholder="例：清邁"
-              list="known-cities"
-              maxLength={40}
-            />
+            <CityCombobox value={city} country={country} onChange={setCity} onPickCountry={setCountry} recent={usedCities} />
           </label>
         </div>
-        <datalist id="known-cities">
-          {cities.map((c) => (
-            <option key={c} value={c} />
-          ))}
-        </datalist>
         <div className="field">
           顏色
           <div className="swatches" role="radiogroup" aria-label="顏色">

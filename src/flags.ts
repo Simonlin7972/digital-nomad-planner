@@ -121,6 +121,11 @@ export function flagCode(country: string): string | null {
   return get().codeByName.get(country.trim().toLowerCase()) ?? null;
 }
 
+// The listed (Chinese) name for an ISO code, e.g. "th" -> "泰國".
+export function countryNameOf(code: string): string | null {
+  return get().options.find((o) => o.code === code && o.keywords.includes(code))?.name ?? null;
+}
+
 export function isListedCountry(name: string): boolean {
   return get().options.some((o) => o.name === name.trim());
 }

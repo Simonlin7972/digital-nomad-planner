@@ -38,7 +38,8 @@ A Stop hook (`.claude/hooks/docs-check.sh`) blocks once when code under `src/` o
 - **Position logic is pure and lives in `src/storage.ts`.** `reorderStays` (dragging a whole stay: list-style reorder), `pushStays` (stretching an edge: shove neighbours) and `insertStay` (alt-drag: drop a copy and make room for it). During a drag they are recomputed from the original stays on every pointer move, so no drag state accumulates.
 - **Imports are sanitised.** `sanitize` drops malformed or overlapping entries and accepts two legacy formats. New fields on `Stay` need handling in `serialize`, `sanitize`, the editor, and the README data-format section.
 - **The PNG export is drawn separately** in `src/exportPng.ts` on a canvas. New visual elements do not appear there unless added.
-- **Countries are stored as display names, not codes.** `src/flags.ts` builds the option list from `Intl.DisplayNames` (Taiwan usage) plus a few regions and aliases; `flagCode` maps a name back to a flag. The picker (`src/CountryCombobox.tsx`) still accepts free text, so never assume a stay's country is on the list.
+- **Countries are stored as display names, not codes.** `src/flags.ts` builds the option list from `Intl.DisplayNames` (Taiwan usage) plus a few regions and aliases; `flagCode` maps a name back to a flag. The pickers (`src/Combobox.tsx`) still accept free text, so never assume a stay's country or city is on a list.
+- **The city list is a typing aid.** `src/cities.ts` holds a hand-written `[Chinese, English]` list per ISO code. It is deliberately incomplete and carries no coordinates; unlisted cities are normal and get no warning.
 - **Coordinates** come from Nominatim via `src/geocode.ts` (rate-limited, cached) and are shared through the `useCoords` hook.
 
 ## Conventions
@@ -49,6 +50,8 @@ A Stop hook (`.claude/hooks/docs-check.sh`) blocks once when code under `src/` o
 - Icons are Phosphor at `weight="bold"`, imported per icon from `@phosphor-icons/react/dist/csr/<Name>`. Flags use `flag-icons` via `src/Flag.tsx`.
 - UI strings are Traditional Chinese (Taiwan usage). Code, comments and commit messages are English.
 - Anything new that talks to the network must be listed under "資料與隱私" in the README.
+- `src/HelpDialog.tsx` is the in-app guide. When a control, shortcut, or how data is stored or exported changes, update its text too.
+- Dialogs call `useScrollLock()` so the page behind them doesn't scroll.
 
 ## Verifying changes
 
