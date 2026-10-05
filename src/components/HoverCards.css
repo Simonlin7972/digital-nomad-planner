@@ -23,3 +23,4 @@
 .hover-card .place { display: flex; align-items: center; gap: 8px; }
 .hover-card .note { white-space: pre-wrap; }
 .hover-card .note { color: var(--muted); font-size: 12px; }
+.hover-card .season-warn { color: var(--danger); font-weight: 600; }

@@ -155,6 +155,14 @@ const zh = {
   'mobile.empty': '還沒有行程。在電腦上排好後匯出，再到這裡用 ⋯ 選單匯入。',
   'mobile.readOnly': '手機上只能瀏覽。要排行程或修改，請用電腦打開。',
 
+  'season.title': '適合的季節',
+  'season.best': '推薦',
+  'season.fine': '普通',
+  'season.avoid': '避開',
+  'season.disclaimer': '一般性參考，非天氣預報',
+  'season.warn': '這段時間建議避開：{why}',
+  'season.warnShort': '季節不佳',
+
   'share.title': '分享',
   'share.alt': '整年行程圖預覽',
   'share.rendering': '產生圖片中…',
@@ -312,6 +320,14 @@ const en: Record<keyof typeof zh, string> = {
   'mobile.inDays': 'leaving in {days}',
   'mobile.empty': 'Nothing planned yet. Plan on a computer, export, then import here from the ⋯ menu.',
   'mobile.readOnly': 'On a phone the plan is view-only. Use a computer to plan or make changes.',
+
+  'season.title': 'When to go',
+  'season.best': 'Best',
+  'season.fine': 'Fine',
+  'season.avoid': 'Avoid',
+  'season.disclaimer': 'General guidance, not a forecast',
+  'season.warn': 'Best avoided at this time: {why}',
+  'season.warnShort': 'Poor season',
 
   'share.title': 'Share',
   'share.alt': 'Preview of the year plan image',

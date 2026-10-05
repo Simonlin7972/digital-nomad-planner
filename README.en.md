@@ -66,6 +66,7 @@ The interface is available in Traditional Chinese and English; switch from the t
 - **Summary**: weeks planned and free, countries and cities visited, an estimate of flights and hours in the air, and weeks and days per country and city
 - **Days of stay**: the summary works out the most days spent in the Schengen area within any 180 days (the limit is 90; when exceeded it says from which date), and the days planned in Taiwan during 2027 (183 days is the tax-residency threshold). Only days on the timeline are counted
 - **Itinerary**: one line per stay — dates, flag and country, city, weeks (days), companions, note; filter by Q1–Q4; stays with a flight show a ticket icon; stays that overrun the Schengen limit show a warning icon
+- **Seasons**: about 58 popular nomad bases (Chiang Mai, Bali, Lisbon, Mexico City…) carry a best / fine / avoid rating for each month, with reasons. The editor shows a twelve-month strip; stays that land in months to avoid (Chiang Mai's burning season in March–April, Dubai's summer) get a warning on the block, in the itinerary and on the hover card
 - **Free stretches**: unplanned days between stays are listed in the itinerary too; press `+` to add a stay in that gap
 - **Map**: every place in visit order, joined into a route
 - **Public holidays**: toggle Taiwan's and Australia's 2027 holidays, drawn over the timeline and calendar
@@ -239,6 +240,7 @@ src/
     BackupReminder      Backup reminder under the header
     Editor              Dialog for adding and editing a stay
     HelpDialog          The "How to use" guide
+    SeasonStrip         The twelve-month season strip in the editor
     ShareDialog         Share: PNG preview, download, system share sheet
     MobileItinerary     The read-only phone itinerary (now / next, stay cards)
     HoverCards          Floating cards for stays, tickets and holidays
@@ -262,6 +264,7 @@ src/
     storage.ts          Types, load/save, import sanitising, reorder/push/insert algorithms, colors
     prefs.ts            View, holiday toggles and zoom preferences
     stayRules.ts        Free stretches, Schengen 90/180 and Taiwan's 183 days
+    seasons.ts          Season data for popular cities (monthly ratings and reasons) and the warning rule
     backup.ts           Backup reminder state and rules
     flags.ts            Country list, search, name → ISO code
     cities.ts           Built-in city list (Chinese and English) and search
@@ -310,6 +313,8 @@ Knowing these before reading the code will save time.
 
 **The backup reminder isn't part of the plan.** `dnp-backup` remembers a fingerprint of the plan at the last export or import (an FNV-1a hash of the export format, independent of stay order). The clock starts when the plan differs from that fingerprint and the reminder shows after 7 days; undoing back to the exported state stops it. It isn't in the undo history and isn't written to exports.
 
+**Season data is fixed and hand-written.** `lib/seasons.ts` has one entry per city: twelve monthly ratings (0 avoid, 1 fine, 2 best) and reasons tied to months, keyed by how stays store places (ISO code / English city name), with `ALIASES` for a few neighbouring places. It is general guidance (climate, monsoons, smoke, heat, crowds), not a forecast, and calls no API. To add a city, add an entry in the same shape and make sure every month rated 0 has an avoid reason and every month rated 2 a best reason.
+
 **The PNG is drawn separately.** `lib/exportPng.ts` redraws the year on a canvas rather than capturing the screen, so the output has a fixed size regardless of window and zoom — but new on-screen elements don't appear in it unless they are added there too.
 
 ---
@@ -325,6 +330,7 @@ Knowing these before reading the code will save time.
 - **A copied stay doesn't carry the flight details** (a flight belongs to one trip)
 - **One flight per stay**
 - **The shared image doesn't include the map**
+- **Season data covers about 58 cities** and is general guidance; a given year's weather can differ. Season warnings aren't in the shared image
 - **Place names on the map are in the local script and English**, as the base map provides
 - **The built-in city list is limited** (about 330); smaller places have to be typed, and the Chinese names are hand-picked and may differ from the spelling you're used to
 - **Place lookup depends on Nominatim.** Places it can't find don't appear on the map and are left out of the flight estimate
@@ -343,7 +349,7 @@ Not scheduled; discussion welcome.
 - Selectable year, multiple years
 - More languages
 - A real city database with search, instead of a short list plus free text
-- A seasonal layer: best and worst months per place (for example Chiang Mai's lantern festival in November and its haze in February and March)
+- Season data for more cities, and a season band on the timeline
 - Visa day rules for other countries (only Schengen 90/180 so far)
 - Dragging whole stays in the month view
 - Several flights per stay, accommodation, budget

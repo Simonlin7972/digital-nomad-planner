@@ -49,6 +49,9 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           下方行程列表會列出還沒排的<b>空檔</b>，按右邊的 <b>+</b> 直接排一段。
         </>,
         <>
+          熱門城市在編輯視窗會顯示<b>適合的季節</b>（推薦／普通／避開）；排到該避開的月份，色塊和列表會出現警示。
+        </>,
+        <>
           摘要會算<b>申根 90/180 天</b>與<b>台灣 183 天</b>；申根超過上限的行程，列表上會出現警示圖示。只算排進時間軸的日子，實際規定以官方為準。
         </>,
       ],
@@ -133,6 +136,10 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         </>,
         <>
           The itinerary below lists the <b>free stretches</b> between stays; press the <b>+</b> beside one to plan a stay there.
+        </>,
+        <>
+          For popular cities the editor shows <b>when to go</b> (best / fine / avoid); a stay in a month to avoid gets a warning on its block
+          and in the itinerary.
         </>,
         <>
           The summary counts <b>Schengen days (90 in 180)</b> and <b>days in Taiwan (183)</b>; stays that break the Schengen limit get a

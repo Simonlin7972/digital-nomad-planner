@@ -46,6 +46,7 @@ A Stop hook (`.claude/hooks/docs-check.sh`) blocks once when code under `src/` o
 - **The city list is a typing aid.** `src/lib/cities.ts` holds a hand-written `[Chinese, English]` list per ISO code. It is deliberately incomplete and carries no coordinates; unlisted cities are normal and get no warning.
 - **Stay rules are derived, never stored.** `src/lib/stayRules.ts` computes gaps, the Schengen 90/180 count and Taiwan's 183 days from the stays on every render. The Schengen list is ISO codes, so it only sees countries picked from the list.
 - **The backup reminder is not plan data.** `src/lib/backup.ts` keeps its own `dnp-backup` record (fingerprint of the last export or import). Call `markBackedUp` from any new path that writes the plan to a file the user keeps.
+- **Season data is fixed and hand-written** in `src/lib/seasons.ts`, keyed by stored `country/city`. Keep it consistent: twelve ratings per city, every month rated 0 covered by an `avoid` note and every month rated 2 by a `best` note. No weather API.
 - **Coordinates** come from Nominatim via `src/lib/geocode.ts` (rate-limited, cached) and are shared through the `useCoords` hook.
 
 ## Conventions

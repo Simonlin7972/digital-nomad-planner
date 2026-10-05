@@ -8,6 +8,7 @@ import { PALETTE, cleanTicket, colorKeyOf, defaultColor, overlaps, placeName, ty
 import { TOTAL_DAYS, dayOfIso, daysOf, isoOfDay, rangeLabel, weeksLabel, type DayRange } from '../lib/weeks';
 import { CityCombobox, CountryCombobox } from './Combobox';
 import { DatePicker } from './DatePicker';
+import { SeasonStrip } from './SeasonStrip';
 import './Dialog.css';
 import './Editor.css';
 
@@ -153,6 +154,7 @@ export function Editor(props: {
             </p>
           )
         )}
+        <SeasonStrip place={place} range={range} />
         <label>
           {t('editor.companions')}
           <input

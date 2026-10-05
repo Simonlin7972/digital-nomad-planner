@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
+import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
 import { usePinchZoom } from '../hooks/usePinchZoom';
 import type { Zoom } from '../hooks/useZoom';
 import type { Holiday, HolidaySet } from '../lib/holidays';
 import { t, useLocale } from '../lib/i18n';
 import { colorOf, countryOf, insertStay, placeName, pushStays, reorderStays, type Stay } from '../lib/storage';
+import { seasonWarning } from '../lib/seasons';
 import { clamp } from '../lib/util';
 import {
   MONTHS,
@@ -325,7 +327,10 @@ export default function YearView(props: Props) {
               >
                 <span className="handle" data-edge="l" />
                 <span className="label">
-                  <strong>{placeName(s)}</strong>
+                  <strong>
+                    {seasonWarning(s) && <Warning size={12} weight="bold" aria-label={t('season.warnShort')} />}
+                    {placeName(s)}
+                  </strong>
                   <small>{s.id === activeId ? rangeLabel(s) : `${weeks}${s.note ? `${t('sep')}${s.note.replace(/\s+/g, ' ')}` : ''}`}</small>
                 </span>
                 <span className="handle" data-edge="r" />

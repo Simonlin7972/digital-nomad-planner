@@ -3,6 +3,7 @@ import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
 import { useMemo } from 'react';
 import { daysText, t, useLocale } from '../lib/i18n';
 import { cityOf, colorOf, countryOf, ticketLines, type Stay } from '../lib/storage';
+import { noteText, seasonWarning } from '../lib/seasons';
 import { checkSchengen, gapsOf } from '../lib/stayRules';
 import { DAY0, dateOfDay, daysOf, longRangeLabel, todayIndex, weeksLabel } from '../lib/weeks';
 import { Flag } from './Flag';
@@ -80,6 +81,12 @@ export function MobileItinerary({ stays }: { stays: Stay[] }) {
                     {t('paren', { x: daysText(daysOf(s)) })}
                   </p>
                   {s.companions && <p>{t('with', { who: s.companions })}</p>}
+                  {seasonWarning(s)?.notes.map((n, i) => (
+                    <p key={i} className="warn">
+                      <Warning size={14} weight="bold" />
+                      {noteText(n)}
+                    </p>
+                  ))}
                   {over !== undefined && (
                     <p className="warn">
                       <Warning size={14} weight="bold" />

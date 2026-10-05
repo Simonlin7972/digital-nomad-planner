@@ -146,6 +146,8 @@
   text-overflow: ellipsis;
 }
 .stay strong { font-size: 14px; font-weight: 600; }
+/* season warning: a small mark before the place name */
+.stay strong svg { vertical-align: -1px; margin-right: 4px; }
 .stay small { font-size: 11px; opacity: 0.9; }
 
 .countries { margin-top: 6px; grid-template-rows: 22px; }

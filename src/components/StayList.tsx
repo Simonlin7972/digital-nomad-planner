@@ -5,6 +5,7 @@ import { Ticket as TicketIcon } from '@phosphor-icons/react/dist/csr/Ticket';
 import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
 import { daysText, t, useLocale } from '../lib/i18n';
 import { cityOf, colorOf, countryOf, overlaps, placeFull, type Stay } from '../lib/storage';
+import { noteText, seasonWarning } from '../lib/seasons';
 import { checkSchengen, gapsOf } from '../lib/stayRules';
 import { TOTAL_DAYS, daysOf, longRangeLabel, monthName, monthRange, weeksLabel, type DayRange } from '../lib/weeks';
 import { Flag } from './Flag';
@@ -101,6 +102,8 @@ export function StayList({ stays, month, onEdit, onCreate, ticketCardId, onTicke
             }
             const s = row.stay;
             const over = schengen.overBy.get(s.id);
+            const season = seasonWarning(s);
+            const seasonText = season?.notes.map(noteText).join(t('list'));
             return (
               <li key={s.id}>
                 <i style={{ background: colorOf(s) }} />
@@ -113,6 +116,11 @@ export function StayList({ stays, month, onEdit, onCreate, ticketCardId, onTicke
                   {t('paren', { x: daysText(daysOf(s)) })}
                 </span>
                 {s.companions && <span className="weeks">{t('with', { who: s.companions })}</span>}
+                {season && (
+                  <span className="warn" role="img" aria-label={t('season.warn', { why: seasonText ?? '' })} title={t('season.warn', { why: seasonText ?? '' })}>
+                    <Warning size={18} weight="bold" />
+                  </span>
+                )}
                 {over !== undefined && (
                   <span
                     className="warn"

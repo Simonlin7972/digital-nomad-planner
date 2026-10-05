@@ -1,0 +1,33 @@
+/* Season guide in the editor: twelve month cells, then the reasons */
+.season-months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; }
+.season-months li {
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: default;
+}
+.season-months .best { background: color-mix(in srgb, #4a9d5b 22%, transparent); color: #2f6b3c; }
+.season-months .fine { background: var(--subtle); color: var(--muted); }
+.season-months .avoid { background: color-mix(in srgb, var(--danger) 18%, transparent); color: var(--danger); }
+/* months the stay covers */
+.season-months .in { box-shadow: inset 0 0 0 2px var(--text); }
+
+.season-notes { display: flex; flex-direction: column; gap: 3px; margin-top: 2px; font-weight: 400; color: var(--muted); }
+.season-notes li { line-height: 1.5; }
+.season-notes b { font-weight: 600; margin-right: 6px; color: var(--text); }
+.season-notes .best b { color: #2f6b3c; }
+.season-notes .avoid b,
+.season-notes .avoid.here { color: var(--danger); }
+.season-notes .here { color: var(--text); }
+
+.season-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; margin: 2px 0 0; font-size: 11px; font-weight: 400; color: var(--muted); }
+.season-legend i { width: 10px; height: 10px; border-radius: 3px; margin-left: 4px; }
+.season-legend i:first-child { margin-left: 0; }
+.season-legend i.best { background: color-mix(in srgb, #4a9d5b 40%, transparent); }
+.season-legend i.fine { background: var(--line-strong); }
+.season-legend i.avoid { background: color-mix(in srgb, var(--danger) 40%, transparent); }
+.season-legend span { margin-left: auto; }

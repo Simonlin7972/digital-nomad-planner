@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import { Ticket as TicketIcon } from '@phosphor-icons/react/dist/csr/Ticket';
+import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
+import { noteText, seasonWarning } from '../lib/seasons';
 import type { Holiday, HolidaySet } from '../lib/holidays';
 import { daysText, t } from '../lib/i18n';
 import { placeFull, ticketLines, type Stay } from '../lib/storage';
@@ -40,6 +42,7 @@ export function StayCard({ stay, ...anchor }: Anchor & { stay: Stay }) {
         </span>
       )}
       {stay.note && <span className="note">{stay.note}</span>}
+      <SeasonWarning stay={stay} />
     </Card>
   );
 }
@@ -67,5 +70,21 @@ export function HolidayCard({ holiday, set, ...anchor }: Anchor & { holiday: Hol
       </span>
       {holiday.note && <span className="note">{holiday.note}</span>}
     </Card>
+  );
+}
+
+// One line per reason the stay falls in a month worth avoiding, if it does.
+export function SeasonWarning({ stay }: { stay: Stay }) {
+  const warning = seasonWarning(stay);
+  if (!warning) return null;
+  return (
+    <>
+      {warning.notes.map((n, i) => (
+        <span key={i} className="with-icon season-warn">
+          <Warning size={14} weight="bold" />
+          {noteText(n)}
+        </span>
+      ))}
+    </>
   );
 }
