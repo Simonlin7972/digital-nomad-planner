@@ -11,6 +11,7 @@ import { Trash } from '@phosphor-icons/react/dist/csr/Trash';
 import { UploadSimple } from '@phosphor-icons/react/dist/csr/UploadSimple';
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus';
 import { renderPng } from './exportPng';
+import { CountryCombobox } from './CountryCombobox';
 import { Flag } from './Flag';
 import MonthView from './MonthView';
 import { flightStats, useCoords } from './useCoords';
@@ -974,6 +975,19 @@ function Editor(props: {
   const [start, setStart] = useState(isoOfDay(editing.startDay));
   const [end, setEnd] = useState(isoOfDay(editing.endDay));
 
+  // The page behind the dialog must not scroll. Padding stands in for the scrollbar so nothing shifts sideways.
+  useEffect(() => {
+    const { style } = document.body;
+    const prev = { overflow: style.overflow, paddingRight: style.paddingRight };
+    const scrollbar = window.innerWidth - document.documentElement.clientWidth;
+    style.overflow = 'hidden';
+    if (scrollbar > 0) style.paddingRight = `${scrollbar}px`;
+    return () => {
+      style.overflow = prev.overflow;
+      style.paddingRight = prev.paddingRight;
+    };
+  }, []);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -1017,17 +1031,10 @@ function Editor(props: {
     <div className="backdrop" onPointerDown={(e) => e.target === e.currentTarget && onClose()}>
       <form className="editor" onSubmit={submit}>
         <h2>{stay ? '編輯行程' : '新增行程'}</h2>
-        <div className="dates">
+        <div className="dates place">
           <label>
             國家
-            <input
-              autoFocus
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              placeholder="例：泰國"
-              list="known-countries"
-              maxLength={40}
-            />
+            <CountryCombobox value={country} onChange={setCountry} recent={countries} autoFocus />
           </label>
           <label>
             城市
@@ -1040,11 +1047,6 @@ function Editor(props: {
             />
           </label>
         </div>
-        <datalist id="known-countries">
-          {countries.map((c) => (
-            <option key={c} value={c} />
-          ))}
-        </datalist>
         <datalist id="known-cities">
           {cities.map((c) => (
             <option key={c} value={c} />

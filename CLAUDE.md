@@ -38,6 +38,7 @@ A Stop hook (`.claude/hooks/docs-check.sh`) blocks once when code under `src/` o
 - **Position logic is pure and lives in `src/storage.ts`.** `reorderStays` (dragging a whole stay: list-style reorder), `pushStays` (stretching an edge: shove neighbours) and `insertStay` (alt-drag: drop a copy and make room for it). During a drag they are recomputed from the original stays on every pointer move, so no drag state accumulates.
 - **Imports are sanitised.** `sanitize` drops malformed or overlapping entries and accepts two legacy formats. New fields on `Stay` need handling in `serialize`, `sanitize`, the editor, and the README data-format section.
 - **The PNG export is drawn separately** in `src/exportPng.ts` on a canvas. New visual elements do not appear there unless added.
+- **Countries are stored as display names, not codes.** `src/flags.ts` builds the option list from `Intl.DisplayNames` (Taiwan usage) plus a few regions and aliases; `flagCode` maps a name back to a flag. The picker (`src/CountryCombobox.tsx`) still accepts free text, so never assume a stay's country is on the list.
 - **Coordinates** come from Nominatim via `src/geocode.ts` (rate-limited, cached) and are shared through the `useCoords` hook.
 
 ## Conventions

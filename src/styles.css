@@ -657,6 +657,7 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
   width: min(440px, 100%);
   max-height: calc(100dvh - 32px);
   overflow: hidden auto;
+  overscroll-behavior: contain; /* reaching the end of the dialog doesn't scroll what's behind it */
   background: var(--surface);
   border-radius: var(--radius-lg);
   padding: 0 24px 20px;
@@ -694,6 +695,31 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
 .editor textarea::placeholder { color: #b0b0b0; }
 .editor input:focus,
 .editor textarea:focus { outline: 2px solid var(--text); outline-offset: -1px; border-color: transparent; }
+/* Country picker */
+/* The list is positioned against the country/city row, so it spans both fields. */
+.editor .dates.place { position: relative; }
+.combo { display: flex; flex-direction: column; gap: 6px; }
+.combo-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 248px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  z-index: 5;
+  padding: 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+}
+.combo-list li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; font-size: 14px; font-weight: 400; cursor: pointer; }
+.combo-list li.active { background: var(--subtle); }
+.combo-list li small { margin-left: auto; padding-left: 12px; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.combo-list li.none { color: var(--muted); cursor: default; }
+.combo-hint { font-size: 12px; font-weight: 400; color: var(--muted); }
+
 .swatches { display: flex; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
 .swatch {
   width: 30px;
