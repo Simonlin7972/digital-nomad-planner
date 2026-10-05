@@ -1,5 +1,7 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { BackupReminder } from './components/BackupReminder';
+import { MobileItinerary } from './components/MobileItinerary';
+import { ShareDialog } from './components/ShareDialog';
 import { Editor, type Editing, type StayDetails } from './components/Editor';
 import { HelpDialog } from './components/HelpDialog';
 import { HolidayCard, StayCard, TicketCard, type Anchor } from './components/HoverCards';
@@ -14,8 +16,8 @@ import YearView from './components/YearView';
 import { useBackupReminder } from './hooks/useBackupReminder';
 import { useCoords } from './hooks/useCoords';
 import { useHistory } from './hooks/useHistory';
+import { useNarrow } from './hooks/useNarrow';
 import { useZoom } from './hooks/useZoom';
-import { renderPng } from './lib/exportPng';
 import { download } from './lib/files';
 import { holidaySets as allHolidaySets, type Holiday, type HolidaySet } from './lib/holidays';
 import { t, useLocale } from './lib/i18n';
@@ -36,6 +38,9 @@ export default function App() {
   const { present: stays, set: setStays, undo, redo, canUndo, canRedo } = useHistory<Stay[]>(load);
   const [editing, setEditing] = useState<Editing | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  // Phones get a read-only layout: no timeline or calendar to drag on, no editor.
+  const narrow = useNarrow();
   const [dragging, setDragging] = useState(false);
   const [view, setView] = useState(loadView);
   const [holidayOn, setHolidayOn] = useState(loadHolidayToggles);
@@ -62,7 +67,7 @@ export default function App() {
     document.title = `${t('app.title')} — ${t('app.tagline')}`;
   }, [locale]);
 
-  const busy = Boolean(dragging || editing || helpOpen);
+  const busy = Boolean(dragging || editing || helpOpen || shareOpen);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey) || e.altKey || busy) return;
@@ -105,14 +110,6 @@ export default function App() {
     backup.markBackedUp(stays);
   }
 
-  async function savePng() {
-    try {
-      download(await renderPng(stays), 'png');
-    } catch {
-      alert(t('alert.pngFailed'));
-    }
-  }
-
   async function importJson(file: File) {
     try {
       const next = sanitize(JSON.parse(await file.text()));
@@ -143,13 +140,14 @@ export default function App() {
           <Tagline />
         </div>
         <Toolbar
+          readOnly={narrow}
           canUndo={canUndo}
           canRedo={canRedo}
           hasStays={stays.length > 0}
           onHelp={() => setHelpOpen(true)}
           onUndo={undo}
           onRedo={redo}
-          onSavePng={() => void savePng()}
+          onShare={() => setShareOpen(true)}
           onExport={exportJson}
           onImport={(file) => void importJson(file)}
         />
@@ -157,56 +155,67 @@ export default function App() {
 
       {backup.remind && <BackupReminder daysSince={backup.daysSince} onExport={exportJson} onSnooze={backup.snooze} />}
 
-      <ViewBar
-        mode={view.mode}
-        onMode={(mode) => setView((v) => ({ ...v, mode }))}
-        holidayOn={holidayOn}
-        onToggleHoliday={(key) => setHolidayOn((prev) => ({ ...prev, [key]: !prev[key] }))}
-        zoom={zoom.zoom}
-        onZoom={zoom.stepTo}
-      />
-
-      <div key={shownMode} className={`view${shownMode !== view.mode ? ' leaving' : ''}`}>
-        {shownMode === 'month' ? (
-          <MonthView
-            stays={stays}
-            month={view.month}
-            onMonth={(month) => setView({ mode: 'month', month: clamp(month, 0, 11) })}
-            holidaySets={holidaySets}
-            pending={pending}
-            onCreate={(range) => setEditing({ id: null, ...range })}
-            onEdit={edit}
-            onResize={(id, range) => setStays((prev) => pushStays(prev, id, range) ?? prev)}
-            onHover={setStayCard}
+      {narrow ? (
+        <>
+          <MobileItinerary stays={stays} />
+          <section className="panels">
+            <Summary stays={stays} coords={coords} />
+          </section>
+        </>
+      ) : (
+        <>
+          <ViewBar
+            mode={view.mode}
+            onMode={(mode) => setView((v) => ({ ...v, mode }))}
+            holidayOn={holidayOn}
+            onToggleHoliday={(key) => setHolidayOn((prev) => ({ ...prev, [key]: !prev[key] }))}
+            zoom={zoom.zoom}
+            onZoom={zoom.stepTo}
           />
-        ) : (
-          <YearView
-            stays={stays}
-            zoom={zoom}
-            holidaySets={holidaySets}
-            pending={pending}
-            onCreate={(range) => setEditing({ id: null, ...range })}
-            onEdit={edit}
-            onChange={setStays}
-            onOpenMonth={(month) => setView({ mode: 'month', month })}
-            onHoverStay={setStayCard}
-            onHoverHoliday={setHolidayCard}
-            onDragging={setDragging}
-          />
-        )}
-      </div>
 
-      <section className="panels">
-        <Summary stays={stays} coords={coords} />
-        <StayList
-          stays={stays}
-          month={view.mode === 'month' ? view.month : null}
-          onEdit={edit}
-          onCreate={(range) => setEditing({ id: null, ...range })}
-          ticketCardId={ticketCard?.id ?? null}
-          onTicket={setTicketCard}
-        />
-      </section>
+          <div key={shownMode} className={`view${shownMode !== view.mode ? ' leaving' : ''}`}>
+            {shownMode === 'month' ? (
+              <MonthView
+                stays={stays}
+                month={view.month}
+                onMonth={(month) => setView({ mode: 'month', month: clamp(month, 0, 11) })}
+                holidaySets={holidaySets}
+                pending={pending}
+                onCreate={(range) => setEditing({ id: null, ...range })}
+                onEdit={edit}
+                onResize={(id, range) => setStays((prev) => pushStays(prev, id, range) ?? prev)}
+                onHover={setStayCard}
+              />
+            ) : (
+              <YearView
+                stays={stays}
+                zoom={zoom}
+                holidaySets={holidaySets}
+                pending={pending}
+                onCreate={(range) => setEditing({ id: null, ...range })}
+                onEdit={edit}
+                onChange={setStays}
+                onOpenMonth={(month) => setView({ mode: 'month', month })}
+                onHoverStay={setStayCard}
+                onHoverHoliday={setHolidayCard}
+                onDragging={setDragging}
+              />
+            )}
+          </div>
+
+          <section className="panels">
+            <Summary stays={stays} coords={coords} />
+            <StayList
+              stays={stays}
+              month={view.mode === 'month' ? view.month : null}
+              onEdit={edit}
+              onCreate={(range) => setEditing({ id: null, ...range })}
+              ticketCardId={ticketCard?.id ?? null}
+              onTicket={setTicketCard}
+            />
+          </section>
+        </>
+      )}
 
       <section className="panel map-panel">
         <h2>{t('map.title')}</h2>
@@ -220,8 +229,9 @@ export default function App() {
       {holidayCard && <HolidayCard {...holidayCard} />}
 
       {helpOpen && <HelpDialog mod={MOD} onClose={() => setHelpOpen(false)} />}
+      {shareOpen && <ShareDialog stays={stays} holidaySets={holidaySets} onClose={() => setShareOpen(false)} />}
 
-      {editing && (
+      {editing && !narrow && (
         <Editor
           key={editing.id ?? `new-${editing.startDay}-${editing.endDay}`}
           editing={editing}

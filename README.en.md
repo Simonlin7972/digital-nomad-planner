@@ -56,7 +56,7 @@ The interface is available in Traditional Chinese and English; switch from the t
   - Countries: about 260, also searchable by ISO code or common alias (`thai`, `jp`, `韓國`)
   - Cities: about 330 common ones built in. With a country chosen only its cities are listed; picking a city with no country fills the country in. Cities not on the list can simply be typed
 - Exact start and end dates
-- Color (8 to choose from)
+- Color (black plus 8 others; a new place starts black, a place you've used before keeps its color)
 - Who you're travelling with
 - Flight booked: airline, flight number, departure time, booking reference, fare
 - A note
@@ -74,10 +74,11 @@ The interface is available in Traditional Chinese and English; switch from the t
 
 - A built-in "How to use" guide: gestures, where data lives, backup and transfer
 - Traditional Chinese and English interface, switched from the toolbar; defaults to the browser's language and remembers your choice
-- A compact toolbar: undo and redo are icons; export, import and Save PNG live in the `⋯` menu
+- A compact toolbar: undo and redo are icons; export, import and Share live in the `⋯` menu
 - Undo and redo, up to 100 steps
 - JSON export and import; file names carry the export date (e.g. `nomad-plan-2027_2026-10-05.json`)
-- Save PNG: the year timeline plus the itinerary, at a fixed size
+- Share: preview the year as an image, then download it as a PNG (fixed size, with the timeline, country strips and flags, holidays that are switched on, ticket markers, a summary line and the itinerary; flight details left out). On a phone it can open the system share sheet
+- Read-only phone layout: below 720px the page becomes view-only — now / next, one card per stay (flight details and full notes included), the summary and the map. Plan on a computer, export, then import on the phone
 - Every change is saved automatically
 - Backup reminder: when the plan has changed and gone 7 days without an export, a reminder appears under the header, with buttons to export or to put it off for 3 days
 
@@ -186,7 +187,7 @@ An exported file:
       "city": "Chiang Mai",
       "start": "2027-02-10",      // ISO date
       "end": "2027-03-07",        // inclusive; must be >= start
-      "color": "teal",            // optional: red orange yellow green teal blue purple pink
+      "color": "teal",            // optional: black red orange yellow green teal blue purple pink
       "companions": "Amy",        // optional
       "ticket": {                 // optional; its presence means "flight booked", every field optional
         "airline": "EVA Air",
@@ -223,12 +224,12 @@ Older formats still load: week-based `startWeek`/`endWeek`, a single `location` 
 ```
 index.html              Entry page; loads the font and favicon
 public/favicon.svg      16×16 pixel-art globe
-docs/overview.png       Sample image for the README (made with the app's Save PNG)
+docs/overview.png       Sample image for the README (downloaded from the app's Share dialog)
 src/
   main.tsx              React mount point; sets the stylesheet order
   App.tsx               Wires the pieces together; owns the plan and page-level state
   components/           UI components, each with its stylesheet (.css) beside it
-    Toolbar             Header actions and the ⋯ menu (export, import, PNG)
+    Toolbar             Header actions and the ⋯ menu (export, import, share)
     ViewBar             Year/month switch, holiday toggles, zoom
     YearView            The year timeline, including drag, resize and copy handling
     MonthView           The month calendar
@@ -237,6 +238,8 @@ src/
     BackupReminder      Backup reminder under the header
     Editor              Dialog for adding and editing a stay
     HelpDialog          The "How to use" guide
+    ShareDialog         Share: PNG preview, download, system share sheet
+    MobileItinerary     The read-only phone itinerary (now / next, stay cards)
     HoverCards          Floating cards for stays, tickets and holidays
     Combobox            Searchable country and city pickers
     DatePicker          Custom date picker (instead of the browser's)
@@ -251,6 +254,7 @@ src/
     usePinchZoom        Trackpad, touch and wheel zoom gestures
     useCoords           Place coordinates, distances and the flight estimate
     useScrollLock       Stops the page scrolling behind a dialog
+    useNarrow           Whether the screen is 720px or narrower (the read-only phone layout)
     useBackupReminder   Tracks time since the last export and decides whether to remind
   lib/                  Logic and data that isn't UI
     weeks.ts            Date model: weeks, day indexes, half-week slots, month ranges, labels
@@ -263,7 +267,7 @@ src/
     holidays.ts         2027 public holiday data
     geocode.ts          Nominatim lookups, rate limiting, cache
     exportPng.ts        Draws the PNG on a canvas
-    files.ts            File download
+    files.ts            File names and download
     util.ts             Small helpers
     i18n.tsx            Dictionaries, current locale, `t()`
   styles/base.css       Design tokens, page background, shared buttons and panels
@@ -314,12 +318,12 @@ Knowing these before reading the code will save time.
 - **The year is fixed at 2027.** The constant is `YEAR` in `lib/weeks.ts`; the holiday data is also for 2027 only
 - **Two interface languages**, Traditional Chinese and English; the product spec (`MVP.md`) is in Chinese only
 - **What you type isn't translated**: unlisted countries and cities, notes and companions show as typed in both languages
-- **Built for desktop.** Narrow screens work but aren't tuned
+- **Editing is desktop-only.** Phones (720px and narrower) get a read-only layout; a tablet or laptop window narrower than 720px does too
 - **No automated tests**
 - **The month view can't move a whole stay or `Alt`-drag a copy**; drag the ends or change the dates in the editor
 - **A copied stay doesn't carry the flight details** (a flight belongs to one trip)
 - **One flight per stay**
-- **Country strips, ticket markers and the map aren't in the PNG export**
+- **The shared image doesn't include the map**
 - **Place names on the map are in the local script and English**, as the base map provides
 - **The built-in city list is limited** (about 330); smaller places have to be typed, and the Chinese names are hand-picked and may differ from the spelling you're used to
 - **Place lookup depends on Nominatim.** Places it can't find don't appear on the map and are left out of the flight estimate

@@ -4,8 +4,8 @@ import { ArrowClockwise } from '@phosphor-icons/react/dist/csr/ArrowClockwise';
 import { ArrowCounterClockwise } from '@phosphor-icons/react/dist/csr/ArrowCounterClockwise';
 import { DotsThree } from '@phosphor-icons/react/dist/csr/DotsThree';
 import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
-import { Image as ImageIcon } from '@phosphor-icons/react/dist/csr/Image';
 import { Question } from '@phosphor-icons/react/dist/csr/Question';
+import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork';
 import { UploadSimple } from '@phosphor-icons/react/dist/csr/UploadSimple';
 import { Translate } from '@phosphor-icons/react/dist/csr/Translate';
 import { setLocale, t, useLocale } from '../lib/i18n';
@@ -13,20 +13,21 @@ import { MOD } from '../lib/util';
 import './Toolbar.css';
 
 type Props = {
+  readOnly: boolean; // phone layout: no undo or redo
   canUndo: boolean;
   canRedo: boolean;
   hasStays: boolean;
   onHelp: () => void;
   onUndo: () => void;
   onRedo: () => void;
-  onSavePng: () => void;
+  onShare: () => void;
   onExport: () => void;
   onImport: (file: File) => void;
 };
 
 // The row of plan-wide actions in the page header. Undo and redo are icons only; the file actions (export,
-// import, PNG) sit in a ⋯ menu.
-export function Toolbar({ canUndo, canRedo, hasStays, onHelp, onUndo, onRedo, onSavePng, onExport, onImport }: Props) {
+// import, share as PNG) sit in a ⋯ menu.
+export function Toolbar({ readOnly, canUndo, canRedo, hasStays, onHelp, onUndo, onRedo, onShare, onExport, onImport }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const locale = useLocale();
   const undoLabel = t('toolbar.shortcut', { action: t('toolbar.undo'), keys: `${MOD}Z` });
@@ -37,17 +38,21 @@ export function Toolbar({ canUndo, canRedo, hasStays, onHelp, onUndo, onRedo, on
         <Question size={16} weight="bold" />
         {t('toolbar.help')}
       </button>
-      <button className="icon" onClick={onUndo} disabled={!canUndo} aria-label={undoLabel} title={undoLabel}>
-        <ArrowCounterClockwise size={16} weight="bold" />
-      </button>
-      <button className="icon" onClick={onRedo} disabled={!canRedo} aria-label={redoLabel} title={redoLabel}>
-        <ArrowClockwise size={16} weight="bold" />
-      </button>
+      {!readOnly && (
+        <>
+          <button className="icon" onClick={onUndo} disabled={!canUndo} aria-label={undoLabel} title={undoLabel}>
+            <ArrowCounterClockwise size={16} weight="bold" />
+          </button>
+          <button className="icon" onClick={onRedo} disabled={!canRedo} aria-label={redoLabel} title={redoLabel}>
+            <ArrowClockwise size={16} weight="bold" />
+          </button>
+        </>
+      )}
       <MoreMenu
         items={[
           { label: t('toolbar.export'), icon: <DownloadSimple size={16} weight="bold" />, onSelect: onExport, disabled: !hasStays },
           { label: t('toolbar.import'), icon: <UploadSimple size={16} weight="bold" />, onSelect: () => fileRef.current?.click() },
-          { label: t('toolbar.savePng'), icon: <ImageIcon size={16} weight="bold" />, onSelect: onSavePng, disabled: !hasStays },
+          { label: t('toolbar.share'), icon: <ShareNetwork size={16} weight="bold" />, onSelect: onShare, disabled: !hasStays },
         ]}
       />
       {/* Labelled in the language it switches to, so it can be found by someone who can't read the current one. */}

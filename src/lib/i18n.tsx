@@ -25,7 +25,7 @@ const zh = {
   'toolbar.help': '如何使用',
   'toolbar.undo': '復原',
   'toolbar.redo': '重做',
-  'toolbar.savePng': '保存 PNG',
+  'toolbar.share': '分享',
   'toolbar.export': '匯出',
   'toolbar.import': '匯入',
   'toolbar.more': '更多',
@@ -127,6 +127,7 @@ const zh = {
   'editor.cancel': '取消',
   'editor.save': '儲存',
 
+  'color.black': '黑',
   'color.red': '紅',
   'color.orange': '橘',
   'color.yellow': '黃',
@@ -146,6 +147,20 @@ const zh = {
 
   'help.title': '如何使用',
   'help.close': '關閉',
+
+  'mobile.now': '現在',
+  'mobile.next': '下一站',
+  'mobile.daysLeft': '還有 {days}',
+  'mobile.inDays': '{days}後出發',
+  'mobile.empty': '還沒有行程。在電腦上排好後匯出，再到這裡用 ⋯ 選單匯入。',
+  'mobile.readOnly': '手機上只能瀏覽。要排行程或修改，請用電腦打開。',
+
+  'share.title': '分享',
+  'share.alt': '整年行程圖預覽',
+  'share.rendering': '產生圖片中…',
+  'share.note': '圖片含時間軸、國家、假日與行程清單；不含機票細節與訂位代號。',
+  'share.download': '下載 PNG',
+  'share.share': '分享…',
 };
 
 const en: Record<keyof typeof zh, string> = {
@@ -168,7 +183,7 @@ const en: Record<keyof typeof zh, string> = {
   'toolbar.help': 'How to use',
   'toolbar.undo': 'Undo',
   'toolbar.redo': 'Redo',
-  'toolbar.savePng': 'Save PNG',
+  'toolbar.share': 'Share',
   'toolbar.export': 'Export',
   'toolbar.import': 'Import',
   'toolbar.more': 'More',
@@ -270,6 +285,7 @@ const en: Record<keyof typeof zh, string> = {
   'editor.cancel': 'Cancel',
   'editor.save': 'Save',
 
+  'color.black': 'Black',
   'color.red': 'Red',
   'color.orange': 'Orange',
   'color.yellow': 'Yellow',
@@ -289,6 +305,20 @@ const en: Record<keyof typeof zh, string> = {
 
   'help.title': 'How to use',
   'help.close': 'Close',
+
+  'mobile.now': 'Now',
+  'mobile.next': 'Next',
+  'mobile.daysLeft': '{days} to go',
+  'mobile.inDays': 'leaving in {days}',
+  'mobile.empty': 'Nothing planned yet. Plan on a computer, export, then import here from the ⋯ menu.',
+  'mobile.readOnly': 'On a phone the plan is view-only. Use a computer to plan or make changes.',
+
+  'share.title': 'Share',
+  'share.alt': 'Preview of the year plan image',
+  'share.rendering': 'Creating the image…',
+  'share.note': 'The image shows the timeline, countries, holidays and itinerary. Flight details and booking references are left out.',
+  'share.download': 'Download PNG',
+  'share.share': 'Share…',
 };
 
 export type Key = keyof typeof zh;

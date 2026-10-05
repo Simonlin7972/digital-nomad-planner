@@ -1,0 +1,23 @@
+/* Share dialog: the editor's shell, wide enough for the image, capped like the help dialog */
+.editor.share { width: min(960px, 100%); max-height: 85vh; max-height: 85dvh; overflow: hidden; }
+.editor.share h2 { position: relative; }
+.editor.share .close { position: absolute; top: 50%; right: 16px; transform: translateY(-50%); width: 32px; height: 32px; padding: 0; border: 0; display: grid; place-items: center; }
+.editor.share .close:active:not(:disabled) { transform: translateY(-50%) scale(0.94); }
+
+/* The image scrolls inside its frame (it is wide and can be tall); the buttons stay in view */
+.share-preview {
+  flex: 1 1 auto;
+  min-height: 160px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--subtle);
+  display: grid;
+  place-items: center;
+}
+.share-preview img { display: block; width: 100%; height: auto; }
+.share-preview p { margin: 0; color: var(--muted); font-size: 14px; }
+.share-note { margin: -4px 0 0; font-size: 12px; color: var(--muted); }
+.editor.share .buttons { padding-bottom: 0; }
+.editor.share .buttons button { display: inline-flex; align-items: center; gap: 8px; }

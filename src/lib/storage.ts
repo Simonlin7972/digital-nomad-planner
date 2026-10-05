@@ -229,8 +229,10 @@ export function save(stays: Stay[]) {
   }
 }
 
-// Colour names for display come from the dictionary: t(`color.${key}`).
+// Colour names for display come from the dictionary: t(`color.${key}`). Black comes first: it is the default
+// for a new place.
 export const PALETTE = [
+  { key: 'black', hex: '#222222' },
   { key: 'red', hex: '#cf4b45' },
   { key: 'orange', hex: '#d97a1e' },
   { key: 'yellow', hex: '#a8841f' },
@@ -245,10 +247,13 @@ export type ColorKey = (typeof PALETTE)[number]['key'];
 
 const isColorKey = (v: unknown): v is ColorKey => PALETTE.some((c) => c.key === v);
 
+// Fallback for stays saved without a colour (older files). A fixed list of the eight original colours, so adding
+// colours to the palette never changes how those stays look.
+const HASHED: ColorKey[] = ['red', 'orange', 'yellow', 'green', 'teal', 'blue', 'purple', 'pink'];
 function hashColor(name: string): ColorKey {
   let h = 0;
   for (const ch of name.trim().toLowerCase()) h = (h * 31 + ch.codePointAt(0)!) >>> 0;
-  return PALETTE[h % PALETTE.length].key;
+  return HASHED[h % HASHED.length];
 }
 
 type Place = Pick<Stay, 'country' | 'city'>;
@@ -268,8 +273,8 @@ export const colorKeyOf = (stay: Place & Pick<Stay, 'color'>): ColorKey => stay.
 export const colorOf = (stay: Place & Pick<Stay, 'color'>): string =>
   PALETTE.find((c) => c.key === colorKeyOf(stay))!.hex;
 
-// Suggested colour for a place: reuse what the same place already has, otherwise pick one from its name.
+// Suggested colour for a place: reuse what the same place already has, otherwise black.
 export function defaultColor(place: Place, stays: Stay[]): ColorKey {
   const same = stays.find((s) => s.country === place.country && s.city === place.city);
-  return same ? colorKeyOf(same) : hashColor(placeKey(place));
+  return same ? colorKeyOf(same) : 'black';
 }
