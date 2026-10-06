@@ -1,7 +1,7 @@
 // Remembers what was last exported, so the page can nudge when the plan has gone a while without a backup.
 // Kept per browser like the other preferences; it is not part of the plan, the export or the undo history.
 import { serialize, type Stay } from './storage';
-import { YEAR } from './weeks';
+import { YEAR, inYear } from './weeks';
 
 export const REMIND_AFTER_DAYS = 7; // unbacked changes this old bring up the reminder
 export const SNOOZE_DAYS = 3;
@@ -66,6 +66,9 @@ export const backedUp = (stays: Stay[], now: number): BackupState => ({
   dirtySince: null,
   snoozeUntil: null,
 });
+
+// Records another year's plan as backed up (the current year's goes through useBackupReminder).
+export const markYearBackedUp = (year: number, stays: Stay[], now: number) => inYear(year, () => saveBackup(backedUp(stays, now)));
 
 export const snoozed = (state: BackupState, now: number): BackupState => ({ ...state, snoozeUntil: now + SNOOZE_DAYS * DAY_MS });
 

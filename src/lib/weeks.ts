@@ -1,7 +1,7 @@
 import { getLocale, t } from './i18n';
 
 // The years that can be planned. Each has its own plan in storage; the chosen one is remembered per browser.
-export const YEARS = [2026, 2027, 2028] as const;
+export const YEARS = [2025, 2026, 2027, 2028] as const;
 const YEAR_KEY = 'dnp-year';
 
 function loadYear(): number {
@@ -65,13 +65,8 @@ export let SLOTS = WEEK_COUNT * 2;
 export let MONTHS = buildMonths(WEEKS);
 
 const listeners = new Set<() => void>();
-let direction: -1 | 0 | 1 = 0; // which way the last change went: 1 to a later year, -1 to an earlier one
 
-// Switches the year being planned: remembers it, rebuilds the date model and tells subscribers. The plan for the
-// year being left is already saved.
-export function setYear(year: number) {
-  if (year === YEAR || !(YEARS as readonly number[]).includes(year)) return;
-  direction = year > YEAR ? 1 : -1;
+function applyYear(year: number) {
   YEAR = year;
   WEEKS = buildWeeks(year);
   WEEK_COUNT = WEEKS.length;
@@ -79,6 +74,28 @@ export function setYear(year: number) {
   TOTAL_DAYS = WEEK_COUNT * 7;
   SLOTS = WEEK_COUNT * 2;
   MONTHS = buildMonths(WEEKS);
+}
+
+// Runs `fn` with the date model of another year, then puts the current one back, without telling anyone. For
+// reading, writing and checking other years' plans (export and import of every year). Synchronous only.
+export function inYear<T>(year: number, fn: () => T): T {
+  if (year === YEAR) return fn();
+  const current = YEAR;
+  applyYear(year);
+  try {
+    return fn();
+  } finally {
+    applyYear(current);
+  }
+}
+let direction: -1 | 0 | 1 = 0; // which way the last change went: 1 to a later year, -1 to an earlier one
+
+// Switches the year being planned: remembers it, rebuilds the date model and tells subscribers. The plan for the
+// year being left is already saved.
+export function setYear(year: number) {
+  if (year === YEAR || !(YEARS as readonly number[]).includes(year)) return;
+  direction = year > YEAR ? 1 : -1;
+  applyYear(year);
   try {
     localStorage.setItem(YEAR_KEY, String(year));
   } catch {

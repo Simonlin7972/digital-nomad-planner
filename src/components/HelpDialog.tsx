@@ -69,7 +69,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           月檢視時打開右邊的<b>看全部</b>，1–12 月會由上往下排，可以一路往下捲。
         </>,
         <>
-          分頁左邊可以切換<b>年份</b>（2026／2027／2028），每年各存一份行程。按住月份列拖過 12 月再繼續拉，放開就到下一年（往 1 月拉則回上一年）。
+          分頁左邊可以切換<b>年份</b>（2025／2026／2027／2028），每年各存一份行程。按住月份列拖過 12 月再繼續拉，放開就到下一年（往 1 月拉則回上一年）。
         </>,
         <>
           年檢視可以放大：用上方滑桿、觸控板兩指開合，或按住 <kbd>{alt}</kbd> 滾動滾輪。放大後按住月份列可以左右拖。
@@ -96,11 +96,11 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
       title: '備份與搬移',
       items: [
         <>
-          <b>匯出</b>、<b>匯入</b>、<b>分享</b> 都在工具列的 <b>⋯</b> 選單裡。<b>匯出</b>：把全部行程存成一個 JSON 檔。建議排到一個段落就匯出一次當備份。
+          <b>匯出</b>、<b>匯入</b>、<b>分享</b> 都在工具列的 <b>⋯</b> 選單裡。<b>匯出</b>：把所有年份的行程存成一個 JSON 檔。建議排到一個段落就匯出一次當備份。
         </>,
         <>行程改過之後超過一週沒有匯出，頁首會出現備份提醒；按「稍後提醒」三天內不再出現。</>,
         <>
-          <b>匯入</b>：讀回匯出的檔案。會<b>取代</b>目前的行程，匯入前會先問你。
+          <b>匯入</b>：讀回匯出的檔案。檔案裡有的年份會<b>取代</b>該年的行程，取代前會先問你；其他年份不動。
         </>,
         <>
           <b>分享</b>：先預覽整年行程圖（時間軸、國家、假日、行程清單），再下載成 PNG；手機上可直接用系統分享。圖裡不含機票細節。
@@ -166,7 +166,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           In the month view, switch on <b>All months</b> to stack January to December and scroll down through them.
         </>,
         <>
-          The drop-down beside the tabs switches the <b>year</b> (2026 / 2027 / 2028); each year keeps its own plan. Drag the month row past
+          The drop-down beside the tabs switches the <b>year</b> (2025 / 2026 / 2027 / 2028); each year keeps its own plan. Drag the month row past
           December and keep pulling, then let go, to move to the next year (or past January for the previous one).
         </>,
         <>
@@ -197,11 +197,11 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
       title: 'Backup and transfer',
       items: [
         <>
-          <b>Export</b>, <b>Import</b> and <b>Share</b> are in the <b>⋯</b> menu on the toolbar. <b>Export</b> saves the whole plan as a JSON file. Export whenever you reach a good stopping point.
+          <b>Export</b>, <b>Import</b> and <b>Share</b> are in the <b>⋯</b> menu on the toolbar. <b>Export</b> saves every year's plan in one JSON file. Export whenever you reach a good stopping point.
         </>,
         <>If the plan has changed and gone a week without an export, a reminder appears under the header. “Remind me later” hides it for three days.</>,
         <>
-          <b>Import</b> loads an exported file. It <b>replaces</b> the current plan, and asks first.
+          <b>Import</b> loads an exported file. Each year in it <b>replaces</b> that year's plan, after asking; other years are left alone.
         </>,
         <>
           <b>Share</b> previews the year as an image (timeline, countries, holidays, itinerary), then downloads it as a PNG; on a phone it can go straight to the share sheet. Flight details are left out.

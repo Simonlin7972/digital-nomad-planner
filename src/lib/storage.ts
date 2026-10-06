@@ -1,7 +1,7 @@
 import { cityLabel, normalizeCity } from './cities';
 import { countryLabel, normalizeCountry } from './flags';
 import { t } from './i18n';
-import { TOTAL_DAYS, WEEK_COUNT, YEAR, dayOfIso, isoOfDay, type DayRange } from './weeks';
+import { TOTAL_DAYS, WEEK_COUNT, YEAR, YEARS, dayOfIso, inYear, isoOfDay, type DayRange } from './weeks';
 
 // Flight booked for getting to a stay. Every field is optional free text; the object existing means "booked".
 export type Ticket = { airline?: string; flightNo?: string; departure?: string; bookingRef?: string; price?: string };
@@ -228,6 +228,43 @@ export function save(stays: Stay[]) {
   } catch {
     // storage unavailable (private mode / quota) — keep working in memory
   }
+}
+
+// Another year's plan, read from storage. The current year's lives in App's state; use that instead.
+export const loadYearPlan = (year: number): Stay[] => inYear(year, load);
+
+// Stores another year's plan directly. Only import does this: that year isn't on screen, so it has no undo stack.
+export const saveYearPlan = (year: number, stays: Stay[]) => inYear(year, () => save(stays));
+
+// The export file: every year that has stays, each in the single-year form. `current` is the year on screen,
+// which may hold changes not yet read back from storage.
+export function serializeAll(current: Stay[]) {
+  const years: Record<string, ReturnType<typeof serialize>> = {};
+  for (const year of YEARS) {
+    const stays = year === YEAR ? current : loadYearPlan(year);
+    if (stays.length) years[year] = inYear(year, () => serialize([...stays].sort((a, b) => a.startDay - b.startDay)));
+  }
+  return { version: 2, years };
+}
+
+// Reads an export back into plans per year, each sanitised against its own year's dates. Takes the multi-year
+// form, or a single-year file (any older format), which goes to the year it names — 2027 if it names none,
+// since files from before years could be chosen were all 2027.
+export function sanitizeAll(data: unknown): Map<number, Stay[]> {
+  const out = new Map<number, Stay[]>();
+  const add = (year: number, part: unknown) => {
+    if (!(YEARS as readonly number[]).includes(year)) return;
+    const stays = inYear(year, () => sanitize(part));
+    if (stays.length) out.set(year, stays);
+  };
+  const years = (data as { years?: unknown } | null)?.years;
+  if (years && typeof years === 'object' && !Array.isArray(years)) {
+    for (const [year, part] of Object.entries(years)) add(Number(year), part);
+  } else {
+    const named = Number((data as { year?: unknown } | null)?.year);
+    add(Number.isInteger(named) ? named : 2027, data);
+  }
+  return out;
 }
 
 // Colour names for display come from the dictionary: t(`color.${key}`). Black comes first: it is the default

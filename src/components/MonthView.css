@@ -7,8 +7,7 @@
 }
 .mhead { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 .mhead h2 { margin: 0; min-width: 132px; text-align: center; font-variant-numeric: tabular-nums; }
-/* all twelve months stacked: one card per month, the title on the left */
-.month-stack { display: flex; flex-direction: column; gap: 20px; }
+/* one of all twelve months stacked (see AllMonths): the title on the left */
 .month-view.stacked .mhead h2 { min-width: 0; text-align: left; }
 .month-view.stacked { scroll-margin-top: 16px; }
 .mhead .icon { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; }

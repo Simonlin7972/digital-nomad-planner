@@ -49,7 +49,7 @@ The interface is available in Traditional Chinese and English; switch from the t
 - A seven-column calendar, precise to the **day**
 - Drag across days to add a stay; drag a bar's ends to change its dates; click a bar to edit it
 - The header shows how many days of the month are planned and free
-- The "All months" switch beside the tabs stacks January to December down one long page to scroll through; every month can still be dragged and edited
+- The "All months" switch beside the tabs stacks January to December down one long page to scroll through; every month can still be dragged and edited; once scrolled down, a button in the bottom-right corner goes back to the top
 
 ### What a stay records
 
@@ -70,7 +70,7 @@ The interface is available in Traditional Chinese and English; switch from the t
 - **Seasons**: about 71 popular nomad bases (Chiang Mai, Bali, Lisbon, Mexico City…) carry a best / fine / avoid rating for each month, with reasons. The editor has a "When to go" button that opens the twelve months and reasons (it flags a poor season even when closed); stays that land in months to avoid (Chiang Mai's burning season in March–April, Dubai's summer) get a warning on the block, in the itinerary and on the hover card
 - **Free stretches**: unplanned days between stays are listed in the itinerary too; press `+` to add a stay in that gap
 - **Map**: every place in visit order, joined into a route
-- **Year**: the drop-down beside the view tabs switches between 2026, 2027 and 2028; each year keeps its own plan. Dragging the month row past December (or January) and letting go moves to the next (or previous) year
+- **Year**: the drop-down beside the view tabs switches between 2025, 2026, 2027 and 2028; each year keeps its own plan. Dragging the month row past December (or January) and letting go moves to the next (or previous) year
 - **Public holidays**: toggle Taiwan's and Australia's 2026 and 2027 holidays, drawn over the timeline and calendar (no holiday data for 2028 yet)
 
 ### Also
@@ -79,7 +79,7 @@ The interface is available in Traditional Chinese and English; switch from the t
 - Traditional Chinese and English interface, switched from the toolbar; defaults to the browser's language and remembers your choice
 - A compact toolbar: undo and redo are icons; export, import and Share live in the `⋯` menu
 - Undo and redo, up to 100 steps
-- JSON export and import; file names carry the export date (e.g. `nomad-plan-2027_2026-10-05.json`)
+- JSON export and import: one file holds every year; file names carry the export date (e.g. `nomad-plan_2026-10-06.json`)
 - Share: preview the year as an image, then download it as a PNG (fixed size, with the timeline, country strips and flags, holidays that are switched on, ticket markers, a summary line and the itinerary; flight details left out). On a phone it can open the system share sheet
 - Read-only phone layout: below 720px the page becomes view-only — now / next, one card per stay (flight details and full notes included), the summary and the map. Plan on a computer, export, then import on the phone
 - Every change is saved automatically
@@ -180,7 +180,19 @@ Flight details such as booking references are stored in `localStorage` and are w
 
 ## Data format
 
-An exported file:
+An exported file holds every year that has stays, each in the same form:
+
+```jsonc
+{
+  "version": 2,
+  "years": {
+    "2026": { "year": 2026, "stays": [ … ] },
+    "2027": { "year": 2027, "stays": [ … ] }
+  }
+}
+```
+
+Each year:
 
 ```jsonc
 {
@@ -218,7 +230,9 @@ Names are accepted on import too: `"country": "泰國"`, `"Thailand"` and `"city
 
 Imports are sanitised (`sanitize`): entries that are malformed, out of range, or that overlap an earlier entry are skipped rather than failing the whole file.
 
-Dates can range over the full weeks of the year's timeline: from the Monday of the week containing 1 January to the Sunday of the week containing 31 December. For 2027 that is 2026-12-28 to 2028-01-02 (53 weeks). `year` is the year the file was exported from; on import, stays outside the current year's range are skipped.
+Dates can range over the full weeks of the year's timeline: from the Monday of the week containing 1 January to the Sunday of the week containing 31 December. For 2027 that is 2026-12-28 to 2028-01-02 (53 weeks). On import each year is sanitised against its own range, and stays outside it are skipped.
+
+Import rules: each year in the file **replaces** that year's current stays, and years not in the file are left alone; if any year being replaced already has stays, you are asked first, with the years listed. An older single-year file (`{ "year", "stays" }` at the top level) goes back to the year it names, or 2027 if it names none. Importing into the year on screen can be undone; other years are written directly and are not in the undo history. If the file has nothing for the year on screen, the page switches to the first year it brought in.
 
 Older formats still load: week-based `startWeek`/`endWeek`, a single `location` field (treated as the city), and countries and cities stored by name rather than code.
 
@@ -239,6 +253,7 @@ src/
     ViewBar             Year/month switch, holiday toggles, zoom
     YearView            The year timeline, including drag, resize and copy handling
     MonthView           The month calendar
+    AllMonths           The month view's "All months": twelve stacked months and the back-to-top button
     Summary             Summary panel (including Schengen and Taiwan day counts)
     StayList            Itinerary, free-stretch rows and quarter filter
     BackupReminder      Backup reminder under the header
@@ -326,7 +341,7 @@ Knowing these before reading the code will save time.
 
 ## Known limits
 
-- **Only 2026, 2027 and 2028** (`YEARS` in `lib/weeks.ts`); holiday data exists for 2026 and 2027 only; switching year clears the undo history
+- **Only 2025, 2026, 2027 and 2028** (`YEARS` in `lib/weeks.ts`); holiday data exists for 2026 and 2027 only; switching year clears the undo history
 - **Two interface languages**, Traditional Chinese and English; the product spec (`MVP.md`) is in Chinese only
 - **What you type isn't translated**: unlisted countries and cities, notes and companions show as typed in both languages
 - **Editing is desktop-only.** Phones (720px and narrower) get a read-only layout; a tablet or laptop window narrower than 720px does too

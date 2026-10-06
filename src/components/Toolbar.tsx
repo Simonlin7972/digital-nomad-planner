@@ -16,7 +16,8 @@ type Props = {
   readOnly: boolean; // phone layout: no undo or redo
   canUndo: boolean;
   canRedo: boolean;
-  hasStays: boolean;
+  hasStays: boolean; // this year has stays: share
+  canExport: boolean; // any year has stays: export
   onHelp: () => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -27,7 +28,7 @@ type Props = {
 
 // The row of plan-wide actions in the page header. Undo and redo are icons only; the file actions (export,
 // import, share as PNG) sit in a ⋯ menu.
-export function Toolbar({ readOnly, canUndo, canRedo, hasStays, onHelp, onUndo, onRedo, onShare, onExport, onImport }: Props) {
+export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHelp, onUndo, onRedo, onShare, onExport, onImport }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const locale = useLocale();
   const undoLabel = t('toolbar.shortcut', { action: t('toolbar.undo'), keys: `${MOD}Z` });
@@ -50,7 +51,7 @@ export function Toolbar({ readOnly, canUndo, canRedo, hasStays, onHelp, onUndo, 
       )}
       <MoreMenu
         items={[
-          { label: t('toolbar.export'), icon: <DownloadSimple size={16} weight="bold" />, onSelect: onExport, disabled: !hasStays },
+          { label: t('toolbar.export'), icon: <DownloadSimple size={16} weight="bold" />, onSelect: onExport, disabled: !canExport },
           { label: t('toolbar.import'), icon: <UploadSimple size={16} weight="bold" />, onSelect: () => fileRef.current?.click() },
           { label: t('toolbar.share'), icon: <ShareNetwork size={16} weight="bold" />, onSelect: onShare, disabled: !hasStays },
         ]}

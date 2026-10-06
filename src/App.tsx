@@ -1,6 +1,6 @@
-import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import type { ReactNode } from 'react';
+import { Suspense, lazy, useEffect, useState, useSyncExternalStore } from 'react';
 import { BackupReminder } from './components/BackupReminder';
+import { AllMonths, MONTH_INDEXES } from './components/AllMonths';
 import { MobileItinerary } from './components/MobileItinerary';
 import { ShareDialog } from './components/ShareDialog';
 import { Editor, type Editing, type StayDetails } from './components/Editor';
@@ -15,6 +15,7 @@ import { Toolbar } from './components/Toolbar';
 import { ViewBar } from './components/ViewBar';
 import YearView from './components/YearView';
 import { useBackupReminder } from './hooks/useBackupReminder';
+import { markYearBackedUp } from './lib/backup';
 import { useCoords } from './hooks/useCoords';
 import { useHistory } from './hooks/useHistory';
 import { useNarrow } from './hooks/useNarrow';
@@ -23,7 +24,7 @@ import { download } from './lib/files';
 import { holidaySets as allHolidaySets, type Holiday, type HolidaySet } from './lib/holidays';
 import { t, useLocale } from './lib/i18n';
 import { loadHolidayToggles, loadView, saveHolidayToggles, saveView } from './lib/prefs';
-import { load, pushStays, sanitize, save, serialize, type ColorKey, type Stay } from './lib/storage';
+import { load, pushStays, save, type ColorKey, type Stay, loadYearPlan, saveYearPlan, sanitizeAll, serializeAll } from './lib/storage';
 import { MOD, clamp } from './lib/util';
 import { YEAR, YEARS, getYear, setYear, subscribeYear, yearDirection, type DayRange } from './lib/weeks';
 
@@ -112,23 +113,45 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
     setEditing(null);
   }
 
+  // Export and import cover every year in one file, so one backup is enough.
   function exportJson() {
-    const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
-    download(new Blob([JSON.stringify(serialize(sorted), null, 2)], { type: 'application/json' }), 'json');
+    const file = serializeAll(stays);
+    download(new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' }), 'json', false);
     backup.markBackedUp(stays);
+    const now = Date.now();
+    for (const year of YEARS) if (year !== YEAR) markYearBackedUp(year, loadYearPlan(year), now);
   }
 
   async function importJson(file: File) {
     try {
-      const next = sanitize(JSON.parse(await file.text()));
-      if (next.length === 0) return alert(t('alert.importEmpty'));
-      if (stays.length > 0 && !confirm(t('alert.importConfirm', { n: stays.length }))) return;
-      setStays(next);
-      backup.markBackedUp(next);
+      const plans = sanitizeAll(JSON.parse(await file.text()));
+      if (plans.size === 0) return alert(t('alert.importEmpty'));
+      // Ask only when something would be lost: a year in the file that already has stays.
+      const years = [...plans.keys()].sort();
+      const replaced = years.filter((y) => (y === YEAR ? stays : loadYearPlan(y)).length > 0);
+      if (replaced.length && !confirm(t('alert.importConfirm', { years: replaced.join(t('list')) }))) return;
+      const now = Date.now();
+      for (const [year, next] of plans) {
+        if (year === YEAR) continue;
+        saveYearPlan(year, next);
+        markYearBackedUp(year, next, now);
+      }
+      const here = plans.get(YEAR);
+      if (here) {
+        // The year on screen goes through setStays, so the import can be undone.
+        setStays(here);
+        backup.markBackedUp(here);
+      } else {
+        // Nothing for this year in the file: show the first year it brought in.
+        setYear(years[0]);
+      }
     } catch {
       alert(t('alert.importFailed'));
     }
   }
+
+  // Export is possible when any year has stays, not just this one.
+  const anyStays = stays.length > 0 || YEARS.some((y) => y !== YEAR && loadYearPlan(y).length > 0);
 
   // The years either side of this one that can be pulled through to on the timeline.
   const neighbour = (dir: 1 | -1) => ((YEARS as readonly number[]).includes(YEAR + dir) ? YEAR + dir : null);
@@ -154,6 +177,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
           canUndo={canUndo}
           canRedo={canRedo}
           hasStays={stays.length > 0}
+          canExport={anyStays}
           onHelp={() => setHelpOpen(true)}
           onUndo={undo}
           onRedo={redo}
@@ -279,22 +303,6 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
           onClose={() => setEditing(null)}
         />
       )}
-    </div>
-  );
-}
-
-const MONTH_INDEXES = Array.from({ length: 12 }, (_, m) => m);
-
-// Every month of the year stacked for scrolling. Opening it brings the month that was being looked at into view.
-function AllMonths({ focus, children }: { focus: number; children: ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (focus > 0) ref.current?.querySelector(`[data-month="${focus}"]`)?.scrollIntoView({ block: 'start' });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the stack first appears
-  }, []);
-  return (
-    <div className="month-stack" ref={ref}>
-      {children}
     </div>
   );
 }

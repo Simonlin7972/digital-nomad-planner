@@ -1,0 +1,21 @@
+/* All twelve months stacked, one card per month */
+.month-stack { display: flex; flex-direction: column; gap: 20px; }
+
+/* Back to the top: a round floating button in the bottom-right corner, shown once scrolled down */
+.to-top {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 8;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: var(--text);
+  border-color: var(--text);
+  color: #fff;
+  box-shadow: var(--shadow-pop);
+  animation: rise 0.2s ease-out;
+}
+.to-top:hover:not(:disabled) { background: #000; border-color: #000; }

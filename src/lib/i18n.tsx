@@ -35,13 +35,14 @@ const zh = {
 
   'alert.pngFailed': '無法產生 PNG，請再試一次。',
   'alert.importEmpty': '檔案裡沒有可用的行程。',
-  'alert.importConfirm': '匯入會取代目前的 {n} 段行程，確定嗎？',
+  'alert.importConfirm': '匯入會取代 {years} 年現有的行程，確定嗎？',
   'alert.importFailed': '無法讀取這個檔案，請確認是先前匯出的 JSON。',
 
   'view.label': '檢視',
   'view.year': '年',
   'view.month': '月',
   'view.all': '看全部',
+  'view.toTop': '回到頂端',
   'zoom.out': '縮小',
   'zoom.in': '放大',
   'zoom.label': '時間軸縮放',
@@ -207,13 +208,14 @@ const en: Record<keyof typeof zh, string> = {
 
   'alert.pngFailed': "Couldn't create the PNG. Please try again.",
   'alert.importEmpty': 'No usable stays were found in that file.',
-  'alert.importConfirm': 'Importing will replace your {n} current stays. Continue?',
+  'alert.importConfirm': 'Importing will replace your current stays in {years}. Continue?',
   'alert.importFailed': "Couldn't read that file. Make sure it's a JSON file exported from here.",
 
   'view.label': 'View',
   'view.year': 'Year',
   'view.month': 'Month',
   'view.all': 'All months',
+  'view.toTop': 'Back to top',
   'zoom.out': 'Zoom out',
   'zoom.in': 'Zoom in',
   'zoom.label': 'Timeline zoom',
