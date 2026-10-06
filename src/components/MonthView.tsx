@@ -24,12 +24,13 @@ type Props = {
   onEdit: (stay: Stay) => void;
   onResize: (id: string, range: DayRange) => void;
   onHover: (card: { id: string; x: number; y: number } | null) => void;
+  stacked?: boolean; // one of twelve months shown together: a plain title, no previous / next buttons
 };
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
 export default function MonthView(props: Props) {
-  const { stays, month, onMonth, holidaySets, pending, onCreate, onEdit, onResize, onHover } = props;
+  const { stays, month, onMonth, holidaySets, pending, onCreate, onEdit, onResize, onHover, stacked } = props;
   useLocale();
   const [drag, setDrag] = useState<Drag | null>(null);
   const weekEls = useRef<(HTMLDivElement | null)[]>([]);
@@ -133,17 +134,19 @@ export default function MonthView(props: Props) {
   };
 
   return (
-    <div className="month-view">
+    <div className={`month-view${stacked ? ' stacked' : ''}`} data-month={month}>
       <div className="mhead">
-        <button className="icon" onClick={() => onMonth(month - 1)} disabled={month === 0} aria-label={t('month.prev')}>
-          <CaretLeft size={16} weight="bold" />
-        </button>
-        <h2>
-          {monthTitle(YEAR, month)}
-        </h2>
-        <button className="icon" onClick={() => onMonth(month + 1)} disabled={month === 11} aria-label={t('month.next')}>
-          <CaretRight size={16} weight="bold" />
-        </button>
+        {!stacked && (
+          <button className="icon" onClick={() => onMonth(month - 1)} disabled={month === 0} aria-label={t('month.prev')}>
+            <CaretLeft size={16} weight="bold" />
+          </button>
+        )}
+        <h2>{monthTitle(YEAR, month)}</h2>
+        {!stacked && (
+          <button className="icon" onClick={() => onMonth(month + 1)} disabled={month === 11} aria-label={t('month.next')}>
+            <CaretRight size={16} weight="bold" />
+          </button>
+        )}
         <span className="mstat">
           {tr('month.stat', { planned: <b>{daysText(plannedDays)}</b>, free: <b>{daysText(daysOf(range) - plannedDays)}</b> })}
         </span>

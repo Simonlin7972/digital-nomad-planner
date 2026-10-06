@@ -12,7 +12,7 @@
 
 .timeline {
   width: calc(var(--zoom, 1) * 100%);
-  min-width: calc(var(--n) * 11px * var(--zoom, 1));
+  min-width: calc(var(--slots) * 11px * var(--zoom, 1));
   /* pulled past either end: shifts a little against the drag, then springs back */
   transform: translateX(var(--pull, 0px));
   transition: transform 0.25s cubic-bezier(0.3, 0.7, 0.2, 1);
@@ -111,6 +111,13 @@
   transition: background-color 0.12s;
 }
 .cell.month-start { border-left-color: var(--line-strong); }
+/* By the day (zoomed in): a faint line at the start of each day instead of the mid-week guide */
+.timeline.days .cell {
+  background-image: linear-gradient(to right, var(--line) 1px, transparent 1px);
+  background-size: calc(100% / 7) 100%;
+  background-position: 0 0;
+  background-repeat: repeat-x;
+}
 .cell.today { background-color: #fff0f3; box-shadow: inset 0 -3px 0 var(--accent); }
 .cell:hover { background-color: #efefef; }
 
@@ -202,10 +209,11 @@
 .selection {
   grid-row: 1;
   margin: 24px 1px 10px;
-  border: 2px dashed var(--accent);
+  /* black, like the colour a new stay gets by default */
+  border: 2px dashed var(--text);
   border-radius: 10px;
-  background: rgb(255 56 92 / 0.1);
-  color: var(--accent-dark);
+  background: rgb(34 34 34 / 0.08);
+  color: var(--text);
   font-size: 12px;
   font-weight: 600;
   display: flex;

@@ -3,9 +3,30 @@
 .editor.help h2 { position: sticky; top: 0; z-index: 1; background: var(--surface); }
 .editor.help .close { position: absolute; top: 50%; right: 16px; transform: translateY(-50%); width: 32px; height: 32px; padding: 0; border: 0; display: grid; place-items: center; }
 .editor.help .close:active:not(:disabled) { transform: translateY(-50%) scale(0.94); }
-.help h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 15px; font-weight: 600; }
+.editor.help { gap: 12px; }
+/* Accordion: one row per section, the heading is a full-width button with a caret that turns when open */
+.help-sections { display: flex; flex-direction: column; }
+.help-sections section + section { border-top: 1px solid var(--line); }
+.help h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.help h3 button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 4px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-size: 15px;
+  text-align: left;
+}
+.help h3 button:hover:not(:disabled) { background: var(--subtle); }
+.help h3 button:active:not(:disabled) { transform: none; }
+.help h3 button:focus-visible { outline-offset: -2px; }
 .help h3 svg { flex: none; }
-.help ul { display: flex; flex-direction: column; gap: 6px; padding-left: 18px; list-style: disc; }
+.help h3 .caret { margin-left: auto; color: var(--muted); transition: transform 0.15s; }
+.help h3 button[aria-expanded='true'] .caret { transform: rotate(180deg); }
+.help ul { display: flex; flex-direction: column; gap: 6px; margin: 0 0 16px; padding-left: 30px; list-style: disc; animation: fade 0.15s ease-out; }
 .help li { font-size: 14px; line-height: 1.65; color: var(--muted); }
 .help li::marker { color: var(--line-strong); }
 .help b { font-weight: 600; color: var(--text); }

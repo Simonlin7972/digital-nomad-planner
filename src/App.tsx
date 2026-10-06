@@ -1,4 +1,5 @@
-import { Suspense, lazy, useEffect, useState, useSyncExternalStore } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import type { ReactNode } from 'react';
 import { BackupReminder } from './components/BackupReminder';
 import { MobileItinerary } from './components/MobileItinerary';
 import { ShareDialog } from './components/ShareDialog';
@@ -176,6 +177,8 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
           <ViewBar
             mode={view.mode}
             onMode={(mode) => setView((v) => ({ ...v, mode }))}
+            all={view.all}
+            onAll={(all) => setView((v) => ({ ...v, all }))}
             holidayOn={holidayOn}
             onToggleHoliday={(key) => setHolidayOn((prev) => ({ ...prev, [key]: !prev[key] }))}
             zoom={zoom.zoom}
@@ -186,11 +189,29 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
             key={shownMode}
             className={`view${shownMode !== view.mode ? ' leaving' : ''}${entered ? ` year-in-${entered > 0 ? 'next' : 'prev'}` : ''}`}
           >
-            {shownMode === 'month' ? (
+            {shownMode === 'month' && view.all ? (
+              <AllMonths focus={view.month}>
+                {MONTH_INDEXES.map((month) => (
+                  <MonthView
+                    key={month}
+                    stacked
+                    stays={stays}
+                    month={month}
+                    onMonth={() => {}}
+                    holidaySets={holidaySets}
+                    pending={pending}
+                    onCreate={(range) => setEditing({ id: null, ...range })}
+                    onEdit={edit}
+                    onResize={(id, range) => setStays((prev) => pushStays(prev, id, range) ?? prev)}
+                    onHover={setStayCard}
+                  />
+                ))}
+              </AllMonths>
+            ) : shownMode === 'month' ? (
               <MonthView
                 stays={stays}
                 month={view.month}
-                onMonth={(month) => setView({ mode: 'month', month: clamp(month, 0, 11) })}
+                onMonth={(month) => setView((v) => ({ ...v, mode: 'month', month: clamp(month, 0, 11) }))}
                 holidaySets={holidaySets}
                 pending={pending}
                 onCreate={(range) => setEditing({ id: null, ...range })}
@@ -207,7 +228,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
                 onCreate={(range) => setEditing({ id: null, ...range })}
                 onEdit={edit}
                 onChange={setStays}
-                onOpenMonth={(month) => setView({ mode: 'month', month })}
+                onOpenMonth={(month) => setView((v) => ({ ...v, mode: 'month', month }))}
                 onHoverStay={setStayCard}
                 onHoverHoliday={setHolidayCard}
                 onDragging={setDragging}
@@ -223,7 +244,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
             <Summary stays={stays} coords={coords} />
             <StayList
               stays={stays}
-              month={view.mode === 'month' ? view.month : null}
+              month={view.mode === 'month' && !view.all ? view.month : null}
               onEdit={edit}
               onCreate={(range) => setEditing({ id: null, ...range })}
               ticketCardId={ticketCard?.id ?? null}
@@ -258,6 +279,22 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
           onClose={() => setEditing(null)}
         />
       )}
+    </div>
+  );
+}
+
+const MONTH_INDEXES = Array.from({ length: 12 }, (_, m) => m);
+
+// Every month of the year stacked for scrolling. Opening it brings the month that was being looked at into view.
+function AllMonths({ focus, children }: { focus: number; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (focus > 0) ref.current?.querySelector(`[data-month="${focus}"]`)?.scrollIntoView({ block: 'start' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the stack first appears
+  }, []);
+  return (
+    <div className="month-stack" ref={ref}>
+      {children}
     </div>
   );
 }

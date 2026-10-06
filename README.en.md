@@ -35,7 +35,7 @@ The interface is available in Traditional Chinese and English; switch from the t
 
 ### Year view (timeline)
 
-- One horizontal timeline of a whole year (53 weeks in 2027), one cell per week, each split into two half-weeks
+- One horizontal timeline of a whole year (53 weeks in 2027), one cell per week, each split into two half-weeks; zoomed to 300% or more it works by the day
 - Drag across empty cells → enter a country and city → a stay appears
 - Dragging a whole stay **reorders** it: once it is halfway past a neighbour the two swap, and so on down the line
 - Dragging a stay's edge **resizes and pushes**: growing shoves neighbours along, using up gaps first
@@ -49,6 +49,7 @@ The interface is available in Traditional Chinese and English; switch from the t
 - A seven-column calendar, precise to the **day**
 - Drag across days to add a stay; drag a bar's ends to change its dates; click a bar to edit it
 - The header shows how many days of the month are planned and free
+- The "All months" switch beside the tabs stacks January to December down one long page to scroll through; every month can still be dragged and edited
 
 ### What a stay records
 
@@ -66,7 +67,7 @@ The interface is available in Traditional Chinese and English; switch from the t
 - **Summary**: weeks planned and free, countries and cities visited, an estimate of flights and hours in the air, and weeks and days per country and city
 - **Days of stay**: the summary works out the most days spent in the Schengen area within any 180 days (the limit is 90; when exceeded it says from which date), and the days planned in Taiwan during 2027 (183 days is the tax-residency threshold). Only days on the timeline are counted
 - **Itinerary**: one line per stay — dates, flag and country, city, weeks (days), companions, note; filter by Q1–Q4; stays with a flight show a ticket icon; stays that overrun the Schengen limit show a warning icon
-- **Seasons**: about 63 popular nomad bases (Chiang Mai, Bali, Lisbon, Mexico City…) carry a best / fine / avoid rating for each month, with reasons. The editor has a "When to go" button that opens the twelve months and reasons (it flags a poor season even when closed); stays that land in months to avoid (Chiang Mai's burning season in March–April, Dubai's summer) get a warning on the block, in the itinerary and on the hover card
+- **Seasons**: about 71 popular nomad bases (Chiang Mai, Bali, Lisbon, Mexico City…) carry a best / fine / avoid rating for each month, with reasons. The editor has a "When to go" button that opens the twelve months and reasons (it flags a poor season even when closed); stays that land in months to avoid (Chiang Mai's burning season in March–April, Dubai's summer) get a warning on the block, in the itinerary and on the hover card
 - **Free stretches**: unplanned days between stays are listed in the itinerary too; press `+` to add a stay in that gap
 - **Map**: every place in visit order, joined into a route
 - **Year**: the drop-down beside the view tabs switches between 2026, 2027 and 2028; each year keeps its own plan. Dragging the month row past December (or January) and letting go moves to the next (or previous) year
@@ -74,7 +75,7 @@ The interface is available in Traditional Chinese and English; switch from the t
 
 ### Also
 
-- A built-in "How to use" guide: gestures, where data lives, backup and transfer
+- A built-in "How to use" guide in sections that open and close: gestures, where data lives, backup and transfer
 - Traditional Chinese and English interface, switched from the toolbar; defaults to the browser's language and remembers your choice
 - A compact toolbar: undo and redo are icons; export, import and Share live in the `⋯` menu
 - Undo and redo, up to 100 steps
@@ -123,7 +124,7 @@ The live site and a local copy use separate browser storage (different addresses
 
 | Action | Year view | Month view |
 | --- | --- | --- |
-| Drag across empty space | Select in half-weeks; add a stay | Select in days; add a stay |
+| Drag across empty space | Select in half-weeks (in days at 300% zoom and above); add a stay | Select in days; add a stay |
 | Click a stay | Open the editor | Open the editor |
 | Drag a stay | Reorder | — (not supported) |
 | `Alt` + drag a stay | Drop a copy where you let go | — (not supported) |
@@ -297,7 +298,7 @@ Knowing these before reading the code will save time.
 
 **Dates are day indexes.** Day 0 is the Monday of the week containing 1 January of the chosen year (2026-12-28 for 2027). The year is kept in `dnp-year`. Switching calls `setYear`, which rebuilds the date model (`lib/weeks.ts` exports live bindings, so other modules see the new values) and remounts the whole page component keyed by year, so nothing needs a reload and nothing derived from the old year survives. In memory a stay is `{ startDay, endDay }`, inclusive; it becomes ISO strings only when saved. Because day 0 is a Monday, `day % 7` is the weekday.
 
-**The year view is approximate; the data is always exact.** The timeline splits each week into two half-week slots (Monday–Thursday, Friday–Sunday). Each end of a stay is drawn at the nearest slot boundary, but the stored dates don't change. So a stay moved to start on a Wednesday in the month view still draws from Monday or Friday in the year view.
+**The year view is approximate; the data is always exact.** The timeline splits each week into two half-week slots (Monday–Thursday, Friday–Sunday). Each end of a stay is drawn at the nearest slot boundary, but the stored dates don't change. So a stay moved to start on a Wednesday in the month view still draws from Monday or Friday in the year view. At 300% zoom and above the grid becomes one column per day, stays draw at their exact dates and dragging moves by the day; the unit is fixed when a drag starts, and the timeline's minimum width is always counted in half-week slots, so switching unit never changes the width.
 
 **Dragging, resizing and copying each have their own rule.** Dragging a whole stay calls `reorderStays` (list-style reordering, passing over neighbours); dragging an edge calls `pushStays` (order preserved, neighbours shoved along); `Alt`-dragging calls `insertStay` (drop a new stay in and push what's in the way to either side, or all one way if the other has no room). All three are pure functions, recomputed from the original data on every pointer move, so no state accumulates and dragging back to the start always restores the plan.
 
@@ -334,7 +335,7 @@ Knowing these before reading the code will save time.
 - **A copied stay doesn't carry the flight details** (a flight belongs to one trip)
 - **One flight per stay**
 - **The shared image doesn't include the map**
-- **Season data covers about 63 cities** and is general guidance; a given year's weather can differ. Season warnings aren't in the shared image
+- **Season data covers about 71 cities** and is general guidance; a given year's weather can differ. Season warnings aren't in the shared image
 - **Place names on the map are in the local script and English**, as the base map provides
 - **The built-in city list is limited** (about 330); smaller places have to be typed, and the Chinese names are hand-picked and may differ from the spelling you're used to
 - **Place lookup depends on Nominatim.** Places it can't find don't appear on the map and are left out of the flight estimate

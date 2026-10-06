@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ArrowCounterClockwise } from '@phosphor-icons/react/dist/csr/ArrowCounterClockwise';
 import { Calendar } from '@phosphor-icons/react/dist/csr/Calendar';
+import { CaretDown } from '@phosphor-icons/react/dist/csr/CaretDown';
 import { Database } from '@phosphor-icons/react/dist/csr/Database';
 import { FloppyDisk } from '@phosphor-icons/react/dist/csr/FloppyDisk';
 import { HandGrabbing } from '@phosphor-icons/react/dist/csr/HandGrabbing';
@@ -61,9 +62,12 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
       title: '年與月',
       items: [
         <>
-          <b>年</b>檢視看整年大方向，以半週為單位；<b>月</b>檢視是月曆，可以精準到每一天。
+          <b>年</b>檢視看整年大方向，以半週為單位（放大到 300% 以上改成以天為單位）；<b>月</b>檢視是月曆，可以精準到每一天。
         </>,
         <>點時間軸上的月份，直接跳到那個月。</>,
+        <>
+          月檢視時打開右邊的<b>看全部</b>，1–12 月會由上往下排，可以一路往下捲。
+        </>,
         <>
           分頁左邊可以切換<b>年份</b>（2026／2027／2028），每年各存一份行程。按住月份列拖過 12 月再繼續拉，放開就到下一年（往 1 月拉則回上一年）。
         </>,
@@ -155,9 +159,12 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
       title: 'Year and month',
       items: [
         <>
-          The <b>Year</b> view shows the whole year in half-week steps; the <b>Month</b> view is a calendar, precise to the day.
+          The <b>Year</b> view shows the whole year in half-week steps (by the day once zoomed to 300% or more); the <b>Month</b> view is a calendar, precise to the day.
         </>,
         <>Click a month on the timeline to jump straight to it.</>,
+        <>
+          In the month view, switch on <b>All months</b> to stack January to December and scroll down through them.
+        </>,
         <>
           The drop-down beside the tabs switches the <b>year</b> (2026 / 2027 / 2028); each year keeps its own plan. Drag the month row past
           December and keep pulling, then let go, to move to the next year (or past January for the previous one).
@@ -229,6 +236,16 @@ export function HelpDialog({ mod, onClose }: { mod: string; onClose: () => void 
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  // An accordion: each section's heading opens or closes it. The first starts open; any number can be open.
+  const [open, setOpen] = useState<Set<number>>(() => new Set([0]));
+  const toggle = (i: number) =>
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(i)) next.add(i);
+      return next;
+    });
+  const idBase = useId();
+
   const mac = mod === '⌘';
   const sections = GUIDE[locale]({ alt: mac ? '⌥' : 'Alt', undo: `${mod}Z`, redo: mac ? '⌘⇧Z' : 'Ctrl+Shift+Z' });
 
@@ -241,19 +258,26 @@ export function HelpDialog({ mod, onClose }: { mod: string; onClose: () => void 
             <X size={16} weight="bold" />
           </button>
         </h2>
-        {sections.map((section) => (
-          <section key={section.title}>
-            <h3>
-              {section.icon}
-              {section.title}
-            </h3>
-            <ul>
-              {section.items.map((item, i) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ul>
-          </section>
-        ))}
+        <div className="help-sections">
+          {sections.map((section, s) => (
+            <section key={section.title} className={open.has(s) ? 'open' : undefined}>
+              <h3>
+                <button type="button" aria-expanded={open.has(s)} aria-controls={`${idBase}-${s}`} onClick={() => toggle(s)}>
+                  {section.icon}
+                  {section.title}
+                  <CaretDown size={16} weight="bold" className="caret" />
+                </button>
+              </h3>
+              {open.has(s) && (
+                <ul id={`${idBase}-${s}`}>
+                  {section.items.map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          ))}
+        </div>
         {/* Same line in both languages. */}
         <p className="credit">Designed by Simon Lin with 🧡</p>
       </div>

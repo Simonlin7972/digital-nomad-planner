@@ -6,7 +6,7 @@ import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
 import { usePinchZoom } from '../hooks/usePinchZoom';
 import type { Zoom } from '../hooks/useZoom';
 import type { Holiday, HolidaySet } from '../lib/holidays';
-import { t, useLocale } from '../lib/i18n';
+import { daysText, t, useLocale } from '../lib/i18n';
 import { colorOf, countryOf, insertStay, placeName, pushStays, reorderStays, type Stay } from '../lib/storage';
 import { seasonWarning } from '../lib/seasons';
 import { clamp } from '../lib/util';
@@ -28,11 +28,31 @@ import { Flag } from './Flag';
 import type { Anchor } from './HoverCards';
 import './YearView.css';
 
-type Drag =
-  | { kind: 'select'; anchor: number; lo: number; hi: number } // slots, inclusive
+// The timeline's grid: half-week slots normally, single days once zoomed in far enough to aim at one.
+type Unit = 'half' | 'day';
+const DAY_UNIT_ZOOM = 3; // 300% and up
+
+type Grid = {
+  unit: Unit;
+  n: number; // columns across the year
+  perWeek: number; // columns per week
+  cols: (r: DayRange) => { s: number; e: number }; // a day range as columns [s, e)
+  boundary: (k: number) => number; // the first day of column k
+};
+
+function gridOf(unit: Unit): Grid {
+  return unit === 'day'
+    ? { unit, n: TOTAL_DAYS, perWeek: 7, cols: (r) => ({ s: r.startDay, e: r.endDay + 1 }), boundary: (k) => k }
+    : { unit, n: SLOTS, perWeek: 2, cols: slotsOf, boundary: dayOfBoundary };
+}
+
+// Positions are in columns of the grid the drag started on (see Grid), so a zoom mid-drag can't shift them.
+type Drag = { unit: Unit } & (
+  | { kind: 'select'; anchor: number; lo: number; hi: number } // columns, inclusive
   // copy: alt-drag. The original stays put and a duplicate is dropped where the pointer goes.
   | (DayRange & { kind: 'move'; id: string; grabSlot: number; orig: DayRange; moved: boolean; copy: boolean })
-  | (DayRange & { kind: 'resize'; id: string; edge: 'l' | 'r'; grabSlot: number; moved: boolean });
+  | (DayRange & { kind: 'resize'; id: string; edge: 'l' | 'r'; grabSlot: number; moved: boolean })
+);
 
 type Props = {
   stays: Stay[];
@@ -64,12 +84,9 @@ function copyOf(stays: Stay[], drag: DayRange & { id: string }, id: string): Sta
 }
 
 const slotCol = (s: number, e: number): CSSProperties => ({ gridColumn: `${s + 1} / ${e + 1}` });
-const stayCol = (r: DayRange) => {
-  const { s, e } = slotsOf(r);
-  return slotCol(s, e);
-};
 
-// The year at a glance: one horizontal timeline of 53 weeks, each split into two half-week slots.
+// The year at a glance: one horizontal timeline of weeks, each split into two half-week slots, or into seven days
+// when zoomed to DAY_UNIT_ZOOM or beyond. Stays keep their exact dates either way; only drawing and dragging snap.
 export default function YearView(props: Props) {
   const { stays, zoom, holidaySets, pending, onCreate, onEdit, onChange, onOpenMonth, onHoverStay, onHoverHoliday, onDragging } = props;
   const { prevYear, nextYear, onYearEdge, startAtEnd } = props;
@@ -80,6 +97,14 @@ export default function YearView(props: Props) {
   const { scrollRef } = zoom;
 
   usePinchZoom(zoom, () => setDrag(null));
+
+  // The unit follows the zoom, except during a drag, which keeps the unit it started with.
+  const unit: Unit = drag?.unit ?? (zoom.zoom >= DAY_UNIT_ZOOM ? 'day' : 'half');
+  const grid = gridOf(unit);
+  const stayCol = (r: DayRange) => {
+    const { s, e } = grid.cols(r);
+    return slotCol(s, e);
+  };
 
   const dragging = Boolean(drag);
   useEffect(() => {
@@ -152,13 +177,13 @@ export default function YearView(props: Props) {
 
   const slotAt = (clientX: number) => {
     const rect = trackRef.current!.getBoundingClientRect();
-    return clamp(Math.floor(((clientX - rect.left) / rect.width) * SLOTS), 0, SLOTS - 1);
+    return clamp(Math.floor(((clientX - rect.left) / rect.width) * grid.n), 0, grid.n - 1);
   };
   const slotFree = (slot: number) =>
     slot >= 0 &&
-    slot < SLOTS &&
+    slot < grid.n &&
     !stays.some((st) => {
-      const { s, e } = slotsOf(st);
+      const { s, e } = grid.cols(st);
       return slot >= s && slot < e;
     });
   // Trims a day range so it doesn't run into neighbouring stays; null if nothing is left.
@@ -184,11 +209,11 @@ export default function YearView(props: Props) {
       // With alt held the whole block copies, wherever it is grabbed.
       const edge = e.altKey ? undefined : (target.dataset.edge as 'l' | 'r' | undefined);
       const range = { startDay: stay.startDay, endDay: stay.endDay };
-      const base = { id: stay.id, grabSlot: slot, moved: false, ...range };
+      const base = { unit, id: stay.id, grabSlot: slot, moved: false, ...range };
       setDrag(edge ? { kind: 'resize', edge, ...base } : { kind: 'move', orig: range, copy: e.altKey, ...base });
     } else {
       if (!slotFree(slot)) return;
-      setDrag({ kind: 'select', anchor: slot, lo: slot, hi: slot });
+      setDrag({ unit, kind: 'select', anchor: slot, lo: slot, hi: slot });
     }
     e.currentTarget.setPointerCapture(e.pointerId);
     e.preventDefault();
@@ -208,9 +233,14 @@ export default function YearView(props: Props) {
     if (drag.kind === 'move') {
       const len = daysOf(drag.orig);
       const rangeAt = (delta: number): DayRange => {
-        // Whole-week moves keep the exact dates; half-week moves snap the start to a slot boundary.
+        // By day: the stay moves that many days. By half-week: whole-week moves keep the exact dates, half-week
+        // moves snap the start to a slot boundary.
         const raw =
-          delta % 2 === 0 ? drag.orig.startDay + (delta / 2) * 7 : dayOfBoundary(clamp(slotsOf(drag.orig).s + delta, 0, SLOTS - 1));
+          grid.unit === 'day'
+            ? drag.orig.startDay + delta
+            : delta % 2 === 0
+              ? drag.orig.startDay + (delta / 2) * 7
+              : dayOfBoundary(clamp(slotsOf(drag.orig).s + delta, 0, SLOTS - 1));
         const startDay = clamp(raw, 0, TOTAL_DAYS - len);
         return { startDay, endDay: startDay + len - 1 };
       };
@@ -222,8 +252,8 @@ export default function YearView(props: Props) {
       if (!drag.moved && slot === drag.grabSlot) return;
       const rangeAt = (at: number): DayRange =>
         drag.edge === 'l'
-          ? { startDay: Math.min(dayOfBoundary(at), drag.endDay), endDay: drag.endDay }
-          : { startDay: drag.startDay, endDay: Math.max(dayOfBoundary(at + 1) - 1, drag.startDay) };
+          ? { startDay: Math.min(grid.boundary(at), drag.endDay), endDay: drag.endDay }
+          : { startDay: drag.startDay, endDay: Math.max(grid.boundary(at + 1) - 1, drag.startDay) };
       // Growing into a neighbour pushes it; back off toward the grab point if that runs out of year.
       let next: DayRange | null = null;
       for (let at = slot; ; at += Math.sign(drag.grabSlot - slot)) {
@@ -243,7 +273,7 @@ export default function YearView(props: Props) {
     if (!drag) return;
     setDrag(null);
     if (drag.kind === 'select') {
-      const range = fit({ startDay: dayOfBoundary(drag.lo), endDay: dayOfBoundary(drag.hi + 1) - 1 });
+      const range = fit({ startDay: grid.boundary(drag.lo), endDay: grid.boundary(drag.hi + 1) - 1 });
       if (range) onCreate(range);
     } else if (drag.kind === 'move' && drag.copy) {
       // A copy dropped where it started would only pile onto the original, so that does nothing.
@@ -277,7 +307,7 @@ export default function YearView(props: Props) {
   const countryBars: { id: string; country: string; city: string; color: string; s: number; e: number }[] = [];
   for (const stay of [...visible].sort((a, b) => a.startDay - b.startDay)) {
     if (!stay.country) continue;
-    const { s, e } = slotsOf(stay);
+    const { s, e } = grid.cols(stay);
     const last = countryBars[countryBars.length - 1];
     if (last && last.country === stay.country && last.e === s) last.e = e;
     else countryBars.push({ id: stay.id, country: stay.country, city: '', color: colorOf(stay), s, e });
@@ -298,8 +328,9 @@ export default function YearView(props: Props) {
       )}
       <div className="scroll" ref={scrollRef}>
         <div
-          className={`timeline${pull ? ' pulling' : ''}`}
-          style={{ '--n': SLOTS, '--zoom': zoom.zoom, '--pull': `${-pull * 0.3}px` } as CSSProperties}
+          className={`timeline${pull ? ' pulling' : ''}${unit === 'day' ? ' days' : ''}`}
+          // --slots sets the minimum width and stays in half-weeks, so changing unit never changes the width.
+          style={{ '--n': grid.n, '--slots': SLOTS, '--zoom': zoom.zoom, '--pull': `${-pull * 0.3}px` } as CSSProperties}
         >
           <div
             className={`row months${panning ? ' panning' : ''}`}
@@ -314,7 +345,7 @@ export default function YearView(props: Props) {
                 key={m.month}
                 className="month"
                 data-month={m.month}
-                style={{ gridColumn: `${m.startIndex * 2 + 1} / span ${m.span * 2}` }}
+                style={{ gridColumn: `${m.startIndex * grid.perWeek + 1} / span ${m.span * grid.perWeek}` }}
               >
                 {monthName(m.month)}
               </div>
@@ -351,7 +382,7 @@ export default function YearView(props: Props) {
               <div
                 key={w.index}
                 className={`cell${w.index === thisWeek ? ' today' : ''}${MONTHS.some((m) => m.startIndex === w.index) ? ' month-start' : ''}`}
-                style={{ gridColumn: `${w.index * 2 + 1} / span 2` }}
+                style={{ gridColumn: `${w.index * grid.perWeek + 1} / span ${grid.perWeek}` }}
                 title={rangeLabel({ startDay: w.index * 7, endDay: w.index * 7 + 6 })}
               >
                 <span>{w.start.getDate()}</span>
@@ -391,7 +422,7 @@ export default function YearView(props: Props) {
             })}
             {drag?.kind === 'select' && (
               <div className="selection" style={slotCol(drag.lo, drag.hi + 1)}>
-                {t('unit.weeks', { n: (drag.hi - drag.lo + 1) / 2 })}
+                {drag.unit === 'day' ? daysText(drag.hi - drag.lo + 1) : t('unit.weeks', { n: (drag.hi - drag.lo + 1) / 2 })}
               </div>
             )}
             {pending && <div className="selection" style={stayCol(pending)} />}

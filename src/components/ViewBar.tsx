@@ -10,6 +10,8 @@ import './ViewBar.css';
 type Props = {
   mode: View['mode'];
   onMode: (mode: View['mode']) => void;
+  all: boolean; // month view: every month at once
+  onAll: (all: boolean) => void;
   holidayOn: HolidayToggles;
   onToggleHoliday: (key: keyof HolidayToggles) => void;
   zoom: number;
@@ -17,7 +19,7 @@ type Props = {
 };
 
 // Controls above the calendar: year/month switch, holiday toggles and (in the year view) the zoom.
-export function ViewBar({ mode, onMode, holidayOn, onToggleHoliday, zoom, onZoom }: Props) {
+export function ViewBar({ mode, onMode, all, onAll, holidayOn, onToggleHoliday, zoom, onZoom }: Props) {
   useLocale();
   return (
     <div className="timeline-bar">
@@ -32,6 +34,12 @@ export function ViewBar({ mode, onMode, holidayOn, onToggleHoliday, zoom, onZoom
             </button>
           ))}
         </div>
+        {mode === 'month' && (
+          <button role="switch" aria-checked={all} className="toggle" style={{ '--c': 'var(--text)' } as CSSProperties} onClick={() => onAll(!all)}>
+            <span className="knob" />
+            {t('view.all')}
+          </button>
+        )}
       </div>
       <div className="toggles">
         {holidaySets().map((set) => (

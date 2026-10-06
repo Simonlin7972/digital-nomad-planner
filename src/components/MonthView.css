@@ -7,6 +7,10 @@
 }
 .mhead { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 .mhead h2 { margin: 0; min-width: 132px; text-align: center; font-variant-numeric: tabular-nums; }
+/* all twelve months stacked: one card per month, the title on the left */
+.month-stack { display: flex; flex-direction: column; gap: 20px; }
+.month-view.stacked .mhead h2 { min-width: 0; text-align: left; }
+.month-view.stacked { scroll-margin-top: 16px; }
 .mhead .icon { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; }
 .mstat { margin-left: auto; font-size: 14px; color: var(--muted); }
 .mstat b { color: var(--text); font-size: 16px; font-weight: 600; }
@@ -88,15 +92,16 @@
 .mbar .handle:hover { background: rgb(0 0 0 / 0.25); }
 .mbar .handle:hover::after { opacity: 1; }
 .mbar.msel {
-  background: rgb(255 56 92 / 0.1);
-  border: 2px dashed var(--accent);
+  /* black, like the colour a new stay gets by default */
+  background: rgb(34 34 34 / 0.08);
+  border: 2px dashed var(--text);
   background-clip: border-box !important;
-  color: var(--accent-dark);
+  color: var(--text);
   font-size: 12px;
   font-weight: 600;
   pointer-events: none;
 }
-.mbar.msel.starts { border-left: 2px dashed var(--accent); }
-.mbar.msel.ends { border-right: 2px dashed var(--accent); }
+.mbar.msel.starts { border-left: 2px dashed var(--text); }
+.mbar.msel.ends { border-right: 2px dashed var(--text); }
 .mbar.msel:not(.starts) { border-left: 0; }
 .mbar.msel:not(.ends) { border-right: 0; }

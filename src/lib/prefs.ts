@@ -2,7 +2,8 @@
 // None of this is part of the plan, so it isn't exported or undoable.
 import type { HolidaySet } from './holidays';
 
-export type View = { mode: 'year' | 'month'; month: number };
+// all: in the month view, show every month stacked instead of one at a time
+export type View = { mode: 'year' | 'month'; month: number; all: boolean };
 export type HolidayToggles = Record<HolidaySet['key'], boolean>;
 
 export const ZOOM_MIN = 1;
@@ -32,7 +33,7 @@ function write(key: string, value: unknown) {
 export function loadView(): View {
   const v = read(VIEW_KEY) as Partial<View> | null;
   const month = Number.isInteger(v?.month) && v!.month! >= 0 && v!.month! <= 11 ? v!.month! : 0;
-  return { mode: v?.mode === 'month' ? 'month' : 'year', month };
+  return { mode: v?.mode === 'month' ? 'month' : 'year', month, all: v?.all === true };
 }
 export const saveView = (view: View) => write(VIEW_KEY, view);
 
