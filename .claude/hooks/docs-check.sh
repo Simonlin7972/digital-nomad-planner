@@ -20,14 +20,14 @@ changed=$(
 )
 
 # Only app code triggers the check; docs, config and tooling changes don't.
-printf '%s\n' "$changed" | grep -Eq '^(src/|index\.html$)' || exit 0
+printf '%s\n' "$changed" | grep -Eq '^(src/|index\.html$|app/index\.html$|changelog/index\.html$)' || exit 0
 
 missing=""
-for doc in README.md CLAUDE.md MVP.md; do
+for doc in README.md CLAUDE.md MVP.md CHANGELOG.md; do
   printf '%s\n' "$changed" | grep -qx "$doc" || missing="$missing $doc"
 done
 [ -z "$missing" ] && exit 0
 
 cat <<JSON
-{"decision":"block","reason":"App code under src/ or index.html changed, but these docs were not touched:${missing}. Update each one that this change affects (README.md: features, usage, data format, structure, limits; MVP.md: product spec, decisions, changelog; CLAUDE.md: conventions and architecture notes for future work). If a file genuinely needs no change, say so explicitly in your reply instead of editing it."}
+{"decision":"block","reason":"App code under src/ or a page entry (index.html, app/index.html, changelog/index.html) changed, but these docs were not touched:${missing}. Update each one that this change affects (README.md: features, usage, data format, structure, limits; MVP.md: product spec, decisions, changelog; CLAUDE.md: conventions and architecture notes for future work; CHANGELOG.md: a user-facing line, Chinese plus EN, under today's date, which publishes to the /changelog/ page). If a file genuinely needs no change, say so explicitly in your reply instead of editing it."}
 JSON

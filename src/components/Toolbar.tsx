@@ -1,15 +1,17 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { Fragment, useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { ArrowClockwise } from '@phosphor-icons/react/dist/csr/ArrowClockwise';
 import { ArrowCounterClockwise } from '@phosphor-icons/react/dist/csr/ArrowCounterClockwise';
 import { DotsThree } from '@phosphor-icons/react/dist/csr/DotsThree';
 import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
+import { Info } from '@phosphor-icons/react/dist/csr/Info';
 import { Question } from '@phosphor-icons/react/dist/csr/Question';
 import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork';
 import { UploadSimple } from '@phosphor-icons/react/dist/csr/UploadSimple';
 import { Translate } from '@phosphor-icons/react/dist/csr/Translate';
 import { setLocale, t, useLocale } from '../lib/i18n';
 import { MOD } from '../lib/util';
+import { HOME_URL } from '../lib/links';
 import './Toolbar.css';
 
 type Props = {
@@ -27,7 +29,7 @@ type Props = {
 };
 
 // The row of plan-wide actions in the page header. Undo and redo are icons only; the file actions (export,
-// import, share as PNG) sit in a ⋯ menu.
+// import, share as PNG) sit in a ⋯ menu, with the guide and the product page below a divider.
 export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHelp, onUndo, onRedo, onShare, onExport, onImport }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const locale = useLocale();
@@ -35,10 +37,6 @@ export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHel
   const redoLabel = t('toolbar.shortcut', { action: t('toolbar.redo'), keys: `${MOD}⇧Z` });
   return (
     <div className="actions">
-      <button onClick={onHelp}>
-        <Question size={16} weight="bold" />
-        {t('toolbar.help')}
-      </button>
       {!readOnly && (
         <>
           <button className="icon" onClick={onUndo} disabled={!canUndo} aria-label={undoLabel} title={undoLabel}>
@@ -54,6 +52,13 @@ export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHel
           { label: t('toolbar.export'), icon: <DownloadSimple size={16} weight="bold" />, onSelect: onExport, disabled: !canExport },
           { label: t('toolbar.import'), icon: <UploadSimple size={16} weight="bold" />, onSelect: () => fileRef.current?.click() },
           { label: t('toolbar.share'), icon: <ShareNetwork size={16} weight="bold" />, onSelect: onShare, disabled: !hasStays },
+          { label: t('toolbar.help'), icon: <Question size={16} weight="bold" />, onSelect: onHelp, divider: true },
+          {
+            label: t('toolbar.about'),
+            icon: <Info size={16} weight="bold" />,
+            // The landing page, in a new tab so the plan stays open here.
+            onSelect: () => window.open(HOME_URL, '_blank', 'noopener'),
+          },
         ]}
       />
       {/* Labelled in the language it switches to, so it can be found by someone who can't read the current one. */}
@@ -76,7 +81,8 @@ export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHel
   );
 }
 
-type MenuItem = { label: string; icon: ReactNode; onSelect: () => void; disabled?: boolean };
+// divider: draw a separating line above this item
+type MenuItem = { label: string; icon: ReactNode; onSelect: () => void; disabled?: boolean; divider?: boolean };
 
 // A ⋯ button with a small drop-down. Closes on a pick, Esc, or a press outside; arrow keys move between items.
 function MoreMenu({ items }: { items: MenuItem[] }) {
@@ -131,18 +137,20 @@ function MoreMenu({ items }: { items: MenuItem[] }) {
       {open && (
         <div className="more-menu" role="menu" id={menuId}>
           {items.map((item) => (
-            <button
-              key={item.label}
-              role="menuitem"
-              disabled={item.disabled}
-              onClick={() => {
-                close();
-                item.onSelect();
-              }}
-            >
-              {item.icon}
-              {item.label}
-            </button>
+            <Fragment key={item.label}>
+              {item.divider && <hr className="more-sep" role="separator" />}
+              <button
+                role="menuitem"
+                disabled={item.disabled}
+                onClick={() => {
+                  close();
+                  item.onSelect();
+                }}
+              >
+                {item.icon}
+                {item.label}
+              </button>
+            </Fragment>
           ))}
         </div>
       )}

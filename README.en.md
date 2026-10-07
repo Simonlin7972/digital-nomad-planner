@@ -6,7 +6,7 @@
 
 A single-page planner for a year of digital nomading. The year is laid out as 53 weeks; drag across them to block out which city you'll be in and when. Your data stays in your browser — no account, no backend.
 
-**Live: <https://simonlin7972.github.io/digital-nomad-planner/>**
+**Live: <https://simonlin7972.github.io/digital-nomad-planner/app/>** (landing page: <https://simonlin7972.github.io/digital-nomad-planner/>)
 
 ![Year timeline and itinerary, with sample data](docs/overview.png)
 
@@ -78,13 +78,16 @@ The interface is available in Traditional Chinese and English; switch from the t
 
 - A built-in "How to use" guide in sections that open and close: gestures, where data lives, backup and transfer
 - Traditional Chinese and English interface, switched from the toolbar; defaults to the browser's language and remembers your choice
-- A compact toolbar: undo and redo are icons; export, import and Share live in the `⋯` menu
+- A compact toolbar: undo and redo are icons; export, import and Share live in the `⋯` menu, with "How to use" and "About this app" (opens the landing page in a new tab) below a divider
+- A footer at the bottom of the page: where the data lives, the licence, and links home, to the changelog and to GitHub
+- A changelog page (/changelog/): new features and changes in every release, newest day first, in the interface language. It is built from `CHANGELOG.md` at the repository root, so updating that file and pushing publishes it
 - Undo and redo, up to 100 steps
 - JSON export and import: one file holds every year; file names carry the export date (e.g. `nomad-plan_2026-10-06.json`)
 - Share: preview the year as an image, then download it as a PNG (fixed size, with the timeline, country strips and flags, holidays that are switched on, ticket markers, a summary line and the itinerary; flight details left out). On a phone it can open the system share sheet
 - Read-only phone layout: below 720px the page becomes view-only — now / next, one card per stay (flight details and full notes included), the summary and the map. Plan on a computer, export, then import on the phone
 - Every change is saved automatically
 - Backup reminder: when the plan has changed and gone 7 days without an export, a reminder appears under the header, with buttons to export or to put it off for 3 days
+- Landing page (the site root; the app is at `/app/`): introduces the features, each with a short animation that plays when scrolled into view (drag-select, cut, month view, map route, Schengen and Taiwan day counts, seasons, share image, and a tablet frame showing the desktop app switch from year to month view, then shrinking into the phone layout). The demos are simplified HTML/CSS redraws and never read your plan
 
 ---
 
@@ -99,7 +102,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173.
+Open http://localhost:5173/app/ (the root, http://localhost:5173, is the landing page).
 
 | Command | What it does |
 | --- | --- |
@@ -114,6 +117,8 @@ There are no automated tests and no linter. The `tsc --noEmit` inside `npm run b
 ### Deploying
 
 Pushing to `main` builds and publishes to GitHub Pages through GitHub Actions (`.github/workflows/deploy.yml`). To deploy a fork, go to the repository's Settings → Pages and set Source to **GitHub Actions**.
+
+The root is the landing page and the app lives at `/app/`; each page's `og:url` holds its own absolute GitHub Pages address. Bookmarks of the old address (the root) now land on the landing page first; plans are in `localStorage` for the whole domain, so moving to `/app/` keeps them.
 
 The live site and a local copy use separate browser storage (different addresses), so they don't share data. Use export and import to move a plan between them.
 
@@ -244,15 +249,21 @@ Older formats still load: week-based `startWeek`/`endWeek`, a single `location` 
 ## Project structure
 
 ```
-index.html              Entry page; loads the font and favicon
+index.html              Landing page entry (the site root)
+app/index.html          App entry (/app/); loads the font and favicon
+changelog/index.html    Changelog page entry (/changelog/)
+CHANGELOG.md            The user-facing release notes, source of the changelog page (format in the file's header comment)
 public/favicon.svg      16×16 pixel-art globe
 public/og.png           Link-preview image (1200×630)
 docs/overview.png       Sample image for the README (downloaded from the app's Share dialog)
 src/
   main.tsx              React mount point; sets the stylesheet order
+  changelog/            The changelog page (renders CHANGELOG.md as parsed by `lib/changelog.ts`)
+  landing/              Landing page: Landing (layout), Demos (scripted feature demos), motion (scroll triggers and looping)
   App.tsx               Wires the pieces together; owns the plan and page-level state
   components/           UI components, each with its stylesheet (.css) beside it
-    Toolbar             Header actions and the ⋯ menu (export, import, share)
+    Toolbar             Header actions and the ⋯ menu (export, import, share, how to use, about)
+    Footer              Page footer: where data lives, licence, links home and to GitHub
     ViewBar             Year/month switch, holiday toggles, zoom
     YearView            The year timeline, including drag, resize and copy handling
     MonthView           The month calendar
@@ -289,12 +300,15 @@ src/
     stayRules.ts        Free stretches, Schengen 90/180 and Taiwan's 183 days
     seasons.ts          Season data for popular cities (monthly ratings and reasons) and the warning rule
     backup.ts           Backup reminder state and rules
+    analytics.ts        Google Analytics (live site only)
+    changelog.ts        Parses CHANGELOG.md into dated, bilingual entries
     flags.ts            Country list, search, name → ISO code
     cities.ts           Built-in city list (Chinese and English) and search
     holidays.ts         2026 and 2027 public holiday data
     geocode.ts          Nominatim lookups, rate limiting, cache
     exportPng.ts        Draws the PNG on a canvas
     files.ts            File names and download
+    links.ts            Outbound links (landing page, GitHub)
     util.ts             Small helpers
     i18n.tsx            Dictionaries, current locale, `t()`
   styles/base.css       Design tokens, page background, shared buttons and panels

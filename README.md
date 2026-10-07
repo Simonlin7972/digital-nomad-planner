@@ -4,7 +4,7 @@
 
 一頁式的年度行程規劃工具：把一整年拆成 53 週，拖一拖就排好「幾月在哪個城市」。資料只存在你的瀏覽器，沒有帳號、沒有後端。
 
-**線上版：<https://simonlin7972.github.io/digital-nomad-planner/>**
+**線上版：<https://simonlin7972.github.io/digital-nomad-planner/app/>**（產品介紹頁：<https://simonlin7972.github.io/digital-nomad-planner/>）
 
 ![整年時間軸與行程清單（範例資料）](docs/overview.png)
 
@@ -76,13 +76,16 @@
 
 - 內建「如何使用」說明（可展開收合的分段）：操作方式、資料存在哪、備份與搬移
 - 繁體中文與英文介面，工具列可切換；預設依瀏覽器語言，選擇會記住
-- 工具列精簡：復原、重做只有圖示；匯出、匯入、分享收在 `⋯` 選單裡
+- 工具列精簡：復原、重做只有圖示；匯出、匯入、分享收在 `⋯` 選單裡，分隔線下方是「如何使用」與「產品介紹」（新分頁開啟首頁）
+- 頁面底部的 footer：資料只存在瀏覽器的提醒、授權、首頁、更新日誌與 GitHub 連結
+- 更新日誌頁（/changelog/）：每次發布的新功能與改動，依日期由新到舊，跟著介面語言切換中英文。內容來自根目錄的 `CHANGELOG.md`，build 時讀入，所以更新那個檔案再推上去就會發布
 - 復原／重做，最多 100 步
 - JSON 匯出／匯入：一個檔案包含所有年份，檔名帶匯出當天日期（例：`nomad-plan_2026-10-06.json`）
 - 分享：預覽整年行程圖再下載成 PNG（固定尺寸，含時間軸、國家條與國旗、開著的假日、機票標示、摘要與行程清單；不含機票細節），手機上可叫出系統分享選單
 - 手機唯讀版：螢幕 720px 以下改成只能瀏覽的版面——現在／下一站、每段行程一張卡片（含機票資訊與備註全文）、摘要與地圖。在電腦排好、匯出，再到手機匯入即可
 - 所有變更自動儲存
 - 備份提醒：行程改過之後超過 7 天沒有匯出，頁首出現提醒，可直接匯出或延後 3 天
+- 產品介紹頁（網站根網址，App 在 `/app/`）：介紹功能，每項功能配一段捲到才播放的小動畫（拖選、切開、月曆、地圖路線、申根與台灣天數、季節、分享圖、平板外框裡的桌面版先從年檢視切到月檢視，再縮成手機版）。動畫是用 HTML/CSS 重畫的簡化示範，不讀取你的行程
 
 ---
 
@@ -97,7 +100,7 @@ npm install
 npm run dev
 ```
 
-開啟 http://localhost:5173 。
+開啟 http://localhost:5173/app/ （根網址 http://localhost:5173 是產品介紹頁）。
 
 | 指令 | 用途 |
 | --- | --- |
@@ -110,6 +113,8 @@ npm run dev
 ### 部署
 
 推到 `main` 會由 GitHub Actions（`.github/workflows/deploy.yml`）自動打包並發佈到 GitHub Pages。Fork 之後要自己部署：到 repo 的 Settings → Pages，把 Source 設為 **GitHub Actions**。
+
+根網址是產品介紹頁，App 在 `/app/`；兩頁的 `og:url` 各自寫死 GitHub Pages 網址。舊網址（根網址）的書籤現在會先到介紹頁；行程存在同一個網域的 `localStorage`，搬到 `/app/` 不影響資料。
 
 線上版和本機版各用各的瀏覽器儲存空間（網址不同），資料不互通；要搬移請用匯出／匯入。
 目前沒有自動化測試，也沒有 lint 設定；`npm run build` 內含的 `tsc --noEmit` 是唯一的檢查。
@@ -241,15 +246,21 @@ npm run dev
 ## 專案結構
 
 ```
-index.html              入口頁，載入字體與 favicon
+index.html              產品介紹頁的入口（網站根網址）
+app/index.html          App 的入口（/app/），載入字體與 favicon
+changelog/index.html    更新日誌頁的入口（/changelog/）
+CHANGELOG.md            給使用者看的更新紀錄，更新日誌頁的內容來源（格式見檔案開頭的註解）
 public/favicon.svg      16×16 像素風地球圖示
 public/og.png           分享連結時的預覽圖（1200×630）
 docs/overview.png       README 用的範例圖（由 app 的「分享」下載）
 src/
   main.tsx              React 掛載點；決定樣式載入順序
+  changelog/            更新日誌頁（讀 `lib/changelog.ts` 解析好的 CHANGELOG.md）
+  landing/              產品介紹頁：Landing（版面）、Demos（腳本化的功能示範）、motion（捲動觸發與循環動畫）
   App.tsx               組裝各元件，持有行程與頁面層級的狀態
   components/           畫面元件，每個元件的樣式（.css）放在旁邊
-    Toolbar             頁首的動作按鈕與 ⋯ 選單（匯出、匯入、分享）
+    Toolbar             頁首的動作按鈕與 ⋯ 選單（匯出、匯入、分享、如何使用、產品介紹）
+    Footer              頁面底部：資料存放提醒、授權、首頁與 GitHub 連結
     ViewBar             年／月切換、假日開關、縮放控制
     YearView            年檢視時間軸，含拖曳、伸縮、複製的指標處理
     MonthView           月檢視月曆
@@ -286,12 +297,15 @@ src/
     stayRules.ts        空檔、申根 90/180、台灣 183 天的計算
     seasons.ts          熱門城市的季節資料（每月評分與原因）與警示判斷
     backup.ts           備份提醒的狀態與判斷
+    analytics.ts        Google Analytics（只在線上版載入）
+    changelog.ts        把 CHANGELOG.md 解析成依日期分組的中英文條目
     flags.ts            國家清單、搜尋、名稱 → ISO 代碼對照
     cities.ts           內建城市清單（中英文）與搜尋
     holidays.ts         2026、2027 國定假日資料
     geocode.ts          Nominatim 查詢、限速、快取
     exportPng.ts        用 canvas 繪製 PNG
     files.ts            檔名與下載
+    links.ts            對外連結（首頁、GitHub）
     util.ts             小工具
     i18n.tsx            翻譯字典、目前語言、`t()`
   styles/base.css       設計變數、頁面底、按鈕與面板等共用樣式

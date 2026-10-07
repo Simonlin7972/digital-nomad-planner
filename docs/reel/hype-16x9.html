@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>今天不在家工作 — Hype Reel 16:9</title>
+<!-- Same faces as the app: 975HazyGo (400/600) for everything, Pixelify Sans only for the English tagline. -->
+<link rel="stylesheet" href="https://font.emtech.cc/css/975HazyGo/400" />
+<link rel="stylesheet" href="https://font.emtech.cc/css/975HazyGo/600" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400&display=block" />
+<link rel="stylesheet" href="../../node_modules/flag-icons/css/flag-icons.min.css" />
+<script src="icons.js"></script>
+<style>
+/* A 60-second, 1920×1080 reel. Every animation is a CSS animation whose delay is an absolute time on the reel
+   (--t, in seconds), and every scene is only visible between --s and --s + --d. So the whole reel is a function of
+   one clock: it plays live in a browser, and render.mjs seeks it frame by frame to make the MP4. Cuts sit on a
+   120 BPM grid (every 0.5 s) so a music track can be laid under it. */
+
+@property --n { syntax: '<integer>'; inherits: false; initial-value: 0; }
+
+:root {
+  --bg: #faf9f6; --dot: #d3cfc6; --surface: #fff; --subtle: #f7f7f7; --text: #222; --muted: #6a6a6a;
+  --line: #ebebeb; --line-strong: #ddd; --accent: #ff385c; --danger: #c13515;
+  --red: #cf4b45; --orange: #d97a1e; --yellow: #a8841f; --green: #4a9d5b; --teal: #2a9d8f; --blue: #3b82c4;
+  --purple: #7c5cc4; --pink: #c2548f;
+  --pop: cubic-bezier(.2, 1.5, .4, 1);
+  --snap: cubic-bezier(.7, 0, .2, 1);
+  font-family: '975HazyGo', -apple-system, 'PingFang TC', sans-serif;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #111; overflow: hidden; }
+body { display: grid; place-items: center; }
+
+#stage {
+  position: relative; width: 1920px; height: 1080px; overflow: hidden; flex: none;
+  background: var(--bg);
+  transform-origin: center;
+}
+.render #stage { transform: none !important; }
+body.render { display: block; }
+
+/* ---------- scenes ---------- */
+.scene {
+  position: absolute; inset: 0; visibility: hidden; overflow: hidden;
+  animation: show calc(var(--d) * 1s) step-end calc(var(--s) * 1s);
+}
+@keyframes show { from, to { visibility: visible; } }
+.paper { background: var(--bg); }
+.paper::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: radial-gradient(circle, var(--dot) 2px, transparent 2.8px);
+  background-size: 40px 40px; background-position: 20px 20px;
+}
+.ink { background: var(--text); color: #fff; }
+.hot { background: var(--accent); color: #fff; }
+/* Every scene drifts in slowly, so even the holds feel alive */
+.cam { position: absolute; inset: 0; animation: drift calc(var(--d) * 1s) linear calc(var(--s) * 1s) both; }
+@keyframes drift { from { transform: scale(1); } to { transform: scale(1.045); } }
+
+/* ---------- one-shot animations, started at --t ---------- */
+.a { animation-delay: calc(var(--t, 0) * 1s); animation-fill-mode: both; }
+.slam { animation-name: slam; animation-duration: .36s; animation-timing-function: var(--pop); }
+@keyframes slam { from { transform: scale(2.2); opacity: 0; filter: blur(14px); } 40% { opacity: 1; } to { transform: none; opacity: 1; filter: none; } }
+.pop { animation-name: pop; animation-duration: .4s; animation-timing-function: var(--pop); }
+@keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: none; opacity: 1; } }
+.up { animation-name: up; animation-duration: .45s; animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
+@keyframes up { from { transform: translateY(70px); opacity: 0; } to { transform: none; opacity: 1; } }
+.wipe { animation-name: wipe; animation-duration: .4s; animation-timing-function: var(--snap); }
+@keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.drop { animation-name: drop; animation-duration: .5s; animation-timing-function: var(--pop); }
+@keyframes drop { from { transform: translateY(-160px) rotate(-8deg); opacity: 0; } to { opacity: 1; } }
+.shake { animation-name: shake; animation-duration: .4s; animation-fill-mode: none; }
+@keyframes shake { 20% { transform: translate(-14px, 4px) rotate(-1deg); } 40% { transform: translate(12px, -6px) rotate(1deg); } 60% { transform: translate(-8px, 2px); } 80% { transform: translate(6px, -2px); } }
+.punch { animation-name: punch; animation-duration: .3s; animation-fill-mode: none; }
+@keyframes punch { 40% { transform: scale(1.08); } }
+.flash { position: absolute; inset: 0; background: #fff; pointer-events: none; z-index: 50; opacity: 0;
+  animation: flash .22s ease-out calc(var(--t) * 1s) forwards; }
+@keyframes flash { from { opacity: .9; } to { opacity: 0; } }
+
+/* ---------- type ---------- */
+.center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.big { font-weight: 600; line-height: 1.08; letter-spacing: .01em; }
+.hl { color: var(--accent); }
+.mute { color: var(--muted); font-weight: 400; }
+.wordline { display: flex; gap: 0 .35em; white-space: nowrap; }
+.wordline > span { display: inline-block; flex: none; }
+
+/* ---------- the app's pieces, drawn big ---------- */
+.window { position: absolute; background: var(--surface); border: 2px solid var(--line-strong); border-radius: 28px;
+  box-shadow: 0 20px 60px rgb(0 0 0 / .12); overflow: hidden; }
+.chrome { display: flex; gap: 12px; padding: 22px 28px; border-bottom: 2px solid var(--line); }
+.chrome i { width: 18px; height: 18px; border-radius: 50%; background: var(--line-strong); }
+.track { position: absolute; border-radius: 16px; background-color: var(--subtle);
+  background-image: linear-gradient(to right, var(--line) 2px, transparent 2px); background-size: var(--cell) 100%; }
+.block { position: absolute; top: 8px; bottom: 8px; display: flex; align-items: center; padding: 0 22px; border-radius: 12px;
+  color: #fff; font-weight: 600; white-space: nowrap; overflow: hidden; }
+.block small { font-weight: 400; opacity: .85; margin-left: .5em; font-size: .7em; }
+.select { position: absolute; top: 8px; bottom: 8px; border: 5px dashed var(--text); border-radius: 12px; background: rgb(34 34 34 / .06); }
+.cursor { position: absolute; width: 84px; height: 84px; z-index: 5; margin: -10px 0 0 -14px;
+  filter: drop-shadow(0 0 3px #fff) drop-shadow(0 4px 8px rgb(0 0 0 / .3)); }
+.icon { display: block; width: 100%; height: 100%; fill: currentColor; }
+.kbd { display: inline-grid; place-items: center; background: #fff; color: var(--text); border: 4px solid var(--line-strong);
+  border-bottom-width: 22px; border-radius: 36px; font-weight: 600; }
+.flagchip { display: inline-flex; align-items: center; gap: 12px; }
+.fi { border-radius: 4px; box-shadow: 0 0 0 1px rgb(0 0 0 / .08); }
+.pill { display: inline-flex; align-items: center; gap: 14px; border-radius: 999px; font-weight: 600; }
+
+/* Mascot: two frames swapped with a hard cut, as in the app header */
+.nomad .fb { animation: nf 1.1s steps(1, end) -.55s infinite; }
+.nomad .fa { animation: nf 1.1s steps(1, end) infinite; }
+@keyframes nf { 0% { opacity: 1; } 50% { opacity: 0; } }
+
+/* Pixel sparkles from the app's storyboard */
+.spark { position: absolute; width: 36px; height: 36px; animation: twinkle 1s steps(2, jump-none) infinite; }
+.spark::before, .spark::after { content: ''; position: absolute; background: var(--c, var(--accent)); }
+.spark::before { left: 12px; top: 0; width: 12px; height: 36px; }
+.spark::after { top: 12px; left: 0; width: 36px; height: 12px; }
+@keyframes twinkle { 50% { transform: scale(.6); } }
+
+/* counters: an animated integer shown through a CSS counter */
+.count { counter-reset: n var(--n); }
+.count::after { content: counter(n); }
+
+/* calendar */
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); }
+.cal .wd { text-align: center; font-size: 30px; color: var(--muted); padding: 10px 0 16px; }
+.cal .day { position: relative; height: 128px; border-top: 2px solid var(--line); padding: 10px 14px; font-size: 30px; }
+.cal .day.hol { background: #fdeceb; }
+.cal .day.hol b { position: absolute; right: 12px; top: 12px; font-size: 22px; color: var(--danger); font-weight: 400; }
+.calbar { position: absolute; height: 52px; border-radius: 10px; color: #fff; font-weight: 600; font-size: 28px;
+  display: flex; align-items: center; padding: 0 16px; white-space: nowrap; overflow: hidden; }
+
+/* season strip */
+.season { display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px; }
+.season div { height: 170px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; font-size: 34px; font-weight: 600; }
+.season .r2 { background: #dcefe0; color: #2f6b3c; }
+.season .r1 { background: var(--subtle); color: var(--muted); border: 2px solid var(--line); }
+.season .r0 { background: #f6dedc; color: var(--danger); }
+.season small { font-size: 24px; font-weight: 400; }
+.alarm { animation: alarm .5s steps(1, end) infinite; }
+@keyframes alarm { 50% { background: var(--danger); color: #fff; } }
+
+/* meters */
+.meter { position: absolute; height: 40px; border-radius: 999px; background: rgb(255 255 255 / .12); overflow: hidden; }
+.paper .meter { background: #ece9e2; }
+.meter i { position: absolute; inset: 0 auto 0 0; border-radius: 999px; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+
+<script>
+// ---------- tiny builders ----------
+const stage = document.getElementById('stage');
+let sheet = '';
+const css = (s) => (sheet += s + '\n');
+let kfId = 0;
+// Registers a one-off keyframes rule and returns its name.
+function kf(frames) {
+  const name = 'k' + kfId++;
+  css(`@keyframes ${name} { ${frames} }`);
+  return name;
+}
+// An element that runs keyframes `name` for `dur` seconds starting at reel time `t`.
+const anim = (name, t, dur, ease = 'cubic-bezier(.7,0,.2,1)') =>
+  `animation: ${name} ${dur}s ${ease} ${t}s both;`;
+const icon = (n, w = 'fill') =>
+  `<svg class="icon" viewBox="0 0 256 256"><path d="${ICONS[n + '_' + w]}"/></svg>`;
+const flag = (cc, w = 64) => `<span class="fi fi-${cc}" style="width:${w}px;height:${Math.round(w * .75)}px;background-size:cover"></span>`;
+function scene(s, d, cls, html) {
+  stage.insertAdjacentHTML('beforeend', `<section class="scene ${cls}" style="--s:${s};--d:${d}"><div class="cam">${html}</div></section>`);
+}
+const flash = (t) => stage.insertAdjacentHTML('beforeend', `<div class="flash" style="--t:${t}"></div>`);
+const A = (cls, t, html, style = '', tag = 'div') => `<${tag} class="a ${cls}" style="--t:${t};${style}">${html}</${tag}>`;
+
+// The mascot, from the app's PixelNomad frames
+const PAL = { K: '#222222', S: '#f2c9a0', H: '#5a3b2a', C: '#ff5a5f', D: '#444444', B: '#7fc4e8', W: '#ffffff', T: '#8a5a3a', L: '#3f9b62', Y: '#f5b83d', A: '#ead9b0' };
+const FA = ['.YY.......LL....', '.YY.....LLLLLL..', '.......LL.TL.LL.', '......L...T...L.', '..........T.....', '...HHH....T.....', '..HHHH....T.....', '..HSSK...T......', '..SSSS...T......', '..CCC....T......', '.CCCCS.D.T......', '.CCCCSSDB.T.....', '.CCKKKKDDDT.....', 'AAAAAAAAAAAAAAAA', 'AAAAAAAAAAAAAAAA'];
+const FB = ['.YY......LL.....', '.YY....LLLLLL...', '......LL..TLLL..', '.....L....T..L..', ...FA.slice(4, 10), '.CCCCSSD.T......', '.CCCCS.DW.T.....', ...FA.slice(12)];
+const rects = (f) => f.map((row, y) => [...row].map((ch, x) => (PAL[ch] ? `<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${PAL[ch]}"/>` : '')).join('')).join('');
+const nomad = (w) => `<svg class="nomad" viewBox="0 0 16 15" width="${w}" height="${w * 15 / 16}" shape-rendering="crispEdges"><g class="fa">${rects(FA)}</g><g class="fb">${rects(FB)}</g></svg>`;
+
+const C = { red: '#cf4b45', orange: '#d97a1e', teal: '#2a9d8f', blue: '#3b82c4', purple: '#7c5cc4', green: '#4a9d5b', pink: '#c2548f', yellow: '#a8841f' };
+// The landing page's sample year, in weeks
+const PLAN = [
+  ['tw', '台北', 0, 7, C.red], ['th', '清邁', 8, 13, C.orange], ['id', '倉古', 14, 20, C.teal], ['pt', '里斯本', 21, 28, C.blue],
+  ['ge', '提比里斯', 29, 33, C.purple], ['mx', '墨西哥城', 36, 44, C.green], ['tw', '台北', 47, 52, C.red],
+];
+const COUNTRY = { tw: '台灣', th: '泰國', id: '印尼', pt: '葡萄牙', ge: '喬治亞', mx: '墨西哥' };
+
+// ============ 0.0  Hook ============
+scene(0, 2.5, 'paper', `
+  <div class="center big" style="font-size:190px;gap:10px">
+    ${A('slam', 0.05, '你決定')}
+    ${A('slam', 0.55, '開始<span class="hl">數位遊牧</span>了')}
+  </div>
+  <div class="a pop" style="--t:1.3;position:absolute;right:180px;top:110px">${nomad(220)}</div>
+  <div class="spark" style="left:220px;top:180px;--c:${C.orange}"></div>
+  <div class="spark" style="left:300px;bottom:170px;--c:${C.teal}"></div>
+`);
+
+// ============ 2.5  "Then what?" ============
+flash(2.5);
+scene(2.5, 2, 'ink', `
+  <div class="center">
+    <div class="a shake" style="--t:3.2">${A('slam big', 2.5, '然後呢？', 'font-size:320px')}</div>
+    ${A('up mute', 3.4, '明年，要住哪？', 'font-size:72px;margin-top:30px;color:#aaa')}
+  </div>
+`);
+
+// ============ 4.5  365 days, so many places ============
+{
+  const flags = ['jp', 'th', 'pt', 'mx', 'id', 'ge', 'kr', 'vn', 'es', 'it', 'gr', 'tr', 'co', 'ar', 'au', 'nz', 'my', 'ph', 'hr', 'de', 'fr', 'gb', 'us', 'ca', 'br', 'pe', 'ma', 'za', 'ae', 'in', 'lk', 'np', 'sg', 'hu', 'cz', 'ee'];
+  const grid = flags.map((cc, i) => {
+    const r = ((i * 37) % 13) - 6;
+    return `<div class="a pop" style="--t:${(4.7 + i * 0.028).toFixed(3)};transform:rotate(${r}deg)">${flag(cc, 150)}</div>`;
+  }).join('');
+  const n365 = kf('from { --n: 0 } to { --n: 365 }');
+  scene(4.5, 3, 'paper', `
+    <div style="position:absolute;top:70px;left:0;right:0;text-align:center" class="big">
+      <span style="font-size:110px">明年的 </span><span class="count hl" style="font-size:190px;${anim(n365, 4.5, 0.9, 'cubic-bezier(.2,.8,.3,1)')}"></span><span style="font-size:110px"> 天</span>
+    </div>
+    <div style="position:absolute;left:150px;right:150px;top:370px;display:grid;grid-template-columns:repeat(9,1fr);gap:34px 30px;justify-items:center">${grid}</div>
+    <div class="a wipe" style="--t:6.1;position:absolute;left:0;right:0;top:500px;height:250px;background:var(--text);display:grid;place-items:center;z-index:3">
+      <div class="big" style="font-size:150px;color:#fff">要在<span class="hl">哪裡</span>工作？</div>
+    </div>
+  `);
+}
+
+// ============ 7.5  Title ============
+flash(7.5);
+scene(7.5, 3, 'paper', `
+  <div class="center">
+    <div class="a pop" style="--t:7.5">${nomad(300)}</div>
+    ${A('slam big', 7.85, '今天不在家工作', 'font-size:180px;margin-top:20px')}
+    <div style="font-family:'Pixelify Sans';font-size:72px;margin-top:24px;color:var(--muted);${anim(kf('from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}'), 8.45, 0.9, 'steps(23, end)')}">A Digital Nomad Planner</div>
+  </div>
+  <div class="spark a pop" style="--t:8.2;left:330px;top:250px;--c:${C.orange}"></div>
+  <div class="spark a pop" style="--t:8.3;right:360px;top:330px;--c:${C.pink}"></div>
+  <div class="spark a pop" style="--t:8.4;left:460px;bottom:200px;--c:${C.teal}"></div>
+  <div class="spark a pop" style="--t:8.5;right:420px;bottom:230px;--c:${C.blue}"></div>
+`);
+
+// ============ 10.5  One year. One page. Done. ============
+flash(10.5);
+scene(10.5, 2, 'ink', `
+  <div class="center"><div class="wordline big" style="font-size:210px">
+    ${A('slam', 10.5, '一整年', '', 'span')}${A('slam', 11.0, '一頁', '', 'span')}${A('slam hl', 11.5, '排完。', '', 'span')}
+  </div></div>
+`);
+
+// ============ 12.5  The 53-week timeline ============
+{
+  const W = 1640, cell = W / 53;
+  const blocks = PLAN.map(([cc, city, s, e, col], i) =>
+    `<div class="block a wipe" style="--t:${(12.85 + i * 0.2).toFixed(2)};left:${s * cell}px;width:${(e - s + 1) * cell - 6}px;background:${col};font-size:36px">${city}</div>`).join('');
+  // Neighbouring stays in the same country share one bar
+  const bars = PLAN.reduce((out, [cc, , s, e]) => {
+    const last = out[out.length - 1];
+    if (last && last.cc === cc && last.e + 1 === s) last.e = e; else out.push({ cc, s, e });
+    return out;
+  }, []).map((b, i) => `<div class="a up flagchip" style="--t:${(14.4 + i * 0.08).toFixed(2)};position:absolute;left:${b.s * cell}px;width:${(b.e - b.s + 1) * cell - 6}px;top:0;height:56px;padding:0 12px;border-radius:10px;background:#fff;border:2px solid var(--line);font-size:26px;overflow:hidden;white-space:nowrap">${flag(b.cc, 36)}${COUNTRY[b.cc]}</div>`).join('');
+  const months = Array.from({ length: 12 }, (_, m) => `<span style="position:absolute;left:${(m / 12) * 100}%;font-size:26px;color:var(--muted)">${m + 1} 月</span>`).join('');
+  scene(12.5, 4, 'paper', `
+    ${A('slam big', 12.5, '<span class="hl">53</span> 週，一條時間軸', 'position:absolute;top:80px;left:0;right:0;text-align:center;font-size:130px')}
+    <div class="window a up" style="--t:12.6;left:100px;top:340px;width:1720px;height:420px">
+      <div class="chrome"><i></i><i></i><i></i></div>
+      <div style="position:absolute;left:40px;top:96px;width:${W}px;height:40px">${months}</div>
+      <div class="track" style="--cell:${cell}px;left:40px;top:150px;width:${W}px;height:150px">${blocks}</div>
+      <div style="position:absolute;left:40px;top:322px;width:${W}px;height:60px">${bars}</div>
+    </div>
+    ${A('up', 15.4, '幾月在哪個城市，<span class="hl">一眼看完</span>', 'position:absolute;bottom:110px;left:0;right:0;text-align:center;font-size:72px;font-weight:600')}
+  `);
+}
+
+// ============ 16.5  Drag to add ============
+const TRACK = (inner, top = 470) => `<div class="track" style="--cell:100px;left:160px;top:${top}px;width:1600px;height:170px">${inner}</div>`;
+{
+  const sel = kf('from { width: 0 } to { width: 500px }');
+  const cur = kf('from { left: 200px } to { left: 700px }');
+  scene(16.5, 3, 'paper', `
+    ${A('slam big', 16.5, '拖一下', 'position:absolute;top:90px;left:0;right:0;text-align:center;font-size:230px')}
+    ${TRACK(`
+      <div class="block" style="left:800px;width:500px;background:${C.blue};font-size:44px">里斯本</div>
+      <div class="select" style="left:200px;${anim(sel, 16.9, 0.75)};opacity:1;animation-fill-mode:both"></div>
+      <div class="block a pop" style="--t:17.7;left:200px;width:500px;background:${C.orange};font-size:44px;z-index:2">清邁<small>5 週</small></div>
+      <div class="cursor" style="top:110px;${anim(cur, 16.9, 0.75)}">${icon('Cursor')}</div>
+    `)}
+    ${A('slam big hl', 18.0, '＝ 一段行程。', 'position:absolute;bottom:120px;left:0;right:0;text-align:center;font-size:130px')}
+  `);
+  // The selection box disappears once the stay lands
+  css(`.scene .select { }`);
+}
+
+// ============ 19.5  Stretch, the neighbour moves ============
+{
+  const grow = kf('from { width: 500px } to { width: 800px }');
+  const push = kf('from { left: 800px } to { left: 1000px }');
+  const cur = kf('from { left: 700px } to { left: 1000px }');
+  scene(19.5, 2.5, 'paper', `
+    ${A('slam big', 19.5, '拉長', 'position:absolute;top:90px;left:0;right:0;text-align:center;font-size:230px')}
+    ${TRACK(`
+      <div class="block" style="left:200px;background:${C.orange};font-size:44px;${anim(grow, 19.95, 0.6)}">清邁</div>
+      <div class="block" style="background:${C.blue};width:500px;font-size:44px;${anim(push, 19.95, 0.6)}">里斯本</div>
+      <div class="cursor" style="top:40px;${anim(cur, 19.95, 0.6)}">${icon('ArrowsHorizontal', 'bold')}</div>
+    `)}
+    ${A('slam big', 20.7, '鄰居<span class="hl">自己讓開。</span>', 'position:absolute;bottom:120px;left:0;right:0;text-align:center;font-size:130px')}
+  `);
+}
+
+// ============ 22.0  Drag the whole stay: reorder ============
+{
+  const lift = kf('0% { transform: none } 15% { transform: translateY(-30px) scale(1.04); box-shadow: 0 30px 50px rgb(0 0 0 / .25) } 85% { transform: translate(450px, -30px) scale(1.04); box-shadow: 0 30px 50px rgb(0 0 0 / .25) } 100% { transform: translateX(450px) }');
+  const swap = kf('from { transform: none } to { transform: translateX(-450px) }');
+  const cur = kf('0% { transform: none } 15% { transform: translateY(-30px) } 85% { transform: translate(450px, -30px) } 100% { transform: translateX(450px) }');
+  scene(22, 2, 'paper', `
+    ${A('slam big', 22, '整塊拖 ＝ <span class="hl">換順序</span>', 'position:absolute;top:110px;left:0;right:0;text-align:center;font-size:150px')}
+    ${TRACK(`
+      <div class="block" style="left:100px;width:440px;background:${C.red};font-size:44px">台北</div>
+      <div class="block" style="left:1000px;width:440px;background:${C.blue};font-size:44px;${anim(swap, 22.75, 0.3)}">里斯本</div>
+      <div class="block" style="left:550px;width:440px;background:${C.orange};font-size:44px;z-index:3;${anim(lift, 22.35, 0.9)}">清邁</div>
+      <div class="cursor" style="left:760px;top:90px;${anim(cur, 22.35, 0.9)}">${icon('Cursor')}</div>
+    `, 520)}
+  `);
+}
+
+// ============ 24.0  Hold B ============
+flash(24);
+scene(24, 0.9, 'ink', `
+  <div class="center" style="flex-direction:row;gap:70px">
+    ${A('up big', 24, '按住', 'font-size:150px')}
+    ${A('slam kbd', 24.1, 'B', 'width:330px;height:330px;font-size:200px')}
+  </div>
+`);
+{
+  const cutline = kf('from { clip-path: inset(0 0 100% 0) } to { clip-path: inset(0 0 0 0) }');
+  const scis = kf('from { top: -80px } to { top: 140px }');
+  const left = kf('from { transform: none } to { transform: translateX(-24px) rotate(-1.5deg) }');
+  const right = kf('from { transform: none } to { transform: translateX(24px) rotate(1.5deg) }');
+  scene(24.9, 1.6, 'paper', `
+    ${TRACK(`
+      <div class="block" style="left:200px;width:600px;border-radius:12px 0 0 12px;background:${C.teal};font-size:44px;${anim(left, 25.45, 0.25, 'var(--pop)')}">倉古</div>
+      <div class="block" style="left:800px;width:600px;border-radius:0 12px 12px 0;background:${C.teal};font-size:44px;${anim(right, 25.45, 0.25, 'var(--pop)')}"><span style="${anim(kf('from{opacity:0}to{opacity:1}'), 25.45, 0.1)}">倉古</span></div>
+      <div style="position:absolute;left:797px;top:-60px;bottom:-60px;width:0;border-left:6px dashed var(--text);${anim(cutline, 24.95, 0.3)}"></div>
+      <div class="cursor" style="left:762px;width:90px;height:90px;transform:rotate(90deg);${anim(scis, 24.95, 0.5)}">${icon('Scissors', 'bold')}</div>
+    `, 360)}
+    ${A('slam big hl', 25.5, '喀嚓。', 'position:absolute;bottom:150px;left:0;right:0;text-align:center;font-size:220px')}
+    ${A('up', 25.8, '一段，切成兩段', 'position:absolute;top:150px;left:0;right:0;text-align:center;font-size:64px;font-weight:600')}
+  `);
+}
+
+// ============ 26.5  ⌥-drag: insert a copy ============
+{
+  const ghost = kf('0% { transform: translateY(0); opacity: .0 } 10% { opacity: .75; transform: translateY(-120px) } 85% { opacity: .75; transform: translate(350px, -120px) } 100% { opacity: 1; transform: translate(350px, 0) }');
+  const shove = kf('from { transform: none } to { transform: translateX(350px) }');
+  const cur = kf('0% { transform: none } 10% { transform: translateY(-120px) } 85% { transform: translate(350px, -120px) } 100% { transform: translate(350px, 0) }');
+  const blk = (l, col, name, extra = '') => `<div class="block" style="left:${l}px;width:344px;background:${col};font-size:44px;${extra}">${name}</div>`;
+  scene(26.5, 2.5, 'paper', `
+    <div style="position:absolute;top:90px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:40px">
+      ${A('slam kbd', 26.5, '⌥', 'width:190px;height:190px;font-size:120px')}
+      ${A('slam big', 26.65, '＋ 拖曳', 'font-size:140px')}
+    </div>
+    ${TRACK(`
+      ${blk(50, C.red, '台北')}
+      ${blk(400, C.orange, '清邁', anim(shove, 27.5, 0.35, 'var(--pop)'))}
+      ${blk(750, C.blue, '里斯本', anim(shove, 27.5, 0.35, 'var(--pop)'))}
+      ${blk(50, C.red, '台北', 'z-index:3;outline:5px solid #fff;' + anim(ghost, 26.9, 0.6))}
+      <div class="cursor" style="left:240px;top:100px;${anim(cur, 26.9, 0.6)}">${icon('CopySimple', 'bold')}</div>
+    `, 520)}
+    ${A('slam big', 27.8, '複製，<span class="hl">插隊。</span>', 'position:absolute;bottom:90px;left:0;right:0;text-align:center;font-size:130px')}
+  `);
+}
+
+// ============ 29.0  Month view, down to the day ============
+{
+  const hol = { 4: '春節', 5: '', 6: '', 7: '', 8: '', 9: '', 10: '', 27: '228', 28: '' };
+  const wd = ['一', '二', '三', '四', '五', '六', '日'].map((d) => `<div class="wd">${d}</div>`).join('');
+  const days = Array.from({ length: 28 }, (_, i) => {
+    const d = i + 1;
+    const h = d in hol;
+    return `<div class="day${h ? ' hol' : ''}">${d}${h && hol[d] ? `<b>${hol[d]}</b>` : ''}</div>`;
+  }).join('');
+  const cw = 1000 / 7, rowTop = (r) => 82 + r * 128 + 62;
+  const bar = (row, from, to, col, label, extra = '') =>
+    `<div class="calbar" style="top:${rowTop(row)}px;left:${(from - 1) * cw + 4}px;width:${(to - from + 1) * cw - 8}px;background:${col};${extra}">${label}</div>`;
+  // Taipei runs to the 10th, then gets stretched to the 12th; Chiang Mai is pushed along
+  const grow = kf(`from { width: ${3 * cw - 8}px } to { width: ${5 * cw - 8}px }`);
+  const push = kf(`from { left: ${3 * cw + 4}px; width: ${4 * cw - 8}px } to { left: ${5 * cw + 4}px; width: ${2 * cw - 8}px }`);
+  const cur = kf(`from { left: ${3 * cw - 10}px } to { left: ${5 * cw - 10}px }`);
+  scene(29, 3, 'paper', `
+    <div style="position:absolute;left:110px;top:260px;width:620px">
+      ${A('slam big', 29, '精準<br><span class="hl">到天。</span>', 'font-size:180px')}
+      ${A('up', 30.6, '時間軸排大方向<br>月曆調確切日期', 'font-size:52px;margin-top:40px;line-height:1.4;font-weight:600')}
+      ${A('up', 31.1, '<span style="display:inline-block;width:32px;height:32px;border-radius:8px;background:#fdeceb;border:2px solid #f3c5c0;vertical-align:-4px"></span> 疊上國定假日', 'font-size:44px;margin-top:24px;color:var(--muted)')}
+    </div>
+    <div class="window a up" style="--t:29.1;left:800px;top:120px;width:1040px;height:840px;padding:20px">
+      <div style="font-size:44px;font-weight:600;padding:6px 10px 10px">2027 年 2 月</div>
+      <div class="cal" style="position:relative">${wd}${days}
+        ${bar(0, 1, 7, C.red, '台北')}
+        ${bar(1, 1, 3, C.red, '台北', anim(grow, 30.0, 0.55, 'var(--pop)'))}
+        ${bar(1, 4, 7, C.orange, '清邁', anim(push, 30.0, 0.55, 'var(--pop)'))}
+        ${bar(2, 1, 7, C.orange, '清邁')}
+        ${bar(3, 1, 7, C.orange, '清邁')}
+        <div class="cursor" style="top:${rowTop(1) - 6}px;width:70px;height:70px;${anim(cur, 30.0, 0.55, 'var(--pop)')}">${icon('ArrowsHorizontal', 'bold')}</div>
+      </div>
+    </div>
+  `);
+}
+
+// ============ 32.0  The route on a map ============
+{
+  const P = { tw: [121.5, 25], th: [99, 18.8], id: [115.1, -8.6], pt: [-9.1, 38.7], ge: [44.8, 41.7], mx: [-99.1, 19.4] };
+  const xy = ([lon, lat]) => [150 + (lon + 115) * 6.6, 360 + (52 - lat) * 6.6];
+  const route = ['tw', 'th', 'id', 'pt', 'ge', 'mx', 'tw'];
+  const names = { tw: '台北', th: '清邁', id: '倉古', pt: '里斯本', ge: '提比里斯', mx: '墨西哥城' };
+  let d = '';
+  route.forEach((cc, i) => {
+    const [x, y] = xy(P[cc]);
+    if (!i) { d = `M${x},${y}`; return; }
+    const [px, py] = xy(P[route[i - 1]]);
+    const lift = Math.min(260, Math.abs(x - px) * 0.28 + 40);
+    d += ` Q${(x + px) / 2},${Math.min(y, py) - lift} ${x},${y}`;
+  });
+  const draw = kf('from { stroke-dashoffset: 1 } to { stroke-dashoffset: 0 }');
+  const labelSide = { tw: [-60, -110], th: [-250, -40], id: [36, -10], pt: [-80, -110], ge: [-90, -110], mx: [-70, 40] };
+  const pins = route.slice(0, 6).map((cc, i) => {
+    const [x, y] = xy(P[cc]);
+    const [dx, dy] = labelSide[cc];
+    return `<div class="a pop" style="--t:${(32.3 + i * 0.36).toFixed(2)};position:absolute;left:${x - 22}px;top:${y - 22}px;width:44px;height:44px;border-radius:50%;background:#fff;border:8px solid var(--text);z-index:2"></div>
+      <div class="a pop flagchip" style="--t:${(32.35 + i * 0.36).toFixed(2)};position:absolute;left:${x + dx}px;top:${y + dy}px;font-size:36px;font-weight:600;background:#fff;padding:8px 18px 8px 10px;border-radius:14px;box-shadow:0 6px 20px rgb(0 0 0 / .12);z-index:3">${flag(cc, 48)}${names[cc]}</div>`;
+  }).join('');
+  scene(32, 3.5, 'paper', `
+    <svg width="1920" height="1080" style="position:absolute;inset:0">
+      <path d="${d}" pathLength="1" fill="none" stroke="var(--accent)" stroke-width="9" stroke-linecap="round" stroke-dasharray="1 1" style="${anim(draw, 32.3, 2.2, 'linear')}"/>
+    </svg>
+    ${pins}
+    ${A('slam big', 32.05, '路線，<span class="hl">一眼看完。</span>', 'position:absolute;top:80px;left:0;right:0;text-align:center;font-size:140px')}
+  `);
+}
+
+// ============ 35.5  Schengen 90/180 ============
+{
+  const n = kf('from { --n: 0 } to { --n: 96 }');
+  const fill = kf('from { width: 0 } to { width: 100% }');
+  const red = kf('from { color: var(--text) } to { color: var(--danger) }');
+  scene(35.5, 3, 'paper', `
+    <div style="position:absolute;left:150px;top:150px">
+      ${A('slam big', 35.5, '申根 90/180', 'font-size:110px')}
+      ${A('up', 35.8, '任 180 天內，最多待 90 天', 'font-size:52px;color:var(--muted);margin-top:16px')}
+    </div>
+    <div class="big" style="position:absolute;right:150px;top:110px;text-align:right">
+      <div class="a shake" style="--t:37.05">
+        <span style="${anim(red, 36.95, 0.05)}"><span class="count" style="font-size:420px;${anim(n, 35.6, 1.4, 'cubic-bezier(.3,.6,.4,1)')}"></span></span><span style="font-size:120px;color:var(--muted)"> / 90</span>
+      </div>
+    </div>
+    <div class="meter" style="left:150px;right:150px;top:720px;height:56px">
+      <i style="background:var(--text);${anim(fill, 35.6, 1.4, 'cubic-bezier(.3,.6,.4,1)')}"></i>
+      <i style="left:93.75%;right:0;width:auto;background:var(--danger);${anim(kf('from{opacity:0}to{opacity:1}'), 36.95, 0.05)}"></i>
+    </div>
+    <div style="position:absolute;left:150px;top:690px;height:120px;width:0;border-left:6px solid var(--text);transform:translateX(${0.9375 * 1620}px)"></div>
+    <div class="a pop pill" style="--t:37.1;position:absolute;left:150px;bottom:110px;background:var(--danger);color:#fff;font-size:64px;padding:22px 44px 22px 30px">
+      <span style="width:68px;height:68px">${icon('Warning')}</span>排超過，直接標給你看
+    </div>
+  `);
+}
+
+// ============ 38.5  Taiwan 183 ============
+{
+  const n = kf('from { --n: 0 } to { --n: 183 }');
+  const fill = kf('from { width: 0 } to { width: 50.1% }');
+  scene(38.5, 2, 'ink', `
+    <div class="center">
+      ${A('up', 38.5, '台灣，今年待了', 'font-size:72px;font-weight:600;color:#aaa')}
+      <div class="big"><span class="count" style="font-size:380px;color:#fff;${anim(n, 38.55, 0.9, 'cubic-bezier(.2,.7,.3,1)')}"></span><span style="font-size:120px"> 天</span></div>
+      ${A('slam', 39.55, '稅務居住者門檻，<span class="hl">幫你算好。</span>', 'font-size:76px;font-weight:600')}
+    </div>
+    <div class="meter" style="left:260px;right:260px;bottom:110px;height:30px"><i style="background:var(--accent);${anim(fill, 38.55, 0.9, 'cubic-bezier(.2,.7,.3,1)')}"></i></div>
+  `);
+}
+
+// ============ 40.5  Seasons ============
+{
+  const rating = '210011111122';
+  const lows = [14, 15, 19, 22, 23, 23, 23, 23, 23, 22, 19, 15], highs = [29, 32, 35, 36, 34, 32, 31, 31, 31, 31, 30, 28];
+  const cells = [...rating].map((r, m) =>
+    `<div class="r${r} a up${r === '0' ? ' alarmwrap' : ''}" style="--t:${(40.85 + m * 0.035).toFixed(3)}">${m + 1}月<small>${lows[m]}–${highs[m]}°</small></div>`).join('');
+  css(`.alarmwrap { animation-name: up, alarm !important; animation-duration: .45s, .5s !important; animation-delay: calc(var(--t) * 1s), 41.4s !important; animation-iteration-count: 1, infinite !important; animation-timing-function: cubic-bezier(.2,.8,.2,1), steps(1, end) !important; }`);
+  scene(40.5, 3, 'paper', `
+    <div style="position:absolute;top:90px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:36px">
+      ${A('slam big', 40.5, `三月去${flag('th', 120).replace('class="fi', 'style="vertical-align:-10px" class="fi')} 清邁？`, 'font-size:150px')}
+    </div>
+    <div class="season" style="position:absolute;left:110px;right:110px;top:380px">${cells}</div>
+    <div class="a pop pill" style="--t:41.5;position:absolute;left:${110 + 2 * 141}px;top:590px;background:var(--danger);color:#fff;font-size:44px;padding:16px 34px 16px 22px;transform-origin:20% 0">
+      <span style="width:52px;height:52px">${icon('Warning')}</span>燒山季：空氣品質常是全球最差之一
+    </div>
+    ${A('slam big', 42.2, '71 個遊牧城市，<span class="hl">逐月評分。</span>', 'position:absolute;bottom:90px;left:0;right:0;text-align:center;font-size:110px')}
+  `);
+}
+
+// ============ 43.5  Share as one image ============
+flash(43.5);
+{
+  const fly = kf('from { transform: translateY(900px) rotate(18deg) } to { transform: rotate(-4deg) }');
+  const press = kf('0%, 100% { transform: none } 50% { transform: scale(.92) }');
+  const mini = PLAN.map(([cc, city, s, e, col]) => `<div style="position:absolute;left:${(s / 53) * 100}%;width:calc(${((e - s + 1) / 53) * 100}% - 4px);top:6px;bottom:6px;background:${col};border-radius:6px;color:#fff;font-size:18px;font-weight:600;padding:0 8px;display:flex;align-items:center;overflow:hidden;white-space:nowrap">${city}</div>`).join('');
+  const flags = [...new Set(PLAN.map((p) => p[0]))].map((cc) => flag(cc, 44)).join('');
+  scene(43.5, 2.5, 'hot', `
+    <div style="position:absolute;left:120px;top:250px;color:#fff">
+      ${A('slam big', 43.5, '一張圖', 'font-size:200px')}
+      ${A('slam big', 43.9, '曬整年。', 'font-size:200px')}
+      ${A('up', 44.4, '下載 PNG・機票細節不外流', 'font-size:52px;margin-top:30px;opacity:.9')}
+    </div>
+    <div style="position:absolute;right:120px;top:170px;width:880px;height:640px;background:#fff;border-radius:28px;box-shadow:0 40px 90px rgb(0 0 0 / .3);padding:44px;color:var(--text);${anim(fly, 43.6, 0.6, 'var(--pop)')}">
+      <div style="display:flex;align-items:center;gap:16px;font-size:44px;font-weight:600">${nomad(64)}今天不在家工作</div>
+      <div style="font-family:'Pixelify Sans';font-size:26px;color:var(--muted);margin:6px 0 30px">A Digital Nomad Planner</div>
+      <div style="position:relative;height:90px;background:var(--subtle);border-radius:12px">${mini}</div>
+      <div style="display:flex;gap:14px;margin:26px 0">${flags}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;font-size:28px">
+        <div style="background:var(--subtle);border-radius:14px;padding:18px"><b style="font-size:52px">6</b><br>國家</div>
+        <div style="background:var(--subtle);border-radius:14px;padding:18px"><b style="font-size:52px">7</b><br>段行程</div>
+        <div style="background:var(--subtle);border-radius:14px;padding:18px"><b style="font-size:52px">48</b><br>週已安排</div>
+      </div>
+    </div>
+    <div class="a pop pill" style="--t:44.6;position:absolute;right:200px;bottom:120px;background:var(--text);color:#fff;font-size:44px;padding:22px 44px">
+      <span style="display:inline-flex;gap:14px;align-items:center;${anim(press, 45.2, 0.25)}">下載 PNG</span>
+    </div>
+  `);
+}
+
+// ============ 46.0  Phone, read-only ============
+{
+  const slide = kf('from { transform: translateY(1000px) } to { transform: none }');
+  const card = (t, label, cc, city, sub, col) => A('up', t, `
+    <div style="font-size:24px;color:var(--muted);margin-bottom:10px">${label}</div>
+    <div style="display:flex;align-items:center;gap:14px;font-size:44px;font-weight:600"><span style="width:16px;height:52px;border-radius:6px;background:${col}"></span>${flag(cc, 52)}${city}</div>
+    <div style="font-size:26px;color:var(--muted);margin-top:10px">${sub}</div>`,
+    'background:#fff;border:2px solid var(--line);border-radius:22px;padding:24px 26px;margin-bottom:18px');
+  scene(46, 2.5, 'paper', `
+    <div style="position:absolute;left:150px;top:290px">
+      ${A('slam big', 46.05, '電腦排，', 'font-size:190px')}
+      ${A('slam big hl', 46.5, '路上看。', 'font-size:190px')}
+      ${A('up', 47.0, '手機打開就是你的行程', 'font-size:52px;margin-top:30px;color:var(--muted)')}
+    </div>
+    <div style="position:absolute;right:240px;top:90px;width:470px;height:960px;border-radius:70px;background:var(--text);padding:18px;${anim(slide, 46.1, 0.55, 'var(--pop)')}">
+      <div style="width:100%;height:100%;border-radius:54px;background:var(--bg);padding:70px 26px 0;overflow:hidden">
+        <div style="font-size:34px;font-weight:600;margin-bottom:22px;display:flex;align-items:center;gap:10px">${nomad(46)}今天不在家工作</div>
+        ${card(46.55, '● 現在', 'th', '清邁', '還有 23 天', C.orange)}
+        ${card(46.7, '下一站', 'id', '倉古', '23 天後出發', C.teal)}
+        ${card(46.85, '5 月', 'pt', '里斯本', '8 週・已買機票 ✈', C.blue)}
+      </div>
+    </div>
+  `);
+}
+
+// ============ 48.5  And more (rapid fire) ============
+{
+  const words = ['放大到「天」', '2025 → 2028', '復原 100 步', '中文 / English', '自動儲存', '備份提醒'];
+  const inner = words.map((w, i) => {
+    const s = 48.7 + i * 0.3;
+    return `<section class="scene" style="--s:${s};--d:${i === words.length - 1 ? 2.5 - (s - 48.5) : 0.3}"><div class="center">${A('slam big', s, w, 'font-size:190px')}</div></section>`;
+  }).join('');
+  scene(48.5, 2.5, 'ink', `
+    ${A('pop big', 48.5, '還有', 'position:absolute;left:100px;top:80px;font-size:80px;color:var(--accent)')}
+    ${inner}
+  `);
+}
+
+// ============ 51.0  Privacy punches ============
+flash(51);
+{
+  const hits = [['不用註冊。', 'var(--accent)'], ['不上傳。', 'var(--text)'], ['免費。', C.teal], ['開源。', C.blue]];
+  hits.forEach(([w, bg], i) => {
+    const s = 51 + i * 0.75;
+    scene(s, 0.75, '', `<div style="position:absolute;inset:0;background:${bg}"></div><div class="center" style="color:#fff">${A('slam big', s, w, 'font-size:300px')}</div>`);
+  });
+}
+
+// ============ 54.0  Your plan stays with you ============
+flash(54);
+scene(54, 2.5, 'paper', `
+  <div class="center">
+    <div class="a pop" style="--t:54.05;width:170px;height:170px;margin-bottom:30px">${icon('LockSimple', 'bold')}</div>
+    ${A('slam big', 54.3, '你的行程，', 'font-size:170px')}
+    ${A('slam big hl', 54.8, '只在你手上。', 'font-size:170px')}
+    ${A('up', 55.4, '資料只存在你的瀏覽器・沒有帳號・沒有伺服器', 'font-size:48px;color:var(--muted);margin-top:30px')}
+  </div>
+`);
+
+// ============ 56.5  CTA ============
+flash(56.5);
+{
+  const press = kf('0%, 100% { transform: none } 40% { transform: scale(.94) }');
+  const nudge = kf('0%, 100% { transform: none } 50% { transform: translateX(14px) }');
+  scene(56.5, 3.5, 'paper', `
+    <div class="center">
+      <div class="a drop" style="--t:56.5">${nomad(250)}</div>
+      ${A('slam big', 56.85, '下一站，去哪？', 'font-size:200px;margin-top:10px')}
+      <div class="a pop" style="--t:57.45;margin-top:50px">
+        <div class="pill" style="background:var(--text);color:#fff;font-size:64px;padding:30px 50px 30px 64px;${anim(press, 58.3, 0.35)}">
+          免費開始規劃 <span style="width:64px;height:64px;${anim(nudge, 58.6, 0.6)};animation-iteration-count:3">${icon('ArrowRight', 'bold')}</span>
+        </div>
+      </div>
+      ${A('up', 57.9, 'simonlin7972.github.io/digital-nomad-planner', 'font-size:42px;color:var(--muted);margin-top:40px;letter-spacing:.02em')}
+    </div>
+    <div class="spark a pop" style="--t:57.0;left:300px;top:220px;--c:${C.orange}"></div>
+    <div class="spark a pop" style="--t:57.1;right:320px;top:260px;--c:${C.pink}"></div>
+    <div class="spark a pop" style="--t:57.2;left:420px;bottom:220px;--c:${C.teal}"></div>
+    <div class="spark a pop" style="--t:57.3;right:400px;bottom:250px;--c:${C.blue}"></div>
+  `);
+}
+
+const style = document.createElement('style');
+style.textContent = sheet;
+document.head.append(style);
+
+// ---------- playback ----------
+const DURATION = 60;
+const render = new URLSearchParams(location.search).has('render');
+function fit() {
+  const k = Math.min(innerWidth / 1920, innerHeight / 1080);
+  stage.style.transform = `scale(${k})`;
+}
+// Puts every animation at reel time `t` (seconds) and holds it there.
+window.seek = (t) => {
+  for (const a of document.getAnimations()) {
+    a.pause();
+    a.currentTime = t * 1000;
+  }
+};
+window.ready = (async () => {
+  await document.fonts.ready;
+  await Promise.all([...document.fonts].filter((f) => f.status !== 'loaded').map((f) => f.load().catch(() => {})));
+  await Promise.all(['600 100px "975HazyGo"', '400 100px "975HazyGo"', '400 50px "Pixelify Sans"'].map((f) => document.fonts.load(f, '今天不在家工作 A')));
+  return true;
+})();
+if (render) {
+  document.body.classList.add('render');
+  window.seek(0);
+} else {
+  fit();
+  addEventListener('resize', fit);
+  // Live preview: loop, click to restart, ?t=12 to start from 12 s
+  const start = Number(new URLSearchParams(location.search).get('t') || 0);
+  const restart = (t = 0) => document.getAnimations().forEach((a) => { a.currentTime = t * 1000; a.play(); });
+  restart(start);
+  let origin = performance.now() - start * 1000;
+  setInterval(() => { if (performance.now() - origin > DURATION * 1000) { origin = performance.now(); restart(0); } }, 100);
+  addEventListener('click', () => { origin = performance.now(); restart(0); });
+}
+</script>
+</body>
+</html>

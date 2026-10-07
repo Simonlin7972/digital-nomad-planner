@@ -4,6 +4,7 @@ import { AllMonths, MONTH_INDEXES } from './components/AllMonths';
 import { MobileItinerary } from './components/MobileItinerary';
 import { ShareDialog } from './components/ShareDialog';
 import { Editor, type Editing, type StayDetails } from './components/Editor';
+import { Footer } from './components/Footer';
 import { HelpDialog } from './components/HelpDialog';
 import { HolidayCard, StayCard, TicketCard, type Anchor } from './components/HoverCards';
 import MonthView from './components/MonthView';
@@ -287,6 +288,8 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
           <MapView stays={stays} coords={coords} failed={coordsFailed} />
         </Suspense>
       </section>
+
+      <Footer />
 
       {hoveredStay && stayCard && <StayCard stay={hoveredStay} x={stayCard.x} y={stayCard.y} />}
       {ticketStay && ticketCard && <TicketCard stay={ticketStay} x={ticketCard.x} y={ticketCard.y} />}

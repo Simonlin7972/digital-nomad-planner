@@ -33,3 +33,4 @@
 .actions .more-menu button:focus-visible { background: var(--subtle); outline: none; }
 .actions .more-menu button:active:not(:disabled) { transform: none; }
 .actions .more > button[aria-expanded='true'] { outline: 2px solid var(--text); outline-offset: -1px; border-color: transparent; }
+.more-sep { margin: 6px 4px; border: 0; border-top: 1px solid var(--line); }

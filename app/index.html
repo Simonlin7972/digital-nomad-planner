@@ -4,10 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <!-- Same faces as the app: 975HazyGo for text, Pixelify Sans only for the English tagline -->
+    <!-- UI face: 975 朦朧黑體 (regular for text, semibold for emphasis), served in subsets by emfont -->
     <link rel="preconnect" href="https://font.emtech.cc" />
     <link rel="stylesheet" href="https://font.emtech.cc/css/975HazyGo/400" />
     <link rel="stylesheet" href="https://font.emtech.cc/css/975HazyGo/600" />
+    <!-- Tagline face: Pixelify Sans, used only for the English line under the title -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400&display=swap" />
@@ -18,7 +19,7 @@
     <meta property="og:site_name" content="今天不在家工作" />
     <meta property="og:title" content="今天不在家工作 — A Digital Nomad Planner" />
     <meta property="og:description" content="一頁排好一整年的數位遊牧行程：53 週時間軸、月曆、地圖，資料只存在瀏覽器。" />
-    <meta property="og:url" content="https://simonlin7972.github.io/digital-nomad-planner/" />
+    <meta property="og:url" content="https://simonlin7972.github.io/digital-nomad-planner/app/" />
     <meta property="og:image" content="https://simonlin7972.github.io/digital-nomad-planner/og.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -27,6 +28,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/landing/main.tsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

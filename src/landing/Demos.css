@@ -1,0 +1,380 @@
+/* The landing page's scripted demos. They borrow the app's look (white window, 12px corners, stay colours) but
+   are drawn from scratch here so the real views stay untouched. */
+
+.d-window {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.d-chrome { display: flex; gap: 6px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.d-chrome i { width: 10px; height: 10px; border-radius: 50%; background: var(--line-strong); }
+
+/* A row of half-week (or day) slots, ruled like the app's timeline */
+.d-track {
+  position: relative;
+  height: 44px;
+  border-radius: 8px;
+  background-color: var(--subtle);
+  background-image: linear-gradient(to right, var(--line) 1px, transparent 1px);
+  background-size: calc(100% / var(--cols)) 100%;
+}
+
+.d-block {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: left 0.45s cubic-bezier(0.3, 0.7, 0.2, 1), width 0.45s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+.d-block span { overflow: hidden; text-overflow: ellipsis; }
+
+/* Stage demos: a single track with a fake cursor */
+.d-stage { padding: 48px 28px; }
+.d-stage.snap .d-block, .d-stage.snap .d-cursor, .d-stage.snap .d-select { transition: none; }
+.d-select {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  border: 2px dashed var(--text);
+  border-radius: 6px;
+  background: rgb(34 34 34 / 0.06);
+  transition: width 1s cubic-bezier(0.4, 0, 0.3, 1);
+}
+.d-pop { animation: d-pop 0.3s ease-out; }
+@keyframes d-pop { from { transform: scale(0.94); opacity: 0.4; } }
+
+.d-cursor {
+  position: absolute;
+  top: 26px;
+  z-index: 2;
+  margin-left: -4px;
+  font-size: 22px;
+  line-height: 0;
+  color: var(--text);
+  filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 1px 2px rgb(0 0 0 / 0.25));
+  transition: left 1s cubic-bezier(0.4, 0, 0.3, 1), transform 0.15s;
+}
+.d-cursor.down { transform: scale(0.85); }
+
+.d-keys { position: absolute; top: 14px; right: 16px; }
+kbd {
+  display: inline-block;
+  min-width: 28px;
+  padding: 4px 8px;
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 3px;
+  border-radius: 6px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  transition: transform 0.1s, border-bottom-width 0.1s;
+}
+kbd.held { transform: translateY(2px); border-bottom-width: 1px; background: var(--subtle); }
+
+.d-cutline {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  border-left: 2px dashed var(--text);
+  animation: fade 0.2s;
+}
+.d-split-l { animation: d-split-l 0.35s ease-out; }
+/* the cut shows as a sliver of track between the halves */
+.d-split-r { animation: d-split-r 0.35s ease-out; border-left: 3px solid var(--subtle); }
+@keyframes d-split-l { from { transform: translateX(3px); } }
+@keyframes d-split-r { from { transform: translateX(-3px); } }
+
+/* ---------- Hero ---------- */
+
+.hero-demo { text-align: left; }
+.hd-body { padding: 20px 24px 24px; }
+.hd-months { position: relative; height: 22px; font-size: 12px; color: var(--muted); }
+.hd-months span { position: absolute; top: 0; }
+.hd-track { height: 52px; }
+.hd-grow {
+  transform-origin: left center;
+  animation: hd-grow 0.6s cubic-bezier(0.3, 0.7, 0.2, 1) both;
+  animation-delay: calc(0.5s + var(--i) * 0.22s);
+}
+@keyframes hd-grow { from { transform: scaleX(0); opacity: 0; } }
+.hd-countries { position: relative; height: 28px; margin-top: 8px; }
+.hd-country {
+  position: absolute;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 8px;
+  border-right: 2px solid var(--bg);
+  background: var(--subtle);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  animation: rise 0.4s ease-out both;
+  animation-delay: calc(1.1s + var(--i) * 0.22s);
+}
+.hd-country span { overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- Month ---------- */
+
+.month-demo { padding: 20px 24px 24px; }
+.md-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.md-head strong { font-size: 18px; font-weight: 600; }
+.md-head span { font-size: 12px; color: var(--muted); }
+.md-week, .md-row { display: grid; grid-template-columns: repeat(7, 1fr); }
+.md-week span { padding: 0 6px 6px; font-size: 12px; color: var(--muted); }
+.md-row { position: relative; height: 46px; border-top: 1px solid var(--line); }
+.md-row > span { padding: 4px 6px; font-size: 12px; color: var(--muted); }
+.md-bar { top: 22px; bottom: 4px; height: auto; padding: 0 6px; font-size: 11px; transition: width 0.1s linear; }
+
+/* ---------- Map ---------- */
+
+.map-demo { padding: 8px; }
+.map-demo svg { display: block; width: 100%; height: auto; }
+.map-grid circle { fill: var(--dot); }
+.map-leg {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 0.6s ease-in-out;
+}
+.map-leg.drawn { stroke-dashoffset: 0; }
+.map-stop { opacity: 0; transition: opacity 0.25s; }
+.map-stop.shown { opacity: 1; }
+.map-stop text { fill: #fff; font-size: 15px; font-weight: 600; text-anchor: middle; }
+.map-stop .map-name { fill: var(--text); font-size: 16px; paint-order: stroke; stroke: var(--surface); stroke-width: 5px; }
+
+/* ---------- Rules ---------- */
+
+.meter strong { display: block; font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.meter-bar { position: relative; height: 8px; margin-top: 10px; border-radius: 999px; background: var(--subtle); }
+.meter-bar i { position: absolute; inset: 0 auto 0 0; border-radius: 999px; }
+.meter-bar b { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--text); }
+
+.sd-cells { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; }
+.sd-cells span {
+  display: grid;
+  place-items: center;
+  height: 30px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--subtle);
+  transition: background 0.3s, color 0.3s;
+  transition-delay: calc(var(--i) * 0.08s);
+}
+.season-demo.shown .r2 { background: #dcefe0; color: #2f6b3c; }
+.season-demo.shown .r0 { background: #f6dedc; color: var(--danger); }
+.season-demo p { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0 0; font-size: 13px; }
+.season-demo em { font-style: normal; color: var(--danger); }
+
+/* ---------- Share ---------- */
+
+.share-demo { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 12px 0; }
+.sh-card {
+  width: min(360px, 100%);
+  padding: 22px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  opacity: 0;
+  transform: translateY(40px) rotate(-4deg);
+  transition: opacity 0.5s, transform 0.7s cubic-bezier(0.3, 0.7, 0.2, 1.2);
+}
+.share-demo.shown .sh-card { opacity: 1; transform: rotate(-2deg); }
+.sh-title { margin: 0; font-size: 18px; font-weight: 600; }
+.sh-tagline { margin: 2px 0 14px; font-family: 'Pixelify Sans', ui-monospace, monospace; font-size: 13px; color: var(--muted); }
+.sh-track { position: relative; height: 18px; border-radius: 4px; background: var(--subtle); }
+.sh-track i { position: absolute; top: 2px; bottom: 2px; border-radius: 3px; }
+.sh-flags { display: flex; gap: 6px; margin: 10px 0 14px; }
+.sh-lines i { display: block; height: 7px; margin-top: 7px; border-radius: 4px; background: var(--subtle); }
+.sh-lines i:nth-child(2) { width: 80%; }
+.sh-lines i:nth-child(3) { width: 55%; }
+.sh-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--text);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.4s 0.6s;
+}
+.share-demo.shown .sh-button { opacity: 1; animation: sh-press 3s 1.4s infinite; }
+@keyframes sh-press { 0%, 86%, 100% { transform: scale(1); } 90% { transform: scale(0.94); } }
+
+/* ---------- Device: tablet frame shrinking to a phone ---------- */
+
+.device-demo { position: relative; height: 480px; }
+.device {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(540px, 100%);
+  height: 360px;
+  border: 10px solid var(--text);
+  border-radius: 24px;
+  background: var(--bg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  transition: width 0.9s cubic-bezier(0.65, 0, 0.25, 1), height 0.9s cubic-bezier(0.65, 0, 0.25, 1),
+    border-radius 0.9s cubic-bezier(0.65, 0, 0.25, 1), border-width 0.9s;
+}
+.is-phone .device { width: 240px; height: 460px; border-width: 8px; border-radius: 36px; }
+/* A front camera dot on the tablet that stretches into the phone's pill */
+.dv-camera {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  z-index: 2;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--text);
+  transform: translateX(-50%);
+  transition: width 0.9s cubic-bezier(0.65, 0, 0.25, 1), height 0.9s, top 0.9s;
+}
+.is-phone .dv-camera { top: 8px; width: 70px; height: 18px; }
+
+/* The two layouts sit on top of each other at fixed sizes, so nothing reflows while the frame moves. The desktop
+   one shrinks with the frame and fades out through the middle of the move; the phone one fades in over it. */
+.dv-desk, .dv-phone { position: absolute; top: 0; left: 50%; }
+.dv-desk {
+  width: min(520px, calc(100vw - 52px));
+  padding: 18px 16px;
+  transform: translateX(-50%);
+  transform-origin: 50% 0;
+  transition: transform 0.9s cubic-bezier(0.65, 0, 0.25, 1), opacity 0.45s 0.45s;
+}
+.dv-phone { width: 224px; margin-left: -112px; padding: 36px 12px 12px; opacity: 0; transition: opacity 0.4s; }
+.is-phone .dv-desk { opacity: 0; transform: translateX(-50%) scale(0.45); transition: transform 0.9s cubic-bezier(0.65, 0, 0.25, 1), opacity 0.45s 0.25s; }
+.is-phone .dv-phone { opacity: 1; transition: opacity 0.45s 0.35s; }
+
+/* Desktop miniature. Sizes are small on purpose: it's a whole app in a 520px window. */
+.dv-head { display: flex; align-items: center; gap: 6px; }
+.dv-head .pixel-nomad { width: 22px; height: 21px; }
+.dv-head > strong { font-size: 14px; font-weight: 600; white-space: nowrap; }
+.dv-tools { display: flex; gap: 4px; margin-left: auto; }
+.dv-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 20px;
+  padding: 0 7px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 9px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.dv-pill.icon { padding: 0 5px; }
+.dv-pill svg { font-size: 10px; }
+
+.dv-viewbar { display: flex; align-items: center; gap: 6px; margin: 10px 0 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.dv-seg { display: inline-flex; padding: 2px; border-radius: 999px; background: var(--subtle); border: 1px solid var(--line); }
+.dv-seg i { padding: 2px 9px; border-radius: 999px; font-style: normal; font-size: 9px; color: var(--muted); transition: background 0.3s, color 0.3s; }
+.dv-seg i.on { background: var(--text); color: #fff; }
+.dv-zoom { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; font-size: 9px; color: var(--muted); }
+.dv-zoom b { width: 50px; height: 3px; border-radius: 2px; background: linear-gradient(to right, var(--text) 30%, var(--line-strong) 30%); }
+
+/* Flags at the miniature's scale */
+.dv-desk .flag { width: 12px; height: 9px; border-radius: 2px; }
+
+/* Year and month views share one box and cross-fade, as the app's view switch does */
+.dv-view { position: relative; height: 112px; padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); }
+.dv-year, .dv-cal { position: absolute; inset: 8px 10px; transition: opacity 0.35s, transform 0.35s; }
+.dv-year.off, .dv-cal.off { opacity: 0; transform: translateY(4px); }
+.dv-months { position: relative; height: 14px; font-size: 8px; color: var(--muted); }
+.dv-months span { position: absolute; }
+.dv-track { position: relative; height: 32px; border-radius: 6px; background: var(--subtle); }
+.dv-track i {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  padding: 0 4px;
+  border-radius: 4px;
+  overflow: hidden;
+  color: #fff;
+  font-style: normal;
+  font-size: 8px;
+  font-weight: 600;
+  line-height: 24px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.dv-flags { position: relative; height: 12px; margin-top: 5px; }
+.dv-flags span { position: absolute; top: 0; margin-left: 4px; line-height: 0; }
+
+.dv-calhead, .dv-calrow { display: grid; grid-template-columns: repeat(7, 1fr); font-size: 8px; color: var(--muted); }
+.dv-calhead { margin-bottom: 2px; }
+.dv-calrow { position: relative; height: 19px; border-top: 1px solid var(--line); }
+.dv-calrow span { padding: 1px 3px; }
+.dv-calrow i { position: absolute; top: 9px; height: 8px; border-radius: 3px; color: #fff; font-style: normal; font-size: 6px; line-height: 8px; padding-left: 3px; }
+
+.dv-panels { display: flex; gap: 8px; margin-top: 8px; }
+.dv-panel {
+  flex: 0 0 34%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.dv-panel.grow { flex: 1; min-width: 0; }
+.dv-panel strong { display: block; margin-bottom: 4px; font-size: 10px; font-weight: 600; }
+.dv-panel b { display: block; height: 5px; margin-top: 8px; border-radius: 3px; background: var(--subtle); }
+.dv-panel b:nth-child(3) { width: 75%; }
+.dv-panel b:nth-child(4) { width: 55%; }
+.dv-row { display: flex; align-items: center; gap: 6px; padding: 3px 0; border-bottom: 1px solid var(--line); font-size: 9px; }
+.dv-row:last-child { border-bottom: 0; }
+.dv-row .dv-city { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dv-row em { font-style: normal; color: var(--muted); font-size: 8px; }
+
+.ph-now { padding: 12px 14px; border-radius: var(--radius); background: var(--text); color: #fff; }
+.ph-now span { display: block; font-size: 11px; opacity: 0.7; }
+.ph-now strong { display: flex; align-items: center; gap: 6px; margin: 4px 0; font-size: 18px; font-weight: 600; }
+.ph-list { height: 300px; margin-top: 12px; overflow: hidden; mask-image: linear-gradient(to bottom, #000 80%, transparent); -webkit-mask-image: linear-gradient(to bottom, #000 80%, transparent); }
+.ph-scroll { animation: ph-scroll 14s linear infinite; }
+@keyframes ph-scroll { to { transform: translateY(-50%); } }
+.ph-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-left: 4px solid;
+  border-radius: 10px;
+  background: var(--surface);
+}
+.ph-card strong { display: block; font-size: 14px; font-weight: 600; }
+.ph-card span { font-size: 11px; color: var(--muted); }
+
+@media (max-width: 720px) {
+  .hd-body { padding: 16px; }
+  .d-stage { padding: 40px 16px; }
+  .d-block { font-size: 11px; padding: 0 5px; }
+  .hd-country span { display: none; }
+}
