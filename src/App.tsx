@@ -24,7 +24,7 @@ import { download } from './lib/files';
 import { holidaySets as allHolidaySets, type Holiday, type HolidaySet } from './lib/holidays';
 import { t, useLocale } from './lib/i18n';
 import { loadHolidayToggles, loadView, saveHolidayToggles, saveView } from './lib/prefs';
-import { load, pushStays, save, type ColorKey, type Stay, loadYearPlan, saveYearPlan, sanitizeAll, serializeAll } from './lib/storage';
+import { load, pushStays, save, type ColorKey, type Stay, loadYearPlan, saveYearPlan, sanitizeAll, serializeAll, splitStay } from './lib/storage';
 import { MOD, clamp } from './lib/util';
 import { YEAR, YEARS, getYear, setYear, subscribeYear, yearDirection, type DayRange } from './lib/weeks';
 
@@ -228,6 +228,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
                     onEdit={edit}
                     onResize={(id, range) => setStays((prev) => pushStays(prev, id, range) ?? prev)}
                     onHover={setStayCard}
+                    onSplit={(id, day) => setStays((prev) => splitStay(prev, id, day) ?? prev)}
                   />
                 ))}
               </AllMonths>
@@ -242,6 +243,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
                 onEdit={edit}
                 onResize={(id, range) => setStays((prev) => pushStays(prev, id, range) ?? prev)}
                 onHover={setStayCard}
+                onSplit={(id, day) => setStays((prev) => splitStay(prev, id, day) ?? prev)}
               />
             ) : (
               <YearView
@@ -260,6 +262,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
                 nextYear={neighbour(1)}
                 onYearEdge={(dir) => setYear(YEAR + dir)}
                 startAtEnd={entered === -1}
+                onSplit={(id, day) => setStays((prev) => splitStay(prev, id, day) ?? prev)}
               />
             )}
           </div>

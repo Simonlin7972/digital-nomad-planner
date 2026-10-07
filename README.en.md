@@ -39,7 +39,8 @@ The interface is available in Traditional Chinese and English; switch from the t
 - Drag across empty cells → enter a country and city → a stay appears
 - Dragging a whole stay **reorders** it: once it is halfway past a neighbour the two swap, and so on down the line
 - Dragging a stay's edge **resizes and pushes**: growing shoves neighbours along, using up gaps first
-- Holding `Alt` (`⌥` on a Mac) while dragging **duplicates**: the original stays put and a copy lands where you let go, pushing whatever is in the way
+- Holding `Alt` (`⌥` on a Mac) while dragging **duplicates**: the original stays put and a copy is inserted where you let go and the stays after it shift later (nothing before it moves)
+- Holding `B` and clicking a stay **cuts** it: the pointer turns to scissors with a line showing the cut, and a click splits the stay in two there (the second part has no flight)
 - A strip under each stay shows its country (flag and name); back-to-back stays in the same country share one strip
 - Zoom from 100% to 600% with the slider, a trackpad pinch, two-finger touch, or `Ctrl`/`Alt` + wheel, always centred on the pointer
 - Drag the month row to pan; click a month to open it in the month view
@@ -47,7 +48,7 @@ The interface is available in Traditional Chinese and English; switch from the t
 ### Month view (calendar)
 
 - A seven-column calendar, precise to the **day**
-- Drag across days to add a stay; drag a bar's ends to change its dates; click a bar to edit it
+- Drag across days to add a stay; drag a bar's ends to change its dates; click a bar to edit it; hold `B` and click a bar to cut it in two
 - The header shows how many days of the month are planned and free
 - The "All months" switch beside the tabs stacks January to December down one long page to scroll through; every month can still be dragged and edited; once scrolled down, a button in the bottom-right corner goes back to the top
 
@@ -128,6 +129,7 @@ The live site and a local copy use separate browser storage (different addresses
 | Click a stay | Open the editor | Open the editor |
 | Drag a stay | Reorder | — (not supported) |
 | `Alt` + drag a stay | Drop a copy where you let go | — (not supported) |
+| Hold `B` + click a stay | Cut it in two at the line | Cut it in two at the line |
 | Drag a stay's edge | Resize, pushing neighbours | Resize, pushing neighbours |
 | Hover a stay | Show its details | Show its details |
 | Drag the month row | Pan the timeline | — |
@@ -165,7 +167,7 @@ Undo and redo shortcuts are left alone while you are typing in a field, while th
 
 Clearing browser data, or using a different browser or computer, means the plan won't be there. Use Export (in the `⋯` menu) to keep a backup.
 
-The page talks to four outside services:
+The page talks to five outside services:
 
 | Service | What is sent | Why |
 | --- | --- | --- |
@@ -173,6 +175,7 @@ The page talks to four outside services:
 | [OpenFreeMap](https://openfreemap.org/) | Map tile requests | The base map |
 | [emfont](https://font.emtech.cc/) | Font file requests | The interface typeface |
 | [Google Fonts](https://fonts.google.com/) | Font file requests | The pixel typeface of the English tagline under the title |
+| [Google Analytics](https://analytics.google.com/) (GA4) | Anonymous usage such as page views, scrolling and outbound clicks, plus browser, device and rough location; sets a `_ga` cookie | Daily traffic figures. Loaded on the live site only, not under `npm run dev`; **nothing from your plan is sent** |
 
 Flight details such as booking references are stored in `localStorage` and are written into exported JSON. Keep that in mind before sharing an export.
 
@@ -315,7 +318,7 @@ Knowing these before reading the code will save time.
 
 **The year view is approximate; the data is always exact.** The timeline splits each week into two half-week slots (Monday–Thursday, Friday–Sunday). Each end of a stay is drawn at the nearest slot boundary, but the stored dates don't change. So a stay moved to start on a Wednesday in the month view still draws from Monday or Friday in the year view. At 300% zoom and above the grid becomes one column per day, stays draw at their exact dates and dragging moves by the day; the unit is fixed when a drag starts, and the timeline's minimum width is always counted in half-week slots, so switching unit never changes the width.
 
-**Dragging, resizing and copying each have their own rule.** Dragging a whole stay calls `reorderStays` (list-style reordering, passing over neighbours); dragging an edge calls `pushStays` (order preserved, neighbours shoved along); `Alt`-dragging calls `insertStay` (drop a new stay in and push what's in the way to either side, or all one way if the other has no room). All three are pure functions, recomputed from the original data on every pointer move, so no state accumulates and dragging back to the start always restores the plan.
+**Dragging, resizing and copying each have their own rule.** Dragging a whole stay calls `reorderStays` (list-style reordering, passing over neighbours); dragging an edge calls `pushStays` (order preserved, neighbours shoved along); `Alt`-dragging calls `insertStay` (insert: nothing before the copy moves; landing inside a stay puts it right after that stay; what it covers, and anything joined on after, shifts later; only when that runs out of year does it push earlier instead). All three are pure functions, recomputed from the original data on every pointer move, so no state accumulates and dragging back to the start always restores the plan.
 
 **Stays never overlap.** You can only be in one place on a given day. Every path that changes the plan — creating, editing, dragging, importing — keeps that true.
 

@@ -116,25 +116,47 @@ export function reorderStays(stays: Stay[], id: string, desired: DayRange): Stay
   return cur.map((s) => (s.id === id ? { ...s, startDay, endDay: startDay + len(me) - 1 } : s));
 }
 
-// Drops a new stay at its own dates and makes room for it, each displaced stay shoving the next. Stays centred
-// after the new one move later and the rest earlier; if that runs off one end of the year, everything in the way
-// goes the other way instead. Null only when neither direction has room.
-export function insertStay(stays: Stay[], added: Stay): Stay[] | null {
-  const centre = (r: DayRange) => (r.startDay + r.endDay) / 2;
-  const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
+// Cuts one stay in two at `day`, which becomes the first day of the second part. The first part keeps the id and
+// the flight (that is the trip there); the second gets a new id and everything else, like an alt-drag copy.
+// Null when `day` doesn't fall strictly inside the stay, so each part has at least one day.
+export function splitStay(stays: Stay[], id: string, day: number): Stay[] | null {
+  const stay = stays.find((s) => s.id === id);
+  if (!stay || day <= stay.startDay || day > stay.endDay) return null;
+  const second: Stay = { ...stay, id: crypto.randomUUID(), ticket: undefined, startDay: day, endDay: stay.endDay };
+  return [...stays.map((s) => (s.id === id ? { ...s, endDay: day - 1 } : s)), second];
+}
 
-  const place = (goesLater: (s: Stay) => boolean): Stay[] | null => {
+// Drops a new stay (an alt-drag copy) and makes room for it, insert-style: nothing before it moves, the original
+// included. If it lands inside a stay that began earlier, it goes in right after that stay; whatever it then
+// covers, and everything up to the next free gap, shifts later. Only when that would run past the end of the year
+// does everything in the way move earlier instead, at the drop point. Null when neither fits.
+export function insertStay(stays: Stay[], added: Stay): Stay[] | null {
+  const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
+  const len = added.endDay - added.startDay + 1;
+
+  // Later: start after any stay already under the drop point, then shove the rest along.
+  const later = (): Stay[] | null => {
+    let startDay = added.startDay;
+    for (const s of sorted) if (s.startDay < startDay && s.endDay >= startDay) startDay = s.endDay + 1;
+    const placed = { ...added, startDay, endDay: startDay + len - 1 };
+    if (placed.endDay >= TOTAL_DAYS) return null;
     const next = new Map<string, DayRange>();
-    let edge = added.endDay + 1;
-    for (const s of sorted.filter(goesLater)) {
+    let edge = placed.endDay + 1;
+    for (const s of sorted.filter((o) => o.startDay >= startDay)) {
       if (s.startDay >= edge) break;
       const endDay = edge + (s.endDay - s.startDay);
       if (endDay >= TOTAL_DAYS) return null;
       next.set(s.id, { startDay: edge, endDay });
       edge = endDay + 1;
     }
-    edge = added.startDay - 1;
-    for (const s of sorted.filter((o) => !goesLater(o)).reverse()) {
+    return [...stays.map((s) => (next.has(s.id) ? { ...s, ...next.get(s.id)! } : s)), placed];
+  };
+
+  // Earlier, as a fallback near the end of the year: everything the copy covers moves back to make room.
+  const earlier = (): Stay[] | null => {
+    const next = new Map<string, DayRange>();
+    let edge = added.startDay - 1;
+    for (const s of sorted.filter((o) => o.startDay <= added.endDay).reverse()) {
       if (s.endDay <= edge) break;
       const startDay = edge - (s.endDay - s.startDay);
       if (startDay < 0) return null;
@@ -144,11 +166,7 @@ export function insertStay(stays: Stay[], added: Stay): Stay[] | null {
     return [...stays.map((s) => (next.has(s.id) ? { ...s, ...next.get(s.id)! } : s)), added];
   };
 
-  return (
-    place((s) => centre(s) >= centre(added)) ??
-    place((s) => s.endDay >= added.startDay) ?? // everything in the way moves later
-    place((s) => s.startDay > added.endDay) // everything in the way moves earlier
-  );
+  return later() ?? earlier();
 }
 
 // Stays are stored with ISO dates so exported files stay readable.

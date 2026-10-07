@@ -139,6 +139,18 @@
 .track.dragging .stay { cursor: grabbing; transition: none; }
 .track.alt:not(.dragging) .stay { cursor: copy; }
 .track.alt:not(.dragging) .stay .handle { cursor: copy; }
+/* B held: scissors over the track; the dashed line marks where a click would cut */
+.track.cutting,
+.track.cutting .stay,
+.track.cutting .stay .handle { cursor: var(--cursor-cut); }
+.track.cutting .stay .handle:hover { background: none; }
+.cut-line {
+  grid-row: 1;
+  margin: 16px 0 4px -1px;
+  border-left: 2px dashed var(--text);
+  pointer-events: none;
+  z-index: 3;
+}
 .stay.blocked { opacity: 0.45; outline: 2px dashed var(--danger); outline-offset: 2px; }
 
 .stay .handle {

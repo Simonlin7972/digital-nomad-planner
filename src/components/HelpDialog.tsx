@@ -44,6 +44,9 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           按住 <kbd>{alt}</kbd> 再拖，會<b>複製</b>一段出來。
         </>,
         <>
+          按住 <kbd>B</kbd> 再點行程，會從切線那裡<b>切成兩段</b>（年、月檢視都可以）。
+        </>,
+        <>
           <b>點一下</b>行程可以編輯：日期、顏色、跟誰去、機票、備註，或刪除。
         </>,
         <>
@@ -87,7 +90,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           所以換瀏覽器、換電腦、用無痕視窗，或清除瀏覽器資料，都會<b>看不到原本的行程</b>。
         </>,
         <>
-          只有兩種資訊會送出去：你填的<b>地名</b>（用來在地圖上找位置），以及載入地圖與字體時的一般連線。
+          只有兩種資訊會送出去：你填的<b>地名</b>（用來在地圖上找位置），以及載入地圖與字體時的一般連線。另外網站用 Google Analytics 統計匿名瀏覽人次，不含任何行程內容。
         </>,
       ],
     },
@@ -139,6 +142,9 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           Hold <kbd>{alt}</kbd> while dragging to <b>duplicate</b> a stay.
         </>,
         <>
+          Hold <kbd>B</kbd> and click a stay to <b>cut it in two</b> at the line (in both the year and month views).
+        </>,
+        <>
           <b>Click</b> a stay to edit its dates, color, companions, flight and note, or to delete it.
         </>,
         <>
@@ -188,7 +194,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         </>,
         <>
           Only two things leave your device: the <b>place names</b> you enter (to find them on the map), and ordinary requests to load
-          the map and the font.
+          the map and the font. The site also counts anonymous visits with Google Analytics, which never sees your plan.
         </>,
       ],
     },

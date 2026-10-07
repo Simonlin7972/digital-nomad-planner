@@ -70,6 +70,19 @@
 .mbar.starts.ends { border-radius: 10px; }
 .mbar.active { opacity: 0.85; z-index: 2; }
 .mgrid.dragging .mbar { cursor: grabbing; }
+/* B held: scissors over the calendar; the dashed line marks where a click would cut */
+.mgrid.cutting,
+.mgrid.cutting .mbar,
+.mgrid.cutting .mbar .handle { cursor: var(--cursor-cut); }
+.mcut {
+  position: absolute;
+  top: 28px;
+  height: 44px;
+  margin-left: -1px;
+  border-left: 2px dashed var(--text);
+  pointer-events: none;
+  z-index: 3;
+}
 .mbar .label {
   flex: 1;
   min-width: 0;

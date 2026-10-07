@@ -3,6 +3,7 @@ import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft';
 import { ArrowRight } from '@phosphor-icons/react/dist/csr/ArrowRight';
 import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
+import { useKeyHeld } from '../hooks/useKeyHeld';
 import { usePinchZoom } from '../hooks/usePinchZoom';
 import type { Zoom } from '../hooks/useZoom';
 import type { Holiday, HolidaySet } from '../lib/holidays';
@@ -70,6 +71,7 @@ type Props = {
   nextYear: number | null;
   onYearEdge: (dir: 1 | -1) => void; // pulled far enough past an end: switch to the neighbouring year
   startAtEnd: boolean; // arrived from the following year, so show December first
+  onSplit: (id: string, day: number) => void; // B held and a stay clicked: cut it in two, `day` starting the second part
 };
 
 // How far (px) the month row has to be pulled past the end of the timeline before letting go switches year.
@@ -89,7 +91,7 @@ const slotCol = (s: number, e: number): CSSProperties => ({ gridColumn: `${s + 1
 // when zoomed to DAY_UNIT_ZOOM or beyond. Stays keep their exact dates either way; only drawing and dragging snap.
 export default function YearView(props: Props) {
   const { stays, zoom, holidaySets, pending, onCreate, onEdit, onChange, onOpenMonth, onHoverStay, onHoverHoliday, onDragging } = props;
-  const { prevYear, nextYear, onYearEdge, startAtEnd } = props;
+  const { prevYear, nextYear, onYearEdge, startAtEnd, onSplit } = props;
   useLocale();
   const [drag, setDrag] = useState<Drag | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -160,6 +162,17 @@ export default function YearView(props: Props) {
   const pullYear = pull > 0 ? nextYear : pull < 0 ? prevYear : null;
   const pullReady = Math.abs(pull) >= PULL_TRIGGER;
 
+  // B held: the cut tool. Hovering a stay shows where a click would cut it, at the nearest column boundary.
+  const cutting = useKeyHeld('b');
+  const [cut, setCut] = useState<{ id: string; col: number; day: number } | null>(null);
+  const cutAt = (clientX: number) => {
+    const rect = trackRef.current!.getBoundingClientRect();
+    const col = clamp(Math.round(((clientX - rect.left) / rect.width) * grid.n), 1, grid.n - 1);
+    const day = grid.boundary(col);
+    const stay = stays.find((s) => s.startDay < day && day <= s.endDay);
+    return stay ? { id: stay.id, col, day } : null;
+  };
+
   // Alt held: stays show a copy cursor, hinting that a drag will duplicate.
   const [altDown, setAltDown] = useState(false);
   useEffect(() => {
@@ -199,6 +212,14 @@ export default function YearView(props: Props) {
 
   function onPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
     if (e.button !== 0) return;
+    if (cutting) {
+      // The cut tool never drags: a click on a stay splits it there, anywhere else does nothing.
+      const at = cutAt(e.clientX);
+      if (at) onSplit(at.id, at.day);
+      setCut(null);
+      e.preventDefault();
+      return;
+    }
     const slot = slotAt(e.clientX);
     const target = e.target as HTMLElement;
     const stayEl = target.closest<HTMLElement>('[data-stay]');
@@ -220,7 +241,10 @@ export default function YearView(props: Props) {
   }
 
   function onPointerMove(e: ReactPointerEvent<HTMLDivElement>) {
-    if (!drag) return;
+    if (!drag) {
+      if (cutting) setCut(cutAt(e.clientX));
+      return;
+    }
     const slot = slotAt(e.clientX);
     if (drag.kind === 'select') {
       // Extend from the anchor toward the pointer, stopping at the first occupied slot.
@@ -372,11 +396,12 @@ export default function YearView(props: Props) {
           ))}
           <div
             ref={trackRef}
-            className={`row track${drag ? ' dragging' : ''}${altDown ? ' alt' : ''}`}
+            className={`row track${drag ? ' dragging' : ''}${altDown ? ' alt' : ''}${cutting ? ' cutting' : ''}`}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerCancel={() => setDrag(null)}
+            onPointerLeave={() => setCut(null)}
           >
             {WEEKS.map((w) => (
               <div
@@ -426,6 +451,7 @@ export default function YearView(props: Props) {
               </div>
             )}
             {pending && <div className="selection" style={stayCol(pending)} />}
+            {cutting && cut && <div className="cut-line" style={slotCol(cut.col, cut.col + 1)} aria-hidden />}
           </div>
           {countryBars.length > 0 && (
             <div className="row countries">

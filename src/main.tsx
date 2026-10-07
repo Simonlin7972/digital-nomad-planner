@@ -4,6 +4,9 @@ import { createRoot } from 'react-dom/client';
 import 'flag-icons/css/flag-icons.min.css';
 import './styles/base.css';
 import App from './App';
+import { initAnalytics } from './lib/analytics';
+
+initAnalytics();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

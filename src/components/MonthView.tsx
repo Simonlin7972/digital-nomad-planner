@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import { CaretLeft } from '@phosphor-icons/react/dist/csr/CaretLeft';
 import { CaretRight } from '@phosphor-icons/react/dist/csr/CaretRight';
+import { useKeyHeld } from '../hooks/useKeyHeld';
 import { Flag } from './Flag';
 import type { HolidaySet } from '../lib/holidays';
 import { daysText, t, tr, useLocale } from '../lib/i18n';
@@ -25,12 +26,13 @@ type Props = {
   onResize: (id: string, range: DayRange) => void;
   onHover: (card: { id: string; x: number; y: number } | null) => void;
   stacked?: boolean; // one of twelve months shown together: a plain title, no previous / next buttons
+  onSplit: (id: string, day: number) => void; // B held and a bar clicked: cut the stay, `day` starting the second part
 };
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
 export default function MonthView(props: Props) {
-  const { stays, month, onMonth, holidaySets, pending, onCreate, onEdit, onResize, onHover, stacked } = props;
+  const { stays, month, onMonth, holidaySets, pending, onCreate, onEdit, onResize, onHover, stacked, onSplit } = props;
   useLocale();
   const [drag, setDrag] = useState<Drag | null>(null);
   const weekEls = useRef<(HTMLDivElement | null)[]>([]);
@@ -60,8 +62,30 @@ export default function MonthView(props: Props) {
     return gridStart + row * 7 + col;
   }
 
+  // B held: the cut tool. Over a bar it shows where a click would cut, at the day boundary nearest the pointer.
+  const cutting = useKeyHeld('b');
+  const [cut, setCut] = useState<{ id: string; day: number; week: number; col: number } | null>(null);
+  function cutAt(e: ReactPointerEvent): typeof cut {
+    const rows = weekEls.current.slice(0, weekCount);
+    const week = rows.findIndex((el) => el && e.clientY >= el.getBoundingClientRect().top && e.clientY < el.getBoundingClientRect().bottom);
+    if (week === -1) return null;
+    const rect = rows[week]!.getBoundingClientRect();
+    const col = clamp(Math.round(((e.clientX - rect.left) / rect.width) * 7), 0, 7);
+    const day = gridStart + week * 7 + col;
+    const stay = stays.find((s) => s.startDay < day && day <= s.endDay);
+    return stay ? { id: stay.id, day, week, col } : null;
+  }
+
   function onPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
     if (e.button !== 0) return;
+    if (cutting) {
+      // The cut tool never drags or selects: a click on a stay splits it there.
+      const at = cutAt(e);
+      if (at) onSplit(at.id, at.day);
+      setCut(null);
+      e.preventDefault();
+      return;
+    }
     const target = e.target as HTMLElement;
     const bar = target.closest<HTMLElement>('[data-stay]');
     onHover(null);
@@ -84,6 +108,7 @@ export default function MonthView(props: Props) {
   }
 
   function onPointerMove(e: ReactPointerEvent<HTMLDivElement>) {
+    if (!drag && cutting) return setCut(cutAt(e));
     if (!drag || drag.kind === 'press') return;
     const day = dayAt(e);
     if (drag.kind === 'select') {
@@ -159,11 +184,12 @@ export default function MonthView(props: Props) {
       </div>
 
       <div
-        className={`mgrid${drag ? ' dragging' : ''}`}
+        className={`mgrid${drag ? ' dragging' : ''}${cutting ? ' cutting' : ''}`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={() => setDrag(null)}
+        onPointerLeave={() => setCut(null)}
       >
         {Array.from({ length: weekCount }, (_, w) => {
           const weekStart = gridStart + w * 7;
@@ -217,6 +243,7 @@ export default function MonthView(props: Props) {
                   </div>
                 );
               })}
+              {cutting && cut?.week === w && <div className="mcut" style={{ left: `${(cut.col / 7) * 100}%` }} aria-hidden />}
               {sel && (
                 <div className={`mbar msel${sel.starts ? ' starts' : ''}${sel.ends ? ' ends' : ''}`} style={sel.style}>
                   {sel.starts && drag?.kind === 'select' && <span className="label">{daysText(drag.hi - drag.lo + 1)}</span>}
