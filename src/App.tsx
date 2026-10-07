@@ -23,7 +23,7 @@ import { useNarrow } from './hooks/useNarrow';
 import { useZoom } from './hooks/useZoom';
 import { download } from './lib/files';
 import { holidaySets as allHolidaySets, type Holiday, type HolidaySet } from './lib/holidays';
-import { t, useLocale } from './lib/i18n';
+import { langTag, t, useLocale } from './lib/i18n';
 import { loadHolidayToggles, loadView, saveHolidayToggles, saveView } from './lib/prefs';
 import { load, pushStays, save, type ColorKey, type Stay, loadYearPlan, saveYearPlan, sanitizeAll, serializeAll, splitStay } from './lib/storage';
 import { MOD, clamp } from './lib/util';
@@ -73,7 +73,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
   useEffect(() => saveHolidayToggles(holidayOn), [holidayOn]);
   useEffect(() => saveView(view), [view]);
   useEffect(() => {
-    document.documentElement.lang = locale === 'en' ? 'en' : 'zh-Hant';
+    document.documentElement.lang = langTag(locale);
     document.title = `${t('app.title')} — ${t('app.tagline')}`;
   }, [locale]);
 

@@ -10,7 +10,7 @@ A single-page planner for a year of digital nomading. The year is laid out as 53
 
 ![Year timeline and itinerary, with sample data](docs/overview.png)
 
-The interface is available in Traditional Chinese and English; switch from the toolbar.
+The interface is available in Traditional Chinese, English and Japanese; switch from the toolbar.
 
 ---
 
@@ -54,7 +54,7 @@ The interface is available in Traditional Chinese and English; switch from the t
 
 ### What a stay records
 
-- Country and city (at least one). Both are picked from searchable lists, in either language:
+- Country and city (at least one). Both are picked from searchable lists, in any of the three languages:
   - Countries: about 260, also searchable by ISO code or common alias (`thai`, `jp`, `韓國`)
   - Cities: about 330 common ones built in. With a country chosen only its cities are listed; picking a city with no country fills the country in. Cities not on the list can simply be typed
 - Exact start and end dates
@@ -77,10 +77,10 @@ The interface is available in Traditional Chinese and English; switch from the t
 ### Also
 
 - A built-in "How to use" guide in sections that open and close: gestures, where data lives, backup and transfer
-- Traditional Chinese and English interface, switched from the toolbar; defaults to the browser's language and remembers your choice
+- Traditional Chinese, English and Japanese interface, cycled with one toolbar button; defaults to the browser's language and remembers your choice
 - A compact toolbar: undo and redo are icons; export, import and Share live in the `⋯` menu, with "How to use" and "About this app" (opens the landing page in a new tab) below a divider
 - A footer at the bottom of the page: where the data lives, the licence, and links home, to the changelog and to GitHub
-- A changelog page (/changelog/): new features and changes in every release, newest day first, in the interface language. It is built from `CHANGELOG.md` at the repository root, so updating that file and pushing publishes it
+- A changelog page (/changelog/): new features and changes in every release, newest day first, in the interface language (English when the interface is Japanese). It is built from `CHANGELOG.md` at the repository root, so updating that file and pushing publishes it
 - Undo and redo, up to 100 steps
 - JSON export and import: one file holds every year; file names carry the export date (e.g. `nomad-plan_2026-10-06.json`)
 - Share: preview the year as an image, then download it as a PNG (fixed size, with the timeline, country strips and flags, holidays that are switched on, ticket markers, a summary line and the itinerary; flight details left out). On a phone it can open the system share sheet
@@ -338,11 +338,11 @@ Knowing these before reading the code will save time.
 
 **Every change to the plan goes through one `setStays`.** It comes from `useHistory` and pushes the previous state onto the undo stack, so a new feature that uses it gets undo for free. Only `App.tsx` holds the plan; the year and month views manage their own drag state and report the result through callbacks.
 
-**The country list isn't hard-coded, and stays store codes.** `lib/flags.ts` builds about 260 countries, in Chinese and English, from the browser's `Intl.DisplayNames`, then adds a few regions (Europe, Southeast Asia, South America, …) and common aliases. A stay stores an ISO code or region id and is given a name in the current language only when shown, so switching language needs no data change. The field still accepts text that isn't on the list (for older data and unusual cases); that is stored as typed and flagged as not being on the list.
+**The country list isn't hard-coded, and stays store codes.** `lib/flags.ts` builds about 260 countries, in Chinese, English and Japanese, from the browser's `Intl.DisplayNames`, then adds a few regions (Europe, Southeast Asia, South America, …) and common aliases. A stay stores an ISO code or region id and is given a name in the current language only when shown, so switching language needs no data change. The field still accepts text that isn't on the list (for older data and unusual cases); that is stored as typed and flagged as not being on the list.
 
-**The city list is hand-written.** `lib/cities.ts` holds about 330 cities people commonly base themselves in, with Chinese and English names. It isn't a gazetteer and has no coordinates. Listed cities are stored by English name and shown in the current language; anything else is stored as typed, with no warning. To add a city, add a `['中文', 'English']` pair under its country code in that file.
+**The city list is hand-written.** `lib/cities.ts` holds about 330 cities people commonly base themselves in, with Chinese and English names (no Japanese; the Japanese interface shows the English ones). It isn't a gazetteer and has no coordinates. Listed cities are stored by English name and shown in the current language; anything else is stored as typed, with no warning. To add a city, add a `['中文', 'English']` pair under its country code in that file.
 
-**The translation layer is small.** `lib/i18n.tsx` is two dictionaries and a `t(key, vars)` function. The current locale lives in a module variable outside React, so plain functions such as the date formatters and the PNG export can read it; a component calls `useLocale()` once to re-render when the language changes. The "How to use" guide is prose, so each language is written out whole rather than assembled from dictionary strings.
+**The translation layer is small.** `lib/i18n.tsx` is three dictionaries (Chinese, English, Japanese) and a `t(key, vars)` function. The current locale lives in a module variable outside React, so plain functions such as the date formatters and the PNG export can read it; a component calls `useLocale()` once to re-render when the language changes. The "How to use" guide is prose, so each of the three languages is written out whole rather than assembled from dictionary strings.
 
 **Flight time is an estimate.** It takes the straight-line distance between consecutive stays, at 850 km/h plus half an hour per flight; hops under 300 km count as ground travel. Layovers are ignored, as are the trips from and back to home.
 
@@ -359,8 +359,9 @@ Knowing these before reading the code will save time.
 ## Known limits
 
 - **Only 2025, 2026, 2027 and 2028** (`YEARS` in `lib/weeks.ts`); holiday data exists for 2026 and 2027 only; switching year clears the undo history
-- **Two interface languages**, Traditional Chinese and English; the product spec (`MVP.md`) is in Chinese only
-- **What you type isn't translated**: unlisted countries and cities, notes and companions show as typed in both languages
+- **Three interface languages**, Traditional Chinese, English and Japanese; the product spec (`MVP.md`) is in Chinese only
+- **Japanese has no city names, season notes or changelog of its own**; those three show in English under the Japanese interface
+- **What you type isn't translated**: unlisted countries and cities, notes and companions show as typed in every language
 - **Editing is desktop-only.** Phones (720px and narrower) get a read-only layout; a tablet or laptop window narrower than 720px does too
 - **No automated tests**
 - **The month view can't move a whole stay or `Alt`-drag a copy**; drag the ends or change the dates in the editor
@@ -425,7 +426,7 @@ Issues and pull requests are welcome.
 - Put logic that moves stays in the pure functions in `lib/storage.ts`, and keep stays from overlapping
 - New components go in `src/components/`, with styles in a `.css` file of the same name imported by that component; only things several components share go in `styles/base.css`
 - Anything new that talks to the network must be described under [Data and privacy](#data-and-privacy)
-- All interface text goes in the dictionaries in `src/lib/i18n.tsx`, in both languages; don't hard-code strings in components
+- All interface text goes in the dictionaries in `src/lib/i18n.tsx`, in all three languages; don't hard-code strings in components
 - When behaviour changes, update `README.md`, this file and `MVP.md` (and `CLAUDE.md` when a convention changes). When developing with Claude Code, `.claude/hooks/docs-check.sh` checks for this before a session ends
 
 ---

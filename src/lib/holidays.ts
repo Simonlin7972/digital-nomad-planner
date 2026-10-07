@@ -4,11 +4,11 @@ import { TOTAL_DAYS, YEAR, dayOfIso, type DayRange } from './weeks';
 export type Holiday = DayRange & { name: string; short: string; note?: string };
 export type HolidaySet = { key: 'tw' | 'au'; label: string; color: string; holidays: Holiday[] };
 
-type Text = { zh: string; en: string };
+type Text = { zh: string; en: string; ja: string };
 type Source = { short: Text; name: Text; start: string; end: string; note?: Text };
 
 const h = (short: Text, name: Text, start: string, end = start, note?: Text): Source => ({ short, name, start, end, note });
-const same = (text: string): Text => ({ zh: text, en: text });
+const same = (text: string): Text => ({ zh: text, en: text, ja: text });
 
 // 2026 and 2027 dates. Taiwan: the Executive Yuan's 115 and 116 年 office calendars, shown as the full days-off
 // run (weekends and make-up days included). Australia: national holidays; state-only days are noted, not listed.
@@ -16,113 +16,133 @@ const same = (text: string): Text => ({ zh: text, en: text });
 const SOURCES: { key: HolidaySet['key']; label: Text; color: string; holidays: Source[] }[] = [
   {
     key: 'tw',
-    label: { zh: '台灣國定假日', en: 'Taiwan holidays' },
+    label: { zh: '台灣國定假日', en: 'Taiwan holidays', ja: '台湾の祝日' },
     color: '#c13515',
     holidays: [
       // 2026 (115 年): no make-up working days all year
-      h({ zh: '元旦', en: 'New Year' }, { zh: '元旦', en: "New Year's Day" }, '2026-01-01'),
-      h({ zh: '春節', en: 'Lunar NY' }, { zh: '春節連假', en: 'Lunar New Year holiday' }, '2026-02-14', '2026-02-22', {
+      h({ zh: '元旦', en: 'New Year', ja: '元日' }, { zh: '元旦', en: "New Year's Day", ja: '元日' }, '2026-01-01'),
+      h({ zh: '春節', en: 'Lunar NY', ja: '旧正月' }, { zh: '春節連假', en: 'Lunar New Year holiday', ja: '旧正月の連休' }, '2026-02-14', '2026-02-22', {
         zh: '含小年夜、除夕與補假，共 9 天',
         en: "Nine days, including the two days before New Year's Day and days off in lieu",
+        ja: '大晦日の前日・大晦日と振替休日を含む 9 日間',
       }),
-      h({ zh: '228', en: '228' }, { zh: '和平紀念日連假', en: 'Peace Memorial Day holiday' }, '2026-02-27', '2026-03-01', {
+      h({ zh: '228', en: '228', ja: '228' }, { zh: '和平紀念日連假', en: 'Peace Memorial Day holiday', ja: '和平記念日の連休' }, '2026-02-27', '2026-03-01', {
         zh: '2/28 逢週六，2/27 補假',
         en: 'Feb 28 falls on a Saturday; Feb 27 is the day off in lieu',
+        ja: '2/28 が土曜のため 2/27 が振替休日',
       }),
-      h({ zh: '清明', en: 'Qingming' }, { zh: '兒童節及清明節連假', en: "Children's Day and Tomb Sweeping Day holiday" }, '2026-04-03', '2026-04-06', {
+      h({ zh: '清明', en: 'Qingming', ja: '清明' }, { zh: '兒童節及清明節連假', en: "Children's Day and Tomb Sweeping Day holiday", ja: 'こどもの日と清明節の連休' }, '2026-04-03', '2026-04-06', {
         zh: '4/4、4/5 逢週末，4/3、4/6 補假',
         en: 'Apr 4 and 5 fall on a weekend; Apr 3 and 6 are days off in lieu',
+        ja: '4/4・4/5 が週末のため 4/3・4/6 が振替休日',
       }),
-      h({ zh: '勞動', en: 'Labor' }, { zh: '勞動節連假', en: 'Labor Day holiday' }, '2026-05-01', '2026-05-03'),
-      h({ zh: '端午', en: 'Dragon Boat' }, { zh: '端午節連假', en: 'Dragon Boat Festival holiday' }, '2026-06-19', '2026-06-21'),
-      h({ zh: '中秋', en: 'Mid-Autumn' }, { zh: '中秋節及教師節連假', en: "Mid-Autumn Festival and Teachers' Day holiday" }, '2026-09-25', '2026-09-28'),
-      h({ zh: '國慶', en: 'National' }, { zh: '國慶日連假', en: 'National Day holiday' }, '2026-10-09', '2026-10-11', {
+      h({ zh: '勞動', en: 'Labor', ja: '労働' }, { zh: '勞動節連假', en: 'Labor Day holiday', ja: '労働節の連休' }, '2026-05-01', '2026-05-03'),
+      h({ zh: '端午', en: 'Dragon Boat', ja: '端午' }, { zh: '端午節連假', en: 'Dragon Boat Festival holiday', ja: '端午節の連休' }, '2026-06-19', '2026-06-21'),
+      h({ zh: '中秋', en: 'Mid-Autumn', ja: '中秋' }, { zh: '中秋節及教師節連假', en: "Mid-Autumn Festival and Teachers' Day holiday", ja: '中秋節と教師節の連休' }, '2026-09-25', '2026-09-28'),
+      h({ zh: '國慶', en: 'National', ja: '国慶' }, { zh: '國慶日連假', en: 'National Day holiday', ja: '国慶節の連休' }, '2026-10-09', '2026-10-11', {
         zh: '10/10 逢週六，10/9 補假',
         en: 'Oct 10 falls on a Saturday; Oct 9 is the day off in lieu',
+        ja: '10/10 が土曜のため 10/9 が振替休日',
       }),
-      h({ zh: '光復', en: 'Retrocession' }, { zh: '臺灣光復節連假', en: 'Taiwan Retrocession Day holiday' }, '2026-10-24', '2026-10-26', {
+      h({ zh: '光復', en: 'Retrocession', ja: '光復' }, { zh: '臺灣光復節連假', en: 'Taiwan Retrocession Day holiday', ja: '台湾光復節の連休' }, '2026-10-24', '2026-10-26', {
         zh: '10/25 逢週日，10/26 補假',
         en: 'Oct 25 falls on a Sunday; Oct 26 is the day off in lieu',
+        ja: '10/25 が日曜のため 10/26 が振替休日',
       }),
-      h({ zh: '行憲', en: 'Constitution' }, { zh: '行憲紀念日連假', en: 'Constitution Day holiday' }, '2026-12-25', '2026-12-27'),
+      h({ zh: '行憲', en: 'Constitution', ja: '憲法' }, { zh: '行憲紀念日連假', en: 'Constitution Day holiday', ja: '憲法記念日の連休' }, '2026-12-25', '2026-12-27'),
       // 2027 (116 年)
-      h({ zh: '元旦', en: 'New Year' }, { zh: '元旦連假', en: "New Year's Day holiday" }, '2027-01-01', '2027-01-03'),
-      h({ zh: '春節', en: 'Lunar NY' }, { zh: '春節連假', en: 'Lunar New Year holiday' }, '2027-02-04', '2027-02-10', {
+      h({ zh: '元旦', en: 'New Year', ja: '元日' }, { zh: '元旦連假', en: "New Year's Day holiday", ja: '元日の連休' }, '2027-01-01', '2027-01-03'),
+      h({ zh: '春節', en: 'Lunar NY', ja: '旧正月' }, { zh: '春節連假', en: 'Lunar New Year holiday', ja: '旧正月の連休' }, '2027-02-04', '2027-02-10', {
         zh: '含小年夜、除夕與補假',
         en: "Includes the two days before New Year's Day and make-up days",
+        ja: '大晦日の前日・大晦日と振替休日を含む',
       }),
-      h({ zh: '228', en: '228' }, { zh: '和平紀念日連假', en: 'Peace Memorial Day holiday' }, '2027-02-27', '2027-03-01', {
+      h({ zh: '228', en: '228', ja: '228' }, { zh: '和平紀念日連假', en: 'Peace Memorial Day holiday', ja: '和平記念日の連休' }, '2027-02-27', '2027-03-01', {
         zh: '2/28 逢週日，3/1 補假',
         en: 'Feb 28 falls on a Sunday; Mar 1 is the day off in lieu',
+        ja: '2/28 が日曜のため 3/1 が振替休日',
       }),
-      h({ zh: '清明', en: 'Qingming' }, { zh: '兒童節及清明節連假', en: "Children's Day and Tomb Sweeping Day holiday" }, '2027-04-03', '2027-04-06', {
+      h({ zh: '清明', en: 'Qingming', ja: '清明' }, { zh: '兒童節及清明節連假', en: "Children's Day and Tomb Sweeping Day holiday", ja: 'こどもの日と清明節の連休' }, '2027-04-03', '2027-04-06', {
         zh: '4/6 補假',
         en: 'Apr 6 is a day off in lieu',
+        ja: '4/6 は振替休日',
       }),
-      h({ zh: '勞動', en: 'Labor' }, { zh: '勞動節連假', en: 'Labor Day holiday' }, '2027-04-30', '2027-05-02', {
+      h({ zh: '勞動', en: 'Labor', ja: '労働' }, { zh: '勞動節連假', en: 'Labor Day holiday', ja: '労働節の連休' }, '2027-04-30', '2027-05-02', {
         zh: '5/1 逢週六，4/30 補假',
         en: 'May 1 falls on a Saturday; Apr 30 is the day off in lieu',
+        ja: '5/1 が土曜のため 4/30 が振替休日',
       }),
-      h({ zh: '端午', en: 'Dragon Boat' }, { zh: '端午節', en: 'Dragon Boat Festival' }, '2027-06-09'),
-      h({ zh: '中秋', en: 'Mid-Autumn' }, { zh: '中秋節', en: 'Mid-Autumn Festival' }, '2027-09-15'),
-      h({ zh: '教師', en: 'Teachers' }, { zh: '教師節', en: "Teachers' Day" }, '2027-09-28'),
-      h({ zh: '國慶', en: 'National' }, { zh: '國慶日連假', en: 'National Day holiday' }, '2027-10-09', '2027-10-11', {
+      h({ zh: '端午', en: 'Dragon Boat', ja: '端午' }, { zh: '端午節', en: 'Dragon Boat Festival', ja: '端午節' }, '2027-06-09'),
+      h({ zh: '中秋', en: 'Mid-Autumn', ja: '中秋' }, { zh: '中秋節', en: 'Mid-Autumn Festival', ja: '中秋節' }, '2027-09-15'),
+      h({ zh: '教師', en: 'Teachers', ja: '教師' }, { zh: '教師節', en: "Teachers' Day", ja: '教師節' }, '2027-09-28'),
+      h({ zh: '國慶', en: 'National', ja: '国慶' }, { zh: '國慶日連假', en: 'National Day holiday', ja: '国慶節の連休' }, '2027-10-09', '2027-10-11', {
         zh: '10/10 逢週日，10/11 補假',
         en: 'Oct 10 falls on a Sunday; Oct 11 is the day off in lieu',
+        ja: '10/10 が日曜のため 10/11 が振替休日',
       }),
-      h({ zh: '光復', en: 'Retrocession' }, { zh: '臺灣光復節連假', en: 'Taiwan Retrocession Day holiday' }, '2027-10-23', '2027-10-25'),
-      h({ zh: '行憲', en: 'Constitution' }, { zh: '行憲紀念日連假', en: 'Constitution Day holiday' }, '2027-12-24', '2027-12-26', {
+      h({ zh: '光復', en: 'Retrocession', ja: '光復' }, { zh: '臺灣光復節連假', en: 'Taiwan Retrocession Day holiday', ja: '台湾光復節の連休' }, '2027-10-23', '2027-10-25'),
+      h({ zh: '行憲', en: 'Constitution', ja: '憲法' }, { zh: '行憲紀念日連假', en: 'Constitution Day holiday', ja: '憲法記念日の連休' }, '2027-12-24', '2027-12-26', {
         zh: '12/25 逢週六，12/24 補假',
         en: 'Dec 25 falls on a Saturday; Dec 24 is the day off in lieu',
+        ja: '12/25 が土曜のため 12/24 が振替休日',
       }),
-      h({ zh: '元旦', en: 'New Year' }, { zh: '2028 元旦連假', en: "New Year's Day 2028 holiday" }, '2027-12-31', '2028-01-02', {
+      h({ zh: '元旦', en: 'New Year', ja: '元日' }, { zh: '2028 元旦連假', en: "New Year's Day 2028 holiday", ja: '2028 年元日の連休' }, '2027-12-31', '2028-01-02', {
         zh: '2028/1/1 逢週六，12/31 補假',
         en: 'Jan 1, 2028 falls on a Saturday; Dec 31 is the day off in lieu',
+        ja: '2028/1/1 が土曜のため 12/31 が振替休日',
       }),
     ],
   },
   {
     key: 'au',
-    label: { zh: '澳洲國定假日', en: 'Australia holidays' },
+    label: { zh: '澳洲國定假日', en: 'Australia holidays', ja: 'オーストラリアの祝日' },
     color: '#1f6f8b',
     holidays: [
       // 2026
       h(same("New Year's"), same("New Year's Day"), '2026-01-01'),
       h(same('Australia Day'), same('Australia Day'), '2026-01-26'),
-      h(same('Easter'), { zh: 'Easter（Good Friday – Easter Monday）', en: 'Easter (Good Friday – Easter Monday)' }, '2026-04-03', '2026-04-06', {
+      h(same('Easter'), { zh: 'Easter（Good Friday – Easter Monday）', en: 'Easter (Good Friday – Easter Monday)', ja: 'イースター（Good Friday〜Easter Monday）' }, '2026-04-03', '2026-04-06', {
         zh: '週六、週日是否放假依各州而定',
         en: 'Whether Saturday and Sunday are holidays varies by state',
+        ja: '土日が休みかどうかは州によります',
       }),
       h(same('Anzac'), same('Anzac Day'), '2026-04-25', '2026-04-25', {
         zh: '逢週六；新南威爾斯、首都領地、西澳 4/27 補假',
         en: 'Falls on a Saturday; NSW, the ACT and WA observe Apr 27',
+        ja: '土曜のため NSW・ACT・西オーストラリアは 4/27 が振替休日',
       }),
       h(same("King's"), same("King's Birthday"), '2026-06-08', '2026-06-08', {
         zh: '多數州；昆士蘭 10/5、西澳 9/28',
         en: 'Most states; Queensland Oct 5, Western Australia Sep 28',
+        ja: '多くの州。クイーンズランドは 10/5、西オーストラリアは 9/28',
       }),
       h(same('Xmas'), same('Christmas Day & Boxing Day'), '2026-12-25', '2026-12-28', {
         zh: 'Boxing Day 逢週六，多數州 12/28 補假',
         en: 'Boxing Day falls on a Saturday; most states observe Dec 28',
+        ja: 'Boxing Day が土曜のため多くの州で 12/28 が振替休日',
       }),
       // 2027
       h(same("New Year's"), same("New Year's Day"), '2027-01-01'),
       h(same('Australia Day'), same('Australia Day'), '2027-01-26'),
-      h(same('Easter'), { zh: 'Easter（Good Friday – Easter Monday）', en: 'Easter (Good Friday – Easter Monday)' }, '2027-03-26', '2027-03-29', {
+      h(same('Easter'), { zh: 'Easter（Good Friday – Easter Monday）', en: 'Easter (Good Friday – Easter Monday)', ja: 'イースター（Good Friday〜Easter Monday）' }, '2027-03-26', '2027-03-29', {
         zh: '週六、週日是否放假依各州而定',
         en: 'Whether Saturday and Sunday are holidays varies by state',
+        ja: '土日が休みかどうかは州によります',
       }),
       h(same('Anzac'), same('Anzac Day'), '2027-04-25', '2027-04-25', {
         zh: '逢週日，部分州 4/26 補假',
         en: 'Falls on a Sunday; some states observe Apr 26',
+        ja: '日曜のため一部の州で 4/26 が振替休日',
       }),
       h(same("King's"), same("King's Birthday"), '2027-06-14', '2027-06-14', {
         zh: '多數州；昆士蘭 10/4、西澳 9/27',
         en: 'Most states; Queensland Oct 4, Western Australia Sep 27',
+        ja: '多くの州。クイーンズランドは 10/4、西オーストラリアは 9/27',
       }),
       h(same('Xmas'), same('Christmas Day & Boxing Day'), '2027-12-25', '2027-12-28', {
         zh: '逢週末，12/27、12/28 補假',
         en: 'Falls on a weekend; Dec 27 and 28 are days off in lieu',
+        ja: '週末のため 12/27・12/28 が振替休日',
       }),
     ],
   },

@@ -9,7 +9,7 @@ import { Question } from '@phosphor-icons/react/dist/csr/Question';
 import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork';
 import { UploadSimple } from '@phosphor-icons/react/dist/csr/UploadSimple';
 import { Translate } from '@phosphor-icons/react/dist/csr/Translate';
-import { setLocale, t, useLocale } from '../lib/i18n';
+import { langTag, nextLocale, setLocale, t, useLocale } from '../lib/i18n';
 import { MOD } from '../lib/util';
 import { HOME_URL } from '../lib/links';
 import './Toolbar.css';
@@ -62,7 +62,7 @@ export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHel
         ]}
       />
       {/* Labelled in the language it switches to, so it can be found by someone who can't read the current one. */}
-      <button onClick={() => setLocale(locale === 'en' ? 'zh' : 'en')} title={t('toolbar.languageHint')} lang={locale === 'en' ? 'zh-Hant' : 'en'}>
+      <button onClick={() => setLocale(nextLocale(locale))} title={t('toolbar.languageHint')} lang={langTag(nextLocale(locale))}>
         <Translate size={16} weight="bold" />
         {t('toolbar.language')}
       </button>

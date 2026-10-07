@@ -116,20 +116,22 @@ const EN_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'
 const EN_MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const EN_WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const ZH_WEEKDAYS = ['一', '二', '三', '四', '五', '六', '日'];
+const JA_WEEKDAYS = ['月', '火', '水', '木', '金', '土', '日'];
+const ja = () => getLocale() === 'ja';
 
-// All date text goes through these, so it follows the current language: "1/4" or "Jan 4".
+// All date text goes through these, so it follows the current language: "1/4" or "Jan 4" (Japanese uses "1/4" too).
 const fmt = (d: Date) => (getLocale() === 'en' ? `${EN_MONTHS[d.getMonth()]} ${d.getDate()}` : `${d.getMonth() + 1}/${d.getDate()}`);
 
 // Monday-first weekday names; `index` 0 is Monday.
-export const weekdayName = (index: number) => (getLocale() === 'en' ? EN_WEEKDAYS : ZH_WEEKDAYS)[index];
+export const weekdayName = (index: number) => (getLocale() === 'en' ? EN_WEEKDAYS : ja() ? JA_WEEKDAYS : ZH_WEEKDAYS)[index];
 // Column headers for calendars: 一 … 日, or Mo … Su.
-export const weekdayHeaders = () => (getLocale() === 'en' ? EN_WEEKDAYS.map((d) => d.slice(0, 2)) : ZH_WEEKDAYS);
+export const weekdayHeaders = () => (getLocale() === 'en' ? EN_WEEKDAYS.map((d) => d.slice(0, 2)) : ja() ? JA_WEEKDAYS : ZH_WEEKDAYS);
 
-// "2 月" / "Feb": the short label on the timeline and in headings.
-export const monthName = (month: number) => (getLocale() === 'en' ? EN_MONTHS[month] : `${month + 1} 月`);
-// "2027 年 2 月" / "February 2027": the title of a calendar page.
+// "2 月" / "Feb" / "2月": the short label on the timeline and in headings.
+export const monthName = (month: number) => (getLocale() === 'en' ? EN_MONTHS[month] : ja() ? `${month + 1}月` : `${month + 1} 月`);
+// "2027 年 2 月" / "February 2027" / "2027年2月": the title of a calendar page.
 export const monthTitle = (year: number, month: number) =>
-  getLocale() === 'en' ? `${EN_MONTHS_LONG[month]} ${year}` : `${year} 年 ${month + 1} 月`;
+  getLocale() === 'en' ? `${EN_MONTHS_LONG[month]} ${year}` : ja() ? `${year}年${month + 1}月` : `${year} 年 ${month + 1} 月`;
 // "2027/7/5（一）" / "Jul 5, 2027 (Mon)": one date written out in full.
 export function fullDate(d: Date): string {
   const weekday = weekdayName((d.getDay() + 6) % 7);

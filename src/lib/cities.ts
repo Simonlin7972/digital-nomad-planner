@@ -91,7 +91,8 @@ const fold = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCas
 let all: Entry[] | null = null;
 const everyCity = () => (all ??= Object.entries(CITIES).flatMap(([country, list]) => list.map(([zh, en]) => ({ zh, en, country }))));
 
-const nameIn = (e: Entry, locale: Locale) => (locale === 'en' ? e.en : e.zh);
+// The list has no Japanese names, so Japanese shows the English ones.
+const nameIn = (e: Entry, locale: Locale) => (locale === 'zh' ? e.zh : e.en);
 
 // The listed city a stored value or typed name refers to. Names repeat across countries (聖地牙哥 is both
 // San Diego and Santiago), so the stay's country decides when it is known.
@@ -118,7 +119,7 @@ export function cityLabel(country: string, city: string, locale: Locale = getLoc
 // city is, each tagged with its country. Cities already used in the plan come first.
 export function searchCities(query: string, country: string, recent: { city: string; country: string }[]): CityOption[] {
   const locale = getLocale();
-  const other: Locale = locale === 'en' ? 'zh' : 'en';
+  const other: Locale = locale === 'zh' ? 'en' : 'zh';
   const code = normalizeCountry(country);
   const scoped = Boolean(CITIES[code]);
   const pool = scoped ? everyCity().filter((c) => c.country === code) : everyCity();

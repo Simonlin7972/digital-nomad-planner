@@ -7,7 +7,7 @@ import { Code } from '@phosphor-icons/react/dist/csr/Code';
 import { LockSimple } from '@phosphor-icons/react/dist/csr/LockSimple';
 import { PixelNomad } from '../components/PixelNomad';
 import { Tagline } from '../components/Tagline';
-import { setLocale, t, useLocale } from '../lib/i18n';
+import { langTag, nextLocale, setLocale, t, useLocale } from '../lib/i18n';
 import type { Key } from '../lib/i18n';
 import {
   CutDemo,
@@ -52,7 +52,7 @@ function Feature({ id, demo, flip }: { id: 'drag' | 'cut' | 'month' | 'map'; dem
 export function Landing() {
   const locale = useLocale();
   document.title = `${t('app.title')} — ${t('app.tagline')}`;
-  document.documentElement.lang = locale === 'en' ? 'en' : 'zh-Hant';
+  document.documentElement.lang = langTag(locale);
 
   return (
     <div className="landing">
@@ -69,9 +69,9 @@ export function Landing() {
           </a>
           {/* Labelled in the language it switches to, as in the app's toolbar. */}
           <button
-            onClick={() => setLocale(locale === 'en' ? 'zh' : 'en')}
+            onClick={() => setLocale(nextLocale(locale))}
             title={t('toolbar.languageHint')}
-            lang={locale === 'en' ? 'zh-Hant' : 'en'}
+            lang={langTag(nextLocale(locale))}
           >
             {t('toolbar.language')}
           </button>

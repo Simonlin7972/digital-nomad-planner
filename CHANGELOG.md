@@ -9,6 +9,8 @@
 
 ## 2026-10-08
 
+- 新增日文介面；語言鈕改成 中文 → English → 日本語 依序循環
+  EN: The interface is now also in Japanese; the language button cycles 中文 → English → 日本語
 - 新增產品介紹首頁；規劃工具搬到 /app/
   EN: A new landing page introduces the planner, which now lives at /app/
 - 規劃工具底部加上 footer：資料存放提醒、授權、首頁與 GitHub 連結

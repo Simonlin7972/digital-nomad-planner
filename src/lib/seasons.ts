@@ -393,7 +393,8 @@ export function seasonBasis(place: Pick<Stay, 'country' | 'city'>): string | nul
   return place.city.trim() ? null : (COUNTRY_DEFAULTS[place.country]?.split('/')[1] ?? null);
 }
 
-export const noteText = (n: SeasonNote) => (getLocale() === 'en' ? n.en : n.zh);
+// Notes exist in Chinese and English only; Japanese reads the English ones.
+export const noteText = (n: SeasonNote) => (getLocale() === 'zh' ? n.zh : n.en);
 
 // The coolest night to the warmest day across some months, e.g. { lo: '19', hi: '36' }. Below zero gets a real
 // minus sign, which reads better than a hyphen next to the range mark.

@@ -12,7 +12,7 @@ export type CountryOption = {
   code: string | null; // ISO code for the flag; null where there is none
 };
 
-type Entry = { value: string; code: string | null; zh: string; en: string; keywords: string[] };
+type Entry = { value: string; code: string | null; zh: string; en: string; ja: string; keywords: string[] };
 
 // Other spellings people type. Keys are lower-case; values are entry values.
 const ALIASES: Record<string, string> = {
@@ -46,6 +46,7 @@ const ALIASES: Record<string, string> = {
 // Shorter everyday names than the official ones the locale data gives.
 const ZH_OVERRIDES: Record<string, string> = { HK: '香港', MO: '澳門' };
 const EN_OVERRIDES: Record<string, string> = { HK: 'Hong Kong', MO: 'Macau' };
+const JA_OVERRIDES: Record<string, string> = { HK: '香港', MO: 'マカオ' };
 
 // Codes the locale data knows that are not places you can plan a stay in: military outposts, pseudo-locales
 // and blocs (Europe is offered as a region below instead).
@@ -53,15 +54,15 @@ const NOT_COUNTRIES = new Set(['AC', 'CP', 'CQ', 'DG', 'EA', 'EU', 'EZ', 'IC', '
 
 // Broader areas, for stays that are not pinned to one country.
 const REGIONS: Entry[] = [
-  { value: 'europe', code: 'eu', zh: '歐洲', en: 'Europe', keywords: [] },
-  { value: 'asia', code: null, zh: '亞洲', en: 'Asia', keywords: [] },
-  { value: 'southeast-asia', code: null, zh: '東南亞', en: 'Southeast Asia', keywords: [] },
-  { value: 'middle-east', code: null, zh: '中東', en: 'Middle East', keywords: [] },
-  { value: 'north-america', code: null, zh: '北美洲', en: 'North America', keywords: [] },
-  { value: 'central-america', code: null, zh: '中美洲', en: 'Central America', keywords: [] },
-  { value: 'south-america', code: null, zh: '南美洲', en: 'South America', keywords: [] },
-  { value: 'africa', code: null, zh: '非洲', en: 'Africa', keywords: [] },
-  { value: 'oceania', code: null, zh: '大洋洲', en: 'Oceania', keywords: [] },
+  { value: 'europe', code: 'eu', zh: '歐洲', en: 'Europe', ja: 'ヨーロッパ', keywords: [] },
+  { value: 'asia', code: null, zh: '亞洲', en: 'Asia', ja: 'アジア', keywords: [] },
+  { value: 'southeast-asia', code: null, zh: '東南亞', en: 'Southeast Asia', ja: '東南アジア', keywords: [] },
+  { value: 'middle-east', code: null, zh: '中東', en: 'Middle East', ja: '中東', keywords: [] },
+  { value: 'north-america', code: null, zh: '北美洲', en: 'North America', ja: '北アメリカ', keywords: [] },
+  { value: 'central-america', code: null, zh: '中美洲', en: 'Central America', ja: '中央アメリカ', keywords: [] },
+  { value: 'south-america', code: null, zh: '南美洲', en: 'South America', ja: '南アメリカ', keywords: [] },
+  { value: 'africa', code: null, zh: '非洲', en: 'Africa', ja: 'アフリカ', keywords: [] },
+  { value: 'oceania', code: null, zh: '大洋洲', en: 'Oceania', ja: 'オセアニア', keywords: [] },
 ];
 
 // Shown at the top of the unfiltered list, ahead of the alphabetical full list.
@@ -88,11 +89,13 @@ function build(): Data {
     const zhTW = names('zh-Hant-TW');
     const zhCN = names('zh-Hans');
     const english = names('en');
+    const japanese = names('ja');
     for (const a of A) {
       for (const b of A) {
         const upper = a + b;
         const zh = zhTW.of(upper);
         const en = english.of(upper);
+        const ja = japanese.of(upper) ?? '';
         if (!zh || !en || NOT_COUNTRIES.has(upper) || !isCurrentCode(upper)) continue;
         const code = upper.toLowerCase();
         entries.push({
@@ -100,8 +103,9 @@ function build(): Data {
           code,
           zh: ZH_OVERRIDES[upper] ?? zh,
           en: EN_OVERRIDES[upper] ?? en,
+          ja: JA_OVERRIDES[upper] ?? (ja || en),
           // The official names stay searchable where a shorter one is shown, as does the Simplified name.
-          keywords: [zh, en, zhCN.of(upper) ?? ''].map((k) => k.toLowerCase()),
+          keywords: [zh, en, ja, zhCN.of(upper) ?? ''].map((k) => k.toLowerCase()),
         });
       }
     }
@@ -135,7 +139,7 @@ function find(country: string): Entry | undefined {
   return byValue.get(key) ?? byName.get(key);
 }
 
-const nameIn = (e: Entry, locale: Locale) => (locale === 'en' ? e.en : e.zh);
+const nameIn = (e: Entry, locale: Locale) => e[locale];
 
 // What to store for a typed or picked country: its code or region id when recognised, else the text itself.
 export function normalizeCountry(country: string): string {
@@ -162,6 +166,7 @@ export function isListedCountry(country: string): boolean {
 export function searchCountries(query: string, recent: string[]): CountryOption[] {
   const locale = getLocale();
   const { entries, byValue } = get();
+  // The secondary name: English under a Chinese or Japanese name, Chinese under an English one.
   const other: Locale = locale === 'en' ? 'zh' : 'en';
   const option = (e: Entry): CountryOption => ({ value: e.value, name: nameIn(e, locale), sub: nameIn(e, other), code: e.code });
 
@@ -171,11 +176,11 @@ export function searchCountries(query: string, recent: string[]): CountryOption[
     const regions = entries.filter((e) => REGIONS.includes(e) && !first.includes(e));
     const rest = entries
       .filter((e) => !first.includes(e) && !REGIONS.includes(e))
-      .sort((x, y) => nameIn(x, locale).localeCompare(nameIn(y, locale), locale === 'en' ? 'en' : 'zh-Hant-TW'));
+      .sort((x, y) => nameIn(x, locale).localeCompare(nameIn(y, locale), locale === 'zh' ? 'zh-Hant-TW' : locale));
     return [...first, ...rest, ...regions].map(option);
   }
   const rank = (e: Entry) => {
-    const terms = [e.zh.toLowerCase(), e.en.toLowerCase(), e.value, ...e.keywords];
+    const terms = [e.zh.toLowerCase(), e.en.toLowerCase(), e.ja.toLowerCase(), e.value, ...e.keywords];
     if (terms.some((term) => term === q)) return 0;
     if (terms.some((term) => term.startsWith(q))) return 1;
     if (terms.some((term) => term.includes(q))) return 2;

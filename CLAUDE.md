@@ -4,7 +4,7 @@ Guidance for Claude Code working in this repository.
 
 ## What this is
 
-A single-page planner for a year of digital nomading (2025 to 2028; 2027 by default). Vite + React 19 + TypeScript, no backend; all data lives in the browser's `localStorage`. The UI is in Traditional Chinese and English.
+A single-page planner for a year of digital nomading (2025 to 2028; 2027 by default). Vite + React 19 + TypeScript, no backend; all data lives in the browser's `localStorage`. The UI is in Traditional Chinese, English and Japanese.
 
 - Product behaviour and decisions: [MVP.md](MVP.md)
 - Setup, data format, structure, design notes: [README.md](README.md)
@@ -61,9 +61,10 @@ A Stop hook (`.claude/hooks/docs-check.sh`) blocks once when code under `src/` o
 - The product name is the same in both locales: `app.title` (今天不在家工作) and `app.tagline` (A Digital Nomad Planner, used for the document title and the PNG export). The line under the page title is `components/Tagline.tsx`, which types `app.tagline.1`–`.3` in turn once per page load and stops on the last. The year is not part of the name; neither the page header nor the PNG export shows it.
 - The header mascot (`components/PixelNomad.tsx`) is pixel art written as rows of characters, one per pixel, rendered to SVG rects and animated by swapping two frames in CSS. Edit the frame strings, not SVG paths; keep it decorative (`aria-hidden`).
 - Icons are Phosphor at `weight="bold"`, imported per icon from `@phosphor-icons/react/dist/csr/<Name>`. Flags use `flag-icons` via `src/components/Flag.tsx`.
-- **Every UI string goes through `src/lib/i18n.tsx`.** Add the key to both the `zh` and `en` dictionaries and use `t(key, vars)` (or `tr()` when a placeholder is a React node). Never hard-code display text in a component. A component that shows text calls `useLocale()` once so it re-renders on a language switch. Date and length text comes from the helpers in `lib/weeks.ts` and `daysText()`, which already follow the locale.
+- **Every UI string goes through `src/lib/i18n.tsx`.** Add the key to the `zh`, `en` and `ja` dictionaries and use `t(key, vars)` (or `tr()` when a placeholder is a React node). Never hard-code display text in a component. A component that shows text calls `useLocale()` once so it re-renders on a language switch. Date and length text comes from the helpers in `lib/weeks.ts` and `daysText()`, which already follow the locale.
 - Chinese strings are Traditional Chinese (Taiwan usage). Code, comments and commit messages are English.
-- `HelpDialog` holds its prose per language rather than in the dictionary; change both versions together.
+- `HelpDialog` holds its prose per language rather than in the dictionary; change all three versions together.
+- Locales are listed in `LOCALES` in `src/lib/i18n.tsx`; the language button calls `nextLocale()` to cycle through them, and `lang` attributes come from `langTag()`. Cities (`lib/cities.ts`), season notes (`lib/seasons.ts`) and changelog entries have no Japanese text and show English for `ja`; holidays (`lib/holidays.ts`) and country names (`lib/flags.ts`, via `Intl.DisplayNames('ja')`) do have it. Any new per-locale data must handle `ja`, by translation or by an explicit English fallback.
 - Anything new that talks to the network must be listed under "資料與隱私" in the README.
 - `src/components/HelpDialog.tsx` is the in-app guide. When a control, shortcut, or how data is stored or exported changes, update its text too.
 - Dialogs call `useScrollLock()` so the page behind them doesn't scroll.

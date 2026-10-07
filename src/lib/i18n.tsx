@@ -1,9 +1,12 @@
-// A small translation layer: two dictionaries, a current locale, and helpers to read them. There is no i18n
-// library because there are only a couple of hundred strings and two languages.
+// A small translation layer: three dictionaries, a current locale, and helpers to read them. There is no i18n
+// library because there are only a couple of hundred strings and three languages.
 import { Fragment, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 
-export type Locale = 'zh' | 'en';
+export type Locale = 'zh' | 'en' | 'ja';
+
+// In the order the language button cycles through them.
+export const LOCALES: Locale[] = ['zh', 'en', 'ja'];
 
 const zh = {
   'app.title': '今天不在家工作',
@@ -165,7 +168,7 @@ const zh = {
   'landing.point.local.title': '只存在你的瀏覽器',
   'landing.point.local.body': '沒有後端，行程不會上傳。',
   'landing.point.free.title': '免費、開源',
-  'landing.point.free.body': '繁體中文與英文介面。',
+  'landing.point.free.body': '繁體中文、英文、日文介面。',
   'landing.features.title': '排一整年，拖幾下就好',
   'landing.f.drag.title': '拖一下，就是一段行程',
   'landing.f.drag.body': '在 53 週的時間軸上拖選就新增一段。整塊拖曳是換順序，拉兩端會把鄰居推開，空檔先被吃掉。',
@@ -248,8 +251,8 @@ const en: Record<keyof typeof zh, string> = {
   'toolbar.import': 'Import',
   'toolbar.more': 'More',
   'toolbar.shortcut': '{action} ({keys})',
-  'toolbar.language': '中文',
-  'toolbar.languageHint': '切換為中文',
+  'toolbar.language': '日本語',
+  'toolbar.languageHint': '日本語に切り替える',
 
   'alert.pngFailed': "Couldn't create the PNG. Please try again.",
   'alert.importEmpty': 'No usable stays were found in that file.',
@@ -382,7 +385,7 @@ const en: Record<keyof typeof zh, string> = {
   'landing.point.local.title': 'Stays in your browser',
   'landing.point.local.body': 'No backend. Your plan is never uploaded.',
   'landing.point.free.title': 'Free and open source',
-  'landing.point.free.body': 'In English and Traditional Chinese.',
+  'landing.point.free.body': 'In English, Traditional Chinese and Japanese.',
   'landing.features.title': 'A whole year, in a few drags',
   'landing.f.drag.title': 'One drag, one stay',
   'landing.f.drag.body': 'Drag across the 53-week timeline to add a stay. Drag a whole stay to reorder; stretch an edge and the neighbours move along, gaps first.',
@@ -439,19 +442,237 @@ const en: Record<keyof typeof zh, string> = {
   'share.share': 'Share…',
 };
 
+const ja: Record<keyof typeof zh, string> = {
+  'app.title': '今天不在家工作',
+  'app.tagline': 'A Digital Nomad Planner',
+  'app.tagline.1': 'Not Working From Home Today',
+  'app.tagline.2': 'Out of office, all year',
+  'app.tagline.3': 'Where to Next?',
+
+  'unit.weeks': '{n} 週',
+  'unit.day': '{n} 日',
+  'unit.days': '{n} 日',
+  'sep': '・',
+  'paren': '（{x}）',
+  'list': '、',
+  'about': '{days}（約 {weeks}）',
+  'with': '{who} と',
+  'other': 'その他',
+
+  'toolbar.help': '使い方',
+  'toolbar.about': 'このアプリについて',
+  'toolbar.undo': '元に戻す',
+  'toolbar.redo': 'やり直す',
+  'toolbar.share': '共有',
+  'toolbar.export': '書き出し',
+  'toolbar.import': '読み込み',
+  'toolbar.more': 'その他',
+  'toolbar.shortcut': '{action}（{keys}）',
+  'toolbar.language': '中文',
+  'toolbar.languageHint': '切換為中文',
+
+  'alert.pngFailed': 'PNG を作成できませんでした。もう一度お試しください。',
+  'alert.importEmpty': 'このファイルには使える滞在がありません。',
+  'alert.importConfirm': '読み込むと {years} 年の滞在が置き換わります。続けますか？',
+  'alert.importFailed': 'ファイルを読み込めませんでした。ここで書き出した JSON か確認してください。',
+
+  'view.label': '表示',
+  'view.year': '年',
+  'view.month': '月',
+  'view.all': '全月表示',
+  'view.toTop': '先頭へ戻る',
+  'zoom.out': '縮小',
+  'zoom.in': '拡大',
+  'zoom.label': 'タイムラインの拡大率',
+  'zoom.fit': '幅に合わせる',
+
+  'year.panHint': 'ドラッグで左右に移動、月をクリックでその月を表示',
+
+  'month.prev': '前の月',
+  'month.next': '次の月',
+  'month.stat': '予定あり {planned}・空き {free}',
+
+  'summary.title': 'まとめ',
+  'summary.time': '予定あり {planned}・空き {free}',
+  'summary.places': '{countries} か国・{cities} 都市',
+  'summary.flights': '約 {legs} 区間・飛行約 {hours} 時間',
+  'summary.flightsSkipped': '（{n} 区間は座標不明のため除外）',
+  'summary.flightsHint': '滞在順に 2 地点間の直線距離から推定。300 km 以内は陸路とみなして除外、乗り継ぎは含みません',
+  'rules.schengen': 'シェンゲン圏：任意の 180 日間で最大 {peak} 日（上限 90）',
+  'rules.schengenOver': '{date}から 90 日超',
+  'rules.schengenHint': '各日について直前 180 日間にシェンゲン加盟国に滞在した日数を数えます。タイムライン開始（{start}）より前と、「ヨーロッパ」のような地域指定は数えません',
+  'rules.taiwan': '台湾：{year} 年に {days}（183 日で税務上の居住者）',
+  'rules.taiwanHint': '台湾に予定した滞在だけを数え、予定のない日は含みません。課税年度は 1/1〜12/31 です',
+
+  'stays.title': '滞在',
+  'stays.titleMonth': '滞在・{month}',
+  'stays.all': 'すべて',
+  'stays.filter': '四半期で絞り込み',
+  'stays.emptyMonth': 'この月にはまだ予定がありません。上のカレンダーで日をドラッグしてみてください。',
+  'stays.emptyQuarter': 'Q{q} にはまだ予定がありません。',
+  'stays.empty': 'まだ予定がありません。上のタイムラインをドラッグして滞在を追加してください。',
+  'stays.ticket': '{place} の航空券',
+  'stays.edit': '編集',
+  'stays.editPlace': '{place} を編集',
+  'stays.gap': '空き',
+  'stays.gapAdd': '追加',
+  'stays.gapAddLabel': '{range} に滞在を追加',
+  'stays.schengenOver': 'シェンゲン圏の滞在が 180 日間で {n} 日に達し、上限の 90 日を超えます',
+
+  'backup.never': 'まだバックアップしていません。',
+  'backup.since': '前回のバックアップは {n} 日前で、その後に変更があります。',
+  'backup.why': 'データはこのブラウザにしかなく、閲覧データを消すと失われます。JSON を書き出して保管してください。',
+  'backup.export': 'バックアップを書き出す',
+  'backup.later': 'あとで',
+
+  'map.title': '地図',
+  'map.loading': '地図を読み込み中…',
+  'map.empty': '滞在を追加すると、行く場所がここに表示されます。',
+  'map.pending': '座標を検索中…（残り {n} か所）',
+  'map.failed': '座標を取得できませんでした。接続を確認して再読み込みしてください。',
+  'map.missing': '見つかりません：{places}（英語名や正式な名前を試してください）',
+
+  'ticket.booked': '航空券購入済み',
+  'ticket.title': '航空券・{place}',
+  'ticket.departs': '出発 {time}',
+  'ticket.ref': '予約番号 {ref}',
+  'ticket.fare': '運賃 {fare}',
+  'ticket.none': '詳細は未入力',
+
+  'editor.edit': '滞在を編集',
+  'editor.new': '滞在を追加',
+  'editor.country': '国',
+  'editor.city': '都市',
+  'editor.color': '色',
+  'editor.start': '開始日',
+  'editor.end': '終了日',
+  'editor.clash': '「{place}」（{range}）と重なっています。',
+  'editor.range': '{range}・{length}',
+  'editor.companions': '同行者',
+  'editor.companionsPh': '例：ひとり、家族、Amy',
+  'editor.airline': '航空会社',
+  'editor.airlinePh': '例：ANA',
+  'editor.flightNo': '便名',
+  'editor.flightNoPh': '例：NH853',
+  'editor.departure': '出発',
+  'editor.depDate': '出発日',
+  'editor.depTime': '出発時刻',
+  'editor.bookingRef': '予約番号',
+  'editor.bookingRefPh': '例：ABC123',
+  'editor.fare': '運賃',
+  'editor.farePh': '例：¥38,000',
+  'editor.note': 'メモ',
+  'editor.notePh': '例：年末年始は帰省、友人の結婚式',
+  'editor.delete': '削除',
+  'editor.cancel': 'キャンセル',
+  'editor.save': '保存',
+
+  'color.black': '黒',
+  'color.red': '赤',
+  'color.orange': 'オレンジ',
+  'color.yellow': '黄',
+  'color.green': '緑',
+  'color.teal': '青緑',
+  'color.blue': '青',
+  'color.purple': '紫',
+  'color.pink': 'ピンク',
+
+  'country.placeholder': '国を検索（例：タイ）',
+  'country.empty': '該当する国がありません。入力した文字のまま保存できます。',
+  'country.unlisted': '「{name}」は国リストにないため、入力のまま保存されます。',
+  'city.placeholder': '都市を検索（例：Chiang Mai）',
+  'city.empty': 'リストにない都市です。入力した文字のまま保存してください。',
+
+  'date.placeholder': '日付を選択',
+
+  'help.title': '使い方',
+  'help.close': '閉じる',
+
+  'mobile.now': '現在',
+  'mobile.next': '次',
+  'landing.nav.features': '機能',
+  'landing.nav.privacy': 'プライバシー',
+  'landing.nav.github': 'GitHub',
+  'landing.cta.open': '計画をはじめる',
+  'landing.hero.lead': 'ドラッグするだけで、1 年を「何月にどの都市にいるか」で組み立てられます。登録不要、データはブラウザの中だけ。',
+  'landing.hero.cta': '無料ではじめる',
+  'landing.hero.more': '使い方を見る',
+  'landing.point.account.title': '登録不要',
+  'landing.point.account.body': '開いてすぐ使えます。アカウント管理なし。',
+  'landing.point.local.title': 'ブラウザの中だけ',
+  'landing.point.local.body': 'サーバーなし。計画はアップロードされません。',
+  'landing.point.free.title': '無料・オープンソース',
+  'landing.point.free.body': '繁体字中国語・英語・日本語に対応。',
+  'landing.features.title': '1 年分を、数回のドラッグで',
+  'landing.f.drag.title': 'ドラッグひとつで滞在ひとつ',
+  'landing.f.drag.body': '53 週のタイムラインをドラッグして滞在を追加。ブロックごと動かせば順番の入れ替え、端を伸ばせば隣が押され、空きから先に埋まります。',
+  'landing.f.cut.title': '分割とコピー',
+  'landing.f.cut.body': 'B を押しながらクリックで滞在を 2 つに分割。⌥ を押しながらドラッグでコピーを差し込み、後ろの滞在は自動で後ろにずれます。',
+  'landing.f.month.title': 'カレンダーで日単位に',
+  'landing.f.month.body': 'タイムラインで大枠を決め、カレンダーで正確な日付を調整。台湾・オーストラリアの祝日も重ねられます。',
+  'landing.f.map.title': 'ルートをひと目で',
+  'landing.f.map.body': '各滞在先を地図に置き、日付順に 1 本の線でつなぎます。',
+  'landing.rules.title': 'ノマドならではの気になる点',
+  'landing.rules.schengen.title': 'シェンゲン 90/180',
+  'landing.rules.schengen.body': '任意の 180 日間で最大 90 日。超えると、どの日からかを表示します。',
+  'landing.rules.schengen.value': '{n} / 90 日',
+  'landing.rules.taiwan.title': '台湾の 183 日',
+  'landing.rules.taiwan.body': 'その年に台湾にいる日数を、税務上の居住者の基準と見比べられます。',
+  'landing.rules.taiwan.value': '{n} 日',
+  'landing.rules.season.title': 'シーズンの注意',
+  'landing.rules.season.body': '人気の約 71 都市を月ごとに評価。野焼きの季節や真夏に予定を入れると注意が出ます。',
+  'landing.share.title': '1 年を 1 枚の画像で共有',
+  'landing.share.body': 'プレビューしてから PNG をダウンロード。タイムライン・国旗・まとめが入り、航空券の詳細は入りません。',
+  'landing.mobile.title': 'PC で計画、旅先で確認',
+  'landing.mobile.body': 'スマホでは閲覧専用：今いる場所、次の目的地、滞在ごとのカード。PC で書き出し、スマホで読み込むだけ。',
+  'landing.privacy.title': '計画はあなたの手元に',
+  'landing.privacy.body': '計画はブラウザの localStorage に保存されます。サーバーもアカウントもありません。地図の座標は OpenStreetMap に問い合わせますが、送るのは都市名だけ。公開サイトでは Google Analytics で匿名の訪問数を集計しますが、計画の内容は含みません。閲覧データを消すと計画も消えるので、定期的に書き出して保管してください。',
+  'landing.final.title': '次はどこへ？',
+  'landing.footer': '© 2026 Simon Lin・MIT ライセンス',
+  'footer.local': '計画はこのブラウザにだけ保存され、アップロードされません',
+  'footer.home': 'ホーム',
+  'changelog.title': '更新履歴',
+  'changelog.lead': 'リリースごとの新機能と変更点。新しいものが上です。',
+  'mobile.daysLeft': 'あと {days}',
+  'mobile.inDays': '{days}後に出発',
+  'mobile.empty': 'まだ予定がありません。PC で計画して書き出し、ここで ⋯ メニューから読み込んでください。',
+  'mobile.readOnly': 'スマホでは閲覧のみです。計画や変更は PC で開いてください。',
+
+  'season.title': 'おすすめの時期',
+  'season.best': 'おすすめ',
+  'season.fine': 'ふつう',
+  'season.avoid': '避ける',
+  'season.disclaimer': '一般的な目安で、天気予報ではありません',
+  'season.temp': '約 {lo}〜{hi}°C',
+  'season.basis': '{city}を基準',
+
+  'year.label': '年',
+  'year.release': '離すと {year} 年へ',
+  'season.warn': 'この時期は避けたほうが無難：{why}',
+  'season.warnShort': '時期が不向き',
+
+  'share.title': '共有',
+  'share.alt': '1 年の計画画像のプレビュー',
+  'share.rendering': '画像を作成中…',
+  'share.note': '画像にはタイムライン・国・祝日・滞在リストが入ります。航空券の詳細と予約番号は入りません。',
+  'share.download': 'PNG をダウンロード',
+  'share.share': '共有…',
+};
+
 export type Key = keyof typeof zh;
-const DICT: Record<Locale, Record<Key, string>> = { zh, en };
+const DICT: Record<Locale, Record<Key, string>> = { zh, en, ja };
 
 const STORAGE_KEY = 'dnp-lang';
 
 function initialLocale(): Locale {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === 'zh' || saved === 'en') return saved;
+    if ((LOCALES as string[]).includes(saved ?? '')) return saved as Locale;
   } catch {
     // fall through to the browser's language
   }
-  return navigator.language.toLowerCase().startsWith('zh') ? 'zh' : 'en';
+  const lang = navigator.language.toLowerCase();
+  return lang.startsWith('zh') ? 'zh' : lang.startsWith('ja') ? 'ja' : 'en';
 }
 
 // The locale lives outside React so that plain functions (date labels, the PNG export) can read it too.
@@ -459,6 +680,12 @@ let locale: Locale = initialLocale();
 const listeners = new Set<() => void>();
 
 export const getLocale = (): Locale => locale;
+
+// The language the button switches to next: 中文 → English → 日本語 → 中文.
+export const nextLocale = (current: Locale): Locale => LOCALES[(LOCALES.indexOf(current) + 1) % LOCALES.length];
+
+// BCP 47 tag for `lang` attributes and Intl APIs.
+export const langTag = (l: Locale): string => ({ zh: 'zh-Hant', en: 'en', ja: 'ja' })[l];
 
 export function setLocale(next: Locale) {
   if (next === locale) return;
@@ -497,5 +724,5 @@ export function tr(key: Key, vars: Record<string, ReactNode>): ReactNode {
   return parts.map((part, i) => <Fragment key={i}>{i % 2 ? vars[part] : part}</Fragment>);
 }
 
-// "1 day" / "3 days"; Chinese has no plural.
+// "1 day" / "3 days"; Chinese and Japanese have no plural.
 export const daysText = (n: number) => t(n === 1 ? 'unit.day' : 'unit.days', { n });

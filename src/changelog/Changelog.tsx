@@ -2,7 +2,7 @@ import { ArrowRight } from '@phosphor-icons/react/dist/csr/ArrowRight';
 import { GithubLogo } from '@phosphor-icons/react/dist/csr/GithubLogo';
 import { PixelNomad } from '../components/PixelNomad';
 import { CHANGELOG } from '../lib/changelog';
-import { setLocale, t, useLocale } from '../lib/i18n';
+import { langTag, nextLocale, setLocale, t, useLocale } from '../lib/i18n';
 import { REPO_URL } from '../lib/links';
 import './Changelog.css';
 
@@ -14,9 +14,9 @@ const APP_URL = '../app/';
 export function Changelog() {
   const locale = useLocale();
   document.title = `${t('changelog.title')} — ${t('app.title')}`;
-  document.documentElement.lang = locale === 'en' ? 'en' : 'zh-Hant';
+  document.documentElement.lang = langTag(locale);
   const dateText = (iso: string) =>
-    new Date(`${iso}T00:00:00`).toLocaleDateString(locale === 'en' ? 'en' : 'zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+    new Date(`${iso}T00:00:00`).toLocaleDateString(locale === 'zh' ? 'zh-TW' : langTag(locale), { year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
     <div className="changelog">
@@ -27,7 +27,7 @@ export function Changelog() {
         </a>
         <nav>
           {/* Labelled in the language it switches to, as in the app's toolbar. */}
-          <button onClick={() => setLocale(locale === 'en' ? 'zh' : 'en')} title={t('toolbar.languageHint')} lang={locale === 'en' ? 'zh-Hant' : 'en'}>
+          <button onClick={() => setLocale(nextLocale(locale))} title={t('toolbar.languageHint')} lang={langTag(nextLocale(locale))}>
             {t('toolbar.language')}
           </button>
           <a className="c-open" href={APP_URL}>
@@ -44,8 +44,9 @@ export function Changelog() {
             <li key={day.date} className="c-day">
               <time dateTime={day.date}>{dateText(day.date)}</time>
               <ul>
+                {/* Entries are written in Chinese and English; Japanese reads the English ones. */}
                 {day.entries.map((e, i) => (
-                  <li key={i}>{locale === 'en' ? e.en : e.zh}</li>
+                  <li key={i}>{locale === 'zh' ? e.zh : e.en}</li>
                 ))}
               </ul>
             </li>
