@@ -82,6 +82,23 @@ export function track<K extends keyof Events>(name: K, params: Events[K]) {
   else if (import.meta.env.DEV) console.debug('[analytics]', name, params);
 }
 
+// For a link that leaves the page: an event fired as the page unloads is often lost, so hold the navigation
+// until gtag has sent it (or a second has passed). New-tab and modified clicks are left to the browser.
+export function trackLink<K extends keyof Events>(e: React.MouseEvent<HTMLAnchorElement>, name: K, params: Events[K]) {
+  const gtag = window.gtag;
+  if (!gtag || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return track(name, params);
+  e.preventDefault();
+  const href = e.currentTarget.href;
+  let gone = false;
+  const go = () => {
+    if (gone) return;
+    gone = true;
+    location.href = href;
+  };
+  gtag('event', name, { ...params, event_callback: go, event_timeout: 1000 });
+  setTimeout(go, 1200);
+}
+
 // Sent once per browser, the first time a stay is created.
 export function trackActivation() {
   if (stored(ACTIVATED_KEY)) return;

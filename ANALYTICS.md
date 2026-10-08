@@ -75,7 +75,7 @@ README 寫著「不會送出任何行程內容」。事件參數只能是：
 - **`?ga_debug=1`**：正式網址加上它，事件會出現在 GA 的 DebugView。
 - **`?internal=1`**：把這個瀏覽器標成自己（`dnp-ga-internal`），之後事件帶 `traffic_type=internal`，在 GA 用內部流量篩選排除；`?internal=0` 取消。
 - **觸發點放在回呼裡**（`App.tsx`、對話框），不放在 view 的拖曳邏輯裡，跟「view 不持有計劃」一致。
-- 連到 app 的 CTA 在點擊後就換頁，gtag 預設用 `sendBeacon` 送出，不會被換頁打斷。
+- **會換頁的連結用 `trackLink()`**：換頁時才送的事件常會遺失（上線實測 `cta_click` 就掉了），所以先攔下換頁，等 gtag 回呼（最多約 1 秒）再前往；新分頁或按著修飾鍵的點擊交給瀏覽器，只照常送事件。
 
 ## GA 後台設定
 
@@ -115,7 +115,10 @@ README 寫著「不會送出任何行程內容」。事件參數只能是：
 - [x] `import_result`
 - [x] `share_open`
 - [x] `share_download`
-- [ ] 上線後用 `?ga_debug=1` 在 DebugView 逐一確認
+- [x] DebugView 確認 `share_open`（2026-10-08）
+- [x] `cta_click` 換頁時遺失 → 改用 `trackLink()`
+- [ ] DebugView 確認 `cta_click`
+- [ ] DebugView 確認 `stay_create`、`plan_activated`、`export_json`、`import_result`、`share_download`（會動到真實行程或下載檔案，請自己操作時順便看）
 
 ### GA 後台
 - [ ] 資料保留改 14 個月
