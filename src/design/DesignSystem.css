@@ -1,0 +1,120 @@
+/* The dev-only design system page: a sticky table of contents beside one long column of sections */
+.ds { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 48px; max-width: 1440px; margin: 0 auto; padding: 0 40px; }
+
+.ds-nav {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 32px 0;
+}
+.ds-brand { margin: 0; font-size: 14px; font-weight: 600; }
+.ds-kicker { margin: 0 0 16px; font-size: 13px; color: var(--muted); }
+.ds-group { margin: 16px 0 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.ds-nav a { padding: 6px 10px; border-radius: 8px; color: var(--text); font-size: 14px; text-decoration: none; }
+@media (hover: hover) {
+  .ds-nav a:hover { background: var(--subtle); }
+}
+
+.ds-main { padding: 32px 0 96px; min-width: 0; }
+.ds-head { padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+.ds-head p { max-width: 680px; margin: 12px 0 0; font-size: 15px; line-height: 1.7; color: var(--muted); }
+.ds code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+.ds-head code,
+.ds-note code { padding: 1px 5px; border-radius: 4px; background: var(--subtle); color: var(--text); }
+
+.ds-section { padding: 40px 0; border-bottom: 1px solid var(--line); scroll-margin-top: 16px; }
+.ds-section h2 { font-size: 24px; margin-bottom: 8px; }
+.ds-section h3 { margin: 28px 0 12px; font-size: 14px; font-weight: 600; }
+.ds-note { max-width: 680px; margin: 0 0 20px; font-size: 14px; line-height: 1.7; color: var(--muted); }
+.ds-muted { color: var(--muted); }
+
+/* Colour */
+.ds-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+.ds-color { margin: 0; overflow: hidden; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); }
+.ds-chip { height: 72px; border-bottom: 1px solid var(--line); }
+.ds-color.small .ds-chip { height: 48px; }
+.ds-color figcaption { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px 12px; font-size: 12px; }
+.ds-color figcaption span { color: var(--muted); font-variant-numeric: tabular-nums; }
+.ds-color figcaption small { margin-top: 4px; line-height: 1.5; color: var(--muted); }
+
+/* Typography */
+.ds-faces { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.ds-face { display: flex; flex-direction: column; gap: 10px; padding: 20px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); }
+.ds-face-sample { font-size: 26px; line-height: 1.2; }
+.ds-face code { color: var(--muted); }
+.tagline-face { font-family: 'Pixelify Sans', monospace; font-size: 22px; }
+
+.ds-table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; }
+.ds-table th,
+.ds-table td { padding: 12px 16px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+.ds-table thead th { font-size: 12px; font-weight: 600; color: var(--muted); background: var(--subtle); }
+.ds-table tbody th { width: 160px; font-weight: 600; white-space: nowrap; }
+.ds-table tr:last-child > * { border-bottom: 0; }
+
+/* Spacing */
+.ds-spacing { display: flex; flex-direction: column; gap: 10px; }
+.ds-space-row { display: grid; grid-template-columns: 56px 64px 1fr; align-items: center; gap: 16px; font-size: 14px; }
+.ds-space-bar { height: 16px; border-radius: 2px; background: var(--accent); opacity: 0.75; }
+
+/* Layout */
+.ds-layout-demo { position: relative; max-width: 560px; margin-bottom: 20px; padding: 16px 40px; border: 1px dashed var(--line-strong); border-radius: var(--radius); background: var(--bg); }
+.ds-l-page { display: flex; flex-direction: column; gap: 10px; font-size: 12px; color: var(--muted); }
+.ds-l-page > div { padding: 10px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line-strong); }
+.ds-l-top { display: flex; justify-content: space-between; }
+.ds-l-view { height: 72px; }
+.ds-l-panels { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; padding: 0 !important; border: 0 !important; background: none !important; }
+.ds-l-panels > div { padding: 10px 12px; height: 48px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line-strong); }
+.ds-l-gutter { position: absolute; top: 50%; left: 4px; transform: translateY(-50%); font-size: 11px; color: var(--accent); writing-mode: vertical-rl; }
+
+/* Radius and shadow */
+.ds-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 24px 16px; }
+.ds-tile { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.ds-tile figcaption { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.ds-tile small { color: var(--muted); line-height: 1.5; }
+.ds-radius-box { width: 96px; height: 72px; border: 2px solid var(--text); background: var(--subtle); }
+.ds-shadow-box { height: 80px; border-radius: var(--radius); background: var(--surface); margin: 8px 8px 0; }
+
+/* State tables: variants down, states across */
+.ds-scroll { overflow-x: auto; margin: 0 -8px; padding: 8px; }
+.ds-states { border-collapse: separate; border-spacing: 0; min-width: 100%; background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius); }
+.ds-states th,
+.ds-states td { padding: 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.ds-states tr:last-child > * { border-bottom: 0; }
+.ds-states thead th { padding: 10px 16px; font-size: 12px; font-weight: 600; color: var(--muted); text-align: left; white-space: nowrap; background: var(--subtle); }
+.ds-states thead th:first-child { border-top-left-radius: var(--radius); }
+.ds-states thead th:last-child { border-top-right-radius: var(--radius); }
+.ds-states tbody th { width: 120px; font-size: 13px; font-weight: 600; text-align: left; white-space: nowrap; }
+.ds-states tbody th code { display: block; margin-top: 4px; font-weight: 400; color: var(--muted); }
+.ds-states td { white-space: nowrap; }
+
+/* Showcase wrappers that take away layout the real context adds */
+.buttons.ds-flat { margin: 0; padding: 0; border: 0; }
+.zoombar.ds-flat { margin: 0; }
+.zoombar.ds-flat input[type='range'] { width: 120px; }
+.ds-static { position: static; animation: none; }
+.editor.ds-bare { width: auto; max-height: none; overflow: visible; padding: 0; gap: 0; background: none; box-shadow: none; border-radius: 0; animation: none; display: block; }
+.editor.ds-bare .ds-states input,
+.editor.ds-bare .datepicker-field { width: 128px; }
+.editor.ds-bare .ds-states td { padding-inline: 10px; }
+.editor.ds-bare .error { margin: 6px 0 0; }
+
+.ds-menu-demo { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; }
+.ds-menu-demo .year-menu { width: 180px; }
+.ds-legend { display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--muted); }
+.ds-legend b { color: var(--text); font-weight: 600; margin-right: 6px; }
+
+.ds-combo-demo { width: 320px; }
+.ds-combo-demo .combo-list { margin-top: 4px; }
+
+.ds-dialog { animation: none; }
+
+@media (max-width: 900px) {
+  .ds { grid-template-columns: 1fr; gap: 0; padding: 0 16px; }
+  .ds-nav { position: static; flex-flow: row wrap; max-height: none; padding-bottom: 0; }
+  .ds-nav .ds-group { width: 100%; }
+}

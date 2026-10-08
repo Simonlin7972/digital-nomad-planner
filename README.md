@@ -43,12 +43,18 @@
 - 縮放 100%–600%：滑桿、觸控板 pinch、兩指觸控、`Ctrl`／`Alt` + 滾輪，皆以游標為中心
 - 按住月份列可左右拖曳平移；點月份標題跳到該月的月檢視
 
+![拖選新增一段行程，拉右端把隔壁推開](docs/demo-drag.gif)
+
+![按住 B 切開一段，按住 ⌥ 拖曳複製一段插進去](docs/demo-cut-copy.gif)
+
 ### 月檢視（月曆）
 
 - 7 欄月曆格，以**天**為單位
 - 在日期上拖選新增行程；拉橫條兩端調整起訖日；點橫條編輯；按住 `B` 點橫條切成兩段
 - 標題列顯示當月已安排／未安排天數
 - 分頁右邊的「看全部」開關：1–12 月由上往下排成一長頁，可以往下捲，每個月照樣可以拖選與編輯；捲下去後右下角有回到頂端的按鈕
+
+![月曆上疊假日、拖行程的一端改日期](docs/demo-month.gif)
 
 ### 每段行程可記錄
 
@@ -71,6 +77,8 @@
 - **地圖**：依時間順序標出每個地點並連成路線
 - **年份**：分頁左邊的下拉選單可切換 2025／2026／2027／2028，每年各存一份行程；在時間軸按住月份列拖過 12 月（或 1 月）再繼續拉，放開就換到下一年（上一年）
 - **國定假日**：可開關台灣、澳洲 2026、2027 年國定假日，疊在時間軸與月曆上（2028 年目前沒有假日資料）
+
+![摘要、行程列表與地圖路線](docs/demo-map.gif)
 
 ### 其他
 
@@ -259,6 +267,7 @@ npm run dev
 index.html              產品介紹頁的入口（網站根網址）
 app/index.html          App 的入口（/app/），載入字體與 favicon
 changelog/index.html    更新日誌頁的入口（/changelog/）
+design/index.html       設計系統頁的入口（/design/，只在 `npm run dev` 時有，不進 build）
 CHANGELOG.md            給使用者看的更新紀錄，更新日誌頁的內容來源（格式見檔案開頭的註解）
 public/favicon.svg      16×16 像素風地球圖示
 public/apple-touch-icon.png, icon-192.png, icon-512.png  加入主畫面用的圖示（由 favicon 放大、加邊距產生）
@@ -266,9 +275,11 @@ public/manifest.webmanifest  PWA 設定：名稱、圖示、從 /app/ 開啟
 public/sw.js            離線用的 service worker（保存載入過的檔案）
 public/og.png           分享連結時的預覽圖（1200×630，三語標示）
 docs/overview.png       README 用的範例圖（由 app 的「分享」下載）
+docs/demo-*.gif         README 的功能示範動畫（英文介面、範例資料）
 src/
   main.tsx              React 掛載點；決定樣式載入順序
   changelog/            更新日誌頁（讀 `lib/changelog.ts` 解析好的 CHANGELOG.md）
+  design/               設計系統頁：顏色、字體、間距、版面、圓角、陰影，以及按鈕、開關、分頁、下拉選單、輸入框等元件的各種狀態；直接套用 app 的 CSS，forceStates 把 :hover／:focus／:active 規則複製成 class 好並排呈現
   landing/              產品介紹頁：Landing（版面）、Demos（腳本化的功能示範）、motion（捲動觸發與循環動畫）
   App.tsx               組裝各元件，持有行程與頁面層級的狀態
   components/           畫面元件，每個元件的樣式（.css）放在旁邊

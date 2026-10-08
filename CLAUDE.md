@@ -12,7 +12,7 @@ A single-page planner for a year of digital nomading (2025 to 2028; 2027 by defa
 ## Commands
 
 ```bash
-npm run dev      # dev server: landing page on http://localhost:5173/, the app on /app/ (strict port)
+npm run dev      # dev server: landing page on http://localhost:5173/, the app on /app/, the design system on /design/ (strict port)
 npm run build    # tsc --noEmit, then vite build
 npx tsc --noEmit # type-check only
 ```
@@ -72,6 +72,7 @@ A Stop hook (`.claude/hooks/docs-check.sh`) blocks once when code under `src/` o
 - Dialogs call `useScrollLock()` so the page behind them doesn't scroll. On a phone the dialog shell and the ⋯ / year menus become bottom sheets (CSS only, under `NARROW_QUERY`); a menu renders a `.menu-scrim` sibling so a tap outside closes it without reaching the page.
 - Hover styles that change a background go inside `@media (hover: hover)`, so they don't stick after a tap on touch screens.
 - Dates are picked with `components/DatePicker.tsx` (ISO strings in and out), not `<input type="date">`.
+- **The design system page** (`design/index.html`, `src/design/`) is dev-only: it is not a build input, so it is served by `npm run dev` and never published. It imports the real `base.css` and component stylesheets, so restyling a component shows there with no change; a new token, base component or state goes into `DesignSystem.tsx` by hand, and so do changes to the hard-coded sizes it lists. `forceStates.ts` copies every `:hover` / `:focus` / `:active` rule onto `.is-hover` / `.is-focus` / `.is-active` so states show at rest. Its text is Chinese only and skips the i18n dictionaries, the one exception to that rule.
 
 ## Verifying changes
 

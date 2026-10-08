@@ -45,12 +45,18 @@ The interface is available in Traditional Chinese, English and Japanese; switch 
 - Zoom from 100% to 600% with the slider, a trackpad pinch, two-finger touch, or `Ctrl`/`Alt` + wheel, always centred on the pointer
 - Drag the month row to pan; click a month to open it in the month view
 
+![Drag to add a stay, then stretch its edge and push the neighbour along](docs/demo-drag.gif)
+
+![Hold B to cut a stay in two; hold ⌥ and drag to insert a copy](docs/demo-cut-copy.gif)
+
 ### Month view (calendar)
 
 - A seven-column calendar, precise to the **day**
 - Drag across days to add a stay; drag a bar's ends to change its dates; click a bar to edit it; hold `B` and click a bar to cut it in two
 - The header shows how many days of the month are planned and free
 - The "All months" switch beside the tabs stacks January to December down one long page to scroll through; every month can still be dragged and edited; once scrolled down, a button in the bottom-right corner goes back to the top
+
+![Holidays on the calendar, and dragging a stay's end to change its dates](docs/demo-month.gif)
 
 ### What a stay records
 
@@ -73,6 +79,8 @@ The interface is available in Traditional Chinese, English and Japanese; switch 
 - **Map**: every place in visit order, joined into a route
 - **Year**: the drop-down beside the view tabs switches between 2025, 2026, 2027 and 2028; each year keeps its own plan. Dragging the month row past December (or January) and letting go moves to the next (or previous) year
 - **Public holidays**: toggle Taiwan's and Australia's 2026 and 2027 holidays, drawn over the timeline and calendar (no holiday data for 2028 yet)
+
+![Summary, itinerary and the route on the map](docs/demo-map.gif)
 
 ### Also
 
@@ -262,6 +270,7 @@ A "Send to another device" link is `…/app/#plan=<code>`. The code's first char
 index.html              Landing page entry (the site root)
 app/index.html          App entry (/app/); loads the font and favicon
 changelog/index.html    Changelog page entry (/changelog/)
+design/index.html       Design system page entry (/design/; served by `npm run dev` only, not built)
 CHANGELOG.md            The user-facing release notes, source of the changelog page (format in the file's header comment)
 public/favicon.svg      16×16 pixel-art globe
 public/apple-touch-icon.png, icon-192.png, icon-512.png  Home-screen icons (the favicon scaled up with a margin)
@@ -269,9 +278,11 @@ public/manifest.webmanifest  PWA settings: name, icons, opens at /app/
 public/sw.js            Offline service worker (keeps loaded files)
 public/og.png           Link-preview image (1200×630, marks all three languages)
 docs/overview.png       Sample image for the README (downloaded from the app's Share dialog)
+docs/demo-*.gif         Feature demos for the README (English interface, sample data)
 src/
   main.tsx              React mount point; sets the stylesheet order
   changelog/            The changelog page (renders CHANGELOG.md as parsed by `lib/changelog.ts`)
+  design/               Design system page: colour, type, spacing, layout, radius and shadow, plus every state of the buttons, toggles, tabs, dropdowns, inputs and other base components; uses the app's own CSS, and forceStates copies :hover / :focus / :active rules to classes so states sit side by side
   landing/              Landing page: Landing (layout), Demos (scripted feature demos), motion (scroll triggers and looping)
   App.tsx               Wires the pieces together; owns the plan and page-level state
   components/           UI components, each with its stylesheet (.css) beside it
