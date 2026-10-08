@@ -21,3 +21,8 @@
 .share-note { margin: -4px 0 0; font-size: 12px; color: var(--muted); }
 .editor.share .buttons { padding-bottom: 0; }
 .editor.share .buttons button { display: inline-flex; align-items: center; gap: 8px; }
+
+/* Landscape / portrait switch above the preview (the view switch's segmented style) */
+.share-layout { align-self: center; flex: none; }
+/* The 9:16 image fits the frame's height instead of its width */
+.share-preview.portrait img { width: auto; max-width: 100%; max-height: min(60dvh, 640px); }

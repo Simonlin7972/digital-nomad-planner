@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
 import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork';
 import { X } from '@phosphor-icons/react/dist/csr/X';
 import { useScrollLock } from '../hooks/useScrollLock';
-import { renderPng } from '../lib/exportPng';
+import { renderPng, renderPortraitPng, type PngLayout } from '../lib/exportPng';
+import { useNarrow } from '../hooks/useNarrow';
 import { track } from '../lib/analytics';
 import { download, fileName } from '../lib/files';
 import type { HolidaySet } from '../lib/holidays';
@@ -15,17 +17,22 @@ import './ShareDialog.css';
 type Props = { stays: Stay[]; holidaySets: HolidaySet[]; onClose: () => void };
 
 // Shows the PNG before it is saved, with a download button and, where the device supports sharing files
-// (most phones), the system share sheet.
+// (most phones), the system share sheet. Two shapes: the wide year (the default on a computer) and a 9:16 one for
+// stories (the default on a phone).
 export function ShareDialog({ stays, holidaySets, onClose }: Props) {
   useLocale();
   useScrollLock();
+  const narrow = useNarrow();
+  const [layout, setLayout] = useState<PngLayout>(narrow ? 'portrait' : 'landscape');
   const [image, setImage] = useState<{ blob: Blob; url: string } | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let url: string | null = null;
     let live = true;
-    renderPng(stays, { holidaySets })
+    setImage(null);
+    setFailed(false);
+    (layout === 'portrait' ? renderPortraitPng(stays) : renderPng(stays, { holidaySets }))
       .then((blob) => {
         if (!live) return;
         url = URL.createObjectURL(blob);
@@ -38,7 +45,7 @@ export function ShareDialog({ stays, holidaySets, onClose }: Props) {
     };
     // The dialog shows the plan as it was when it opened; it can't change behind the dialog anyway.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [layout]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -68,7 +75,15 @@ export function ShareDialog({ stays, holidaySets, onClose }: Props) {
             <X size={16} weight="bold" />
           </button>
         </h2>
-        <div className="share-preview">
+        <div className="segmented share-layout" role="tablist" aria-label={t('share.title')} style={{ '--i': layout === 'landscape' ? 0 : 1 } as CSSProperties}>
+          <span className="thumb" aria-hidden />
+          {(['landscape', 'portrait'] as const).map((l) => (
+            <button key={l} role="tab" aria-selected={layout === l} onClick={() => setLayout(l)}>
+              {t(l === 'landscape' ? 'share.landscape' : 'share.portrait')}
+            </button>
+          ))}
+        </div>
+        <div className={`share-preview ${layout}`}>
           {image ? (
             <img src={image.url} alt={t('share.alt')} />
           ) : (

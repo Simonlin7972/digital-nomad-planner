@@ -2,8 +2,14 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover: the page runs under the notch and home bar; base.css keeps content clear with safe-area insets -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Installable: added to a home screen it opens full screen, and the service worker keeps it working offline -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#faf9f6" />
+    <meta name="apple-mobile-web-app-title" content="今天不在家" />
     <!-- UI face: 975 朦朧黑體 (regular for text, semibold for emphasis), served in subsets by emfont -->
     <link rel="preconnect" href="https://font.emtech.cc" />
     <link rel="stylesheet" href="https://font.emtech.cc/css/975HazyGo/400" />

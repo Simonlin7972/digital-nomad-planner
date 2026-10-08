@@ -1,0 +1,30 @@
+/* Send to another device: the editor's shell, a QR code, the details switch and the link */
+.editor.transfer { width: min(440px, 100%); }
+.editor.transfer h2 { position: relative; }
+.editor.transfer .close { position: absolute; top: 50%; right: 16px; transform: translateY(-50%); width: 32px; height: 32px; padding: 0; border: 0; display: grid; place-items: center; }
+.editor.transfer .close:active:not(:disabled) { transform: translateY(-50%) scale(0.94); }
+.transfer-text { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text); }
+/* Holds the QR card (QrCode.css), or a line while it's being made */
+.transfer-qr {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  flex: none; /* a short dialog scrolls rather than squeezing the code */
+  min-height: 120px;
+}
+.transfer-qr p.transfer-qr-note { font-size: 12px; line-height: 1.6; }
+.transfer-qr p { margin: 0; font-size: 14px; color: var(--muted); text-align: center; }
+.editor.transfer .toggle { align-self: flex-start; }
+.transfer-link {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--subtle);
+  font: inherit;
+  font-size: 13px;
+  color: var(--muted);
+  text-overflow: ellipsis;
+}
+.transfer-note { margin: -4px 0 0; font-size: 12px; line-height: 1.6; color: var(--muted); }
+.editor.transfer .buttons button { display: inline-flex; align-items: center; gap: 8px; }

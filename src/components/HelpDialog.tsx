@@ -5,14 +5,17 @@ import { Calendar } from '@phosphor-icons/react/dist/csr/Calendar';
 import { CaretDown } from '@phosphor-icons/react/dist/csr/CaretDown';
 import { Database } from '@phosphor-icons/react/dist/csr/Database';
 import { FloppyDisk } from '@phosphor-icons/react/dist/csr/FloppyDisk';
+import { DeviceMobile } from '@phosphor-icons/react/dist/csr/DeviceMobile';
 import { HandGrabbing } from '@phosphor-icons/react/dist/csr/HandGrabbing';
 import { X } from '@phosphor-icons/react/dist/csr/X';
+import { useNarrow } from '../hooks/useNarrow';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { t, useLocale, type Locale } from '../lib/i18n';
 import './Dialog.css';
 import './HelpDialog.css';
 
-type Section = { icon: ReactNode; title: string; items: ReactNode[] };
+// only: shown on a computer or on a phone alone; the rest show on both.
+type Section = { icon: ReactNode; title: string; items: ReactNode[]; only?: 'desktop' | 'phone' };
 type Keys = { alt: string; undo: string; redo: string };
 
 const icons = {
@@ -21,6 +24,7 @@ const icons = {
   data: <Database size={18} weight="bold" />,
   backup: <FloppyDisk size={18} weight="bold" />,
   undo: <ArrowCounterClockwise size={18} weight="bold" />,
+  phone: <DeviceMobile size={18} weight="bold" />,
 };
 
 // The guide is prose with inline emphasis, so each language is written out whole rather than assembled from
@@ -28,7 +32,27 @@ const icons = {
 const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
   zh: ({ alt, undo, redo }) => [
     {
+      icon: icons.phone,
+      only: 'phone',
+      title: '在手機上',
+      items: [
+        <>
+          手機上是<b>唯讀</b>版面：最上方是現在在哪、下一站，底下每段行程一張卡片。要排行程或修改，請用電腦打開。
+        </>,
+        <>
+          <b>把行程搬到手機</b>：在電腦的 <b>⋯</b> 選單選「傳到其他裝置」，用手機相機掃 QR code 或打開連結就會匯入。也可以傳 JSON 檔，再用 ⋯ 選單的<b>匯入</b>。
+        </>,
+        <>
+          卡片上可以點按鈕<b>複製航班號或訂位代號</b>、把起飛時間<b>加入行事曆</b>，點地點旁的圖釘用 Google 地圖打開。
+        </>,
+        <>
+          用瀏覽器的「<b>加入主畫面</b>」，之後沒有網路也打得開（地圖除外）。
+        </>,
+      ],
+    },
+    {
       icon: icons.plan,
+      only: 'desktop',
       title: '排行程',
       items: [
         <>
@@ -62,6 +86,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
     },
     {
       icon: icons.views,
+      only: 'desktop',
       title: '年與月',
       items: [
         <>
@@ -90,7 +115,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           所以換瀏覽器、換電腦、用無痕視窗，或清除瀏覽器資料，都會<b>看不到原本的行程</b>。
         </>,
         <>
-          只有兩種資訊會送出去：你填的<b>地名</b>（用來在地圖上找位置），以及載入地圖與字體時的一般連線。另外網站用 Google Analytics 統計匿名的瀏覽人次與操作次數（例如新增、匯出、分享），不含任何行程內容。
+          只有兩種資訊會送出去：你填的<b>地名</b>（用來在地圖上找位置），以及載入地圖與字體時的一般連線。另外網站用 Google Analytics 統計匿名的瀏覽人次與操作次數（例如新增、匯出、分享），不含任何行程內容。在手機卡片上點地圖圖釘時，會用 Google 地圖查那個地名。
         </>,
       ],
     },
@@ -106,13 +131,20 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           <b>匯入</b>：讀回匯出的檔案。檔案裡有的年份會<b>取代</b>該年的行程，取代前會先問你；其他年份不動。
         </>,
         <>
-          <b>分享</b>：先預覽整年行程圖（時間軸、國家、假日、行程清單），再下載成 PNG；手機上可直接用系統分享。圖裡不含機票細節。
+          <b>傳到其他裝置</b>：產生一個帶著所有年份行程的連結與 QR code，在另一台電腦或手機打開就會匯入（要取代那邊的行程前一樣會先問）。行程放在連結裡，不經過伺服器；可以選擇不含訂位代號與票價。
+        </>,
+        <>
+          在電腦上也可以直接把匯出的 JSON 檔<b>拖進頁面</b>匯入。
+        </>,
+        <>
+          <b>分享</b>：先預覽行程圖再下載成 PNG，有橫式（整年時間軸、國家、假日、行程清單）與直式（9:16，適合限動）兩種；手機上可直接用系統分享。圖裡不含機票細節。
         </>,
         <>匯出檔含機票的訂位代號等內容，傳給別人前請留意。</>,
       ],
     },
     {
       icon: icons.undo,
+      only: 'desktop',
       title: '做錯了',
       items: [
         <>
@@ -126,7 +158,27 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
   ],
   en: ({ alt, undo, redo }) => [
     {
+      icon: icons.phone,
+      only: 'phone',
+      title: 'On a phone',
+      items: [
+        <>
+          On a phone the plan is <b>view-only</b>: where you are and where you go next at the top, then one card per stay. Use a computer to plan or make changes.
+        </>,
+        <>
+          <b>To get your plan onto the phone</b>, choose "Send to another device" in the <b>⋯</b> menu on your computer, then scan the QR code with the phone's camera or open the link. You can also send yourself the JSON file and use <b>Import</b> in the ⋯ menu.
+        </>,
+        <>
+          On a card you can <b>copy the flight number or booking reference</b>, <b>add the departure to your calendar</b>, and open a place in Google Maps with the pin beside it.
+        </>,
+        <>
+          Use your browser's <b>Add to Home Screen</b> and the planner opens even without a connection (the map aside).
+        </>,
+      ],
+    },
+    {
       icon: icons.plan,
+      only: 'desktop',
       title: 'Planning',
       items: [
         <>
@@ -162,6 +214,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
     },
     {
       icon: icons.views,
+      only: 'desktop',
       title: 'Year and month',
       items: [
         <>
@@ -194,7 +247,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         </>,
         <>
           Only two things leave your device: the <b>place names</b> you enter (to find them on the map), and ordinary requests to load
-          the map and the font. The site also counts anonymous visits and actions (such as adding, exporting and sharing) with Google Analytics, which never sees your plan.
+          the map and the font. The site also counts anonymous visits and actions (such as adding, exporting and sharing) with Google Analytics, which never sees your plan. Tapping the map pin on a phone card looks the place up in Google Maps.
         </>,
       ],
     },
@@ -210,13 +263,20 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           <b>Import</b> loads an exported file. Each year in it <b>replaces</b> that year's plan, after asking; other years are left alone.
         </>,
         <>
-          <b>Share</b> previews the year as an image (timeline, countries, holidays, itinerary), then downloads it as a PNG; on a phone it can go straight to the share sheet. Flight details are left out.
+          <b>Send to another device</b> makes a link and a QR code carrying every year's plan; opening it on another computer or phone imports it there (asking first before replacing anything). The plan travels inside the link and never passes through a server; you can leave out booking references and fares.
+        </>,
+        <>
+          On a computer you can also <b>drop an exported JSON file onto the page</b> to import it.
+        </>,
+        <>
+          <b>Share</b> previews your plan as an image, then downloads it as a PNG: landscape (the whole timeline, countries, holidays, itinerary) or portrait (9:16, for stories). On a phone it can go straight to the share sheet. Flight details are left out.
         </>,
         <>Exported files include flight booking references, so take care who you send them to.</>,
       ],
     },
     {
       icon: icons.undo,
+      only: 'desktop',
       title: 'Mistakes',
       items: [
         <>
@@ -231,7 +291,27 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
   ],
   ja: ({ alt, undo, redo }) => [
     {
+      icon: icons.phone,
+      only: 'phone',
+      title: 'スマホでは',
+      items: [
+        <>
+          スマホでは<b>閲覧のみ</b>です。いちばん上に今いる場所と次の目的地、その下に滞在ごとのカードが並びます。計画や変更は PC で開いてください。
+        </>,
+        <>
+          <b>計画をスマホに移すには</b>、PC の <b>⋯</b> メニューで「別の端末に送る」を選び、スマホのカメラで QR コードを読み取るかリンクを開きます。JSON ファイルを送って ⋯ メニューの<b>読み込み</b>を使うこともできます。
+        </>,
+        <>
+          カードでは<b>便名や予約番号をコピー</b>したり、出発時刻を<b>カレンダーに追加</b>したり、地名の横のピンから Google マップで開いたりできます。
+        </>,
+        <>
+          ブラウザの「<b>ホーム画面に追加</b>」を使うと、オフラインでも開けます（地図を除く）。
+        </>,
+      ],
+    },
+    {
       icon: icons.plan,
+      only: 'desktop',
       title: '計画する',
       items: [
         <>
@@ -265,6 +345,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
     },
     {
       icon: icons.views,
+      only: 'desktop',
       title: '年と月',
       items: [
         <>
@@ -293,7 +374,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           そのため、別のブラウザや別のパソコン、プライベートウィンドウ、閲覧データの消去では<b>この計画は表示されません</b>。
         </>,
         <>
-          外に送られるのは 2 つだけ：入力した<b>地名</b>（地図上の位置を探すため）と、地図やフォントを読み込む通常の通信です。サイトでは Google Analytics で匿名の訪問数と操作回数（追加・書き出し・共有など）を集計しますが、計画の内容は含みません。
+          外に送られるのは 2 つだけ：入力した<b>地名</b>（地図上の位置を探すため）と、地図やフォントを読み込む通常の通信です。サイトでは Google Analytics で匿名の訪問数と操作回数（追加・書き出し・共有など）を集計しますが、計画の内容は含みません。スマホのカードで地図のピンをタップすると、その地名を Google マップで検索します。
         </>,
       ],
     },
@@ -309,13 +390,20 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           <b>読み込み</b>は書き出したファイルを読み戻します。ファイルにある年はその年の計画を<b>置き換え</b>（置き換える前に確認します）、ほかの年はそのままです。
         </>,
         <>
-          <b>共有</b>は 1 年の計画を画像（タイムライン、国、祝日、滞在リスト）でプレビューしてから PNG として保存します。スマホでは共有シートにそのまま送れます。航空券の詳細は入りません。
+          <b>別の端末に送る</b>は、全年の計画を入れたリンクと QR コードを作ります。別の PC やスマホで開くとそこに読み込まれます（置き換える前に確認します）。計画はリンクの中にあり、サーバーを通りません。予約番号と運賃は外すこともできます。
+        </>,
+        <>
+          PC では書き出した JSON ファイルを<b>ページにドロップ</b>しても読み込めます。
+        </>,
+        <>
+          <b>共有</b>は計画を画像でプレビューしてから PNG として保存します。横長（1 年のタイムライン、国、祝日、滞在リスト）と縦長（9:16、ストーリーズ向け）の 2 種類です。スマホでは共有シートにそのまま送れます。航空券の詳細は入りません。
         </>,
         <>書き出したファイルには航空券の予約番号などが含まれます。人に渡すときは注意してください。</>,
       ],
     },
     {
       icon: icons.undo,
+      only: 'desktop',
       title: '間違えたら',
       items: [
         <>
@@ -351,7 +439,11 @@ export function HelpDialog({ mod, onClose }: { mod: string; onClose: () => void 
   const idBase = useId();
 
   const mac = mod === '⌘';
-  const sections = GUIDE[locale]({ alt: mac ? '⌥' : 'Alt', undo: `${mod}Z`, redo: mac ? '⌘⇧Z' : 'Ctrl+Shift+Z' });
+  // A phone gets its own section first and none of the editing ones, since nothing can be edited there.
+  const narrow = useNarrow();
+  const sections = GUIDE[locale]({ alt: mac ? '⌥' : 'Alt', undo: `${mod}Z`, redo: mac ? '⌘⇧Z' : 'Ctrl+Shift+Z' }).filter(
+    (section) => section.only !== (narrow ? 'desktop' : 'phone'),
+  );
 
   return (
     <div className="backdrop" onPointerDown={(e) => e.target === e.currentTarget && onClose()}>

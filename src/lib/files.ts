@@ -8,11 +8,11 @@ export function fileName(ext: string, withYear = true): string {
   return withYear ? `nomad-plan-${YEAR}_${today}.${ext}` : `nomad-plan_${today}.${ext}`;
 }
 
-// Hands a blob to the browser as a download.
-export function download(blob: Blob, ext: string, withYear = true) {
+// Hands a blob to the browser as a download, named like a plan file unless given a name.
+export function download(blob: Blob, ext: string, withYear = true, name?: string) {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = fileName(ext, withYear);
+  a.download = name ?? fileName(ext, withYear);
   a.click();
   URL.revokeObjectURL(a.href);
 }

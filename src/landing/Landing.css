@@ -43,12 +43,14 @@ html { scroll-behavior: smooth; }
   text-decoration: none;
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }
-.l-btn:hover { border-color: var(--text); background: var(--subtle); }
 .l-btn:active { transform: scale(0.96); }
 .l-btn.primary { background: var(--text); border-color: var(--text); color: #fff; }
-.l-btn.primary:hover { background: #000; }
 .l-btn.primary svg { transition: transform 0.2s; }
-.l-btn.primary:hover svg { transform: translateX(3px); }
+@media (hover: hover) {
+  .l-btn:hover { border-color: var(--text); background: var(--subtle); }
+  .l-btn.primary:hover { background: #000; }
+  .l-btn.primary:hover svg { transform: translateX(3px); }
+}
 .l-btn.small { padding: 8px 16px; font-size: 13px; }
 
 /* ---------- Hero ---------- */

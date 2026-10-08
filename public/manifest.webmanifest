@@ -1,0 +1,14 @@
+{
+  "name": "今天不在家工作 — A Digital Nomad Planner",
+  "short_name": "今天不在家",
+  "description": "Plan a year of nomading on a timeline, a calendar and a map, all in your browser.",
+  "start_url": "./app/",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#faf9f6",
+  "theme_color": "#faf9f6",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

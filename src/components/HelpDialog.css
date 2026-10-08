@@ -20,7 +20,7 @@
   font-size: 15px;
   text-align: left;
 }
-.help h3 button:hover:not(:disabled) { background: var(--subtle); }
+@media (hover: hover) { .help h3 button:hover:not(:disabled) { background: var(--subtle); } }
 .help h3 button:active:not(:disabled) { transform: none; }
 .help h3 button:focus-visible { outline-offset: -2px; }
 .help h3 svg { flex: none; }

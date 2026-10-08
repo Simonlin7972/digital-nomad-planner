@@ -3,7 +3,7 @@ import type { HolidaySet } from './holidays';
 import { daysText, getLocale, t } from './i18n';
 import { colorOf, countryOf, placeFull, placeName, type Stay } from './storage';
 import { checkSchengen, taiwanDays } from './stayRules';
-import { MONTHS, SLOTS, TOTAL_DAYS, WEEKS, YEAR, daysOf, monthName, rangeLabel, slotsOf, weeksLabel } from './weeks';
+import { MONTHS, SLOTS, TOTAL_DAYS, WEEKS, YEAR, daysOf, monthName, monthRange, rangeLabel, slotsOf, weeksLabel } from './weeks';
 
 const FONT = '"975HazyGo", -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
 const TAGLINE_FONT = '16px "Pixelify Sans", monospace';
@@ -30,6 +30,7 @@ const TICKET_PATH =
   'M232,108a12,12,0,0,0,12-12V64a20,20,0,0,0-20-20H32A20,20,0,0,0,12,64V96a12,12,0,0,0,12,12,20,20,0,0,1,0,40,12,12,0,0,0-12,12v32a20,20,0,0,0,20,20H224a20,20,0,0,0,20-20V160a12,12,0,0,0-12-12,20,20,0,0,1,0-40ZM36,170.34a44,44,0,0,0,0-84.68V68H88V188H36Zm184,0V188H112V68H220V85.66a44,44,0,0,0,0,84.68Z';
 
 export type PngOptions = { holidaySets?: HolidaySet[] };
+export type PngLayout = 'landscape' | 'portrait';
 
 function ellipsize(ctx: CanvasRenderingContext2D, text: string, max: number): string {
   if (ctx.measureText(text).width <= max) return text;
@@ -291,6 +292,161 @@ export async function renderPng(stays: Stay[], { holidaySets = [] }: PngOptions 
     const note = stay.note?.replace(/\s+/g, ' ');
     if (note && right - cx > 40) ctx.fillText(ellipsize(ctx, note, right - cx), cx, y + 15);
   });
+
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('PNG export failed'))), 'image/png'),
+  );
+}
+
+// The phone-shaped version (9:16, for stories): title, the summary wrapped over lines, the year as twelve month
+// rows, then the stays one per row. A long plan is cut short with "N more" rather than shrunk.
+const P_W = 540;
+const P_H = 960;
+const P_MONTH_H = 26;
+const P_ROW_H = 46;
+
+function wrap(ctx: CanvasRenderingContext2D, text: string, max: number): string[] {
+  const lines: string[] = [];
+  // Break at the separator between parts first, then by characters when a part alone is too long.
+  let line = '';
+  for (const part of text.split(t('sep'))) {
+    const next = line ? `${line}${t('sep')}${part}` : part;
+    if (ctx.measureText(next).width <= max) line = next;
+    else {
+      if (line) lines.push(line);
+      line = part;
+      while (ctx.measureText(line).width > max) {
+        let cut = line.length;
+        while (cut > 1 && ctx.measureText(line.slice(0, cut)).width > max) cut--;
+        lines.push(line.slice(0, cut));
+        line = line.slice(cut);
+      }
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+export async function renderPortraitPng(stays: Stay[]): Promise<Blob> {
+  const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
+  const summary = summaryLine(sorted);
+  const title = t('app.title');
+  const tagline = t('app.tagline');
+  const codes = [...new Set(sorted.map((s) => flagCode(s.country)).filter((c): c is string => Boolean(c)))];
+  const text = [
+    title,
+    summary.text,
+    '0123456789/–()（）…+',
+    t('unit.weeks', { n: '' }),
+    daysText(2),
+    t('share.more', { n: 0 }),
+    MONTHS.map((m) => monthName(m.month)).join(''),
+    sorted.map((s) => placeFull(s)).join(''),
+  ].join('');
+  const [flags] = await Promise.all([
+    loadFlags(codes),
+    Promise.all([
+      ...[`12px ${FONT}`, `600 14px ${FONT}`].map((font) => document.fonts.load(font, text)),
+      document.fonts.load(TAGLINE_FONT, tagline),
+    ]).catch(() => undefined),
+  ]);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = P_W * SCALE;
+  canvas.height = P_H * SCALE;
+  const ctx = canvas.getContext('2d')!;
+  ctx.scale(SCALE, SCALE);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, P_W, P_H);
+  const inner = P_W - PAD * 2;
+
+  // Title, tagline, summary
+  let y = PAD + 30;
+  ctx.fillStyle = TEXT;
+  ctx.font = `600 30px ${FONT}`;
+  ctx.fillText(ellipsize(ctx, title, inner), PAD, y);
+  y += 30;
+  ctx.fillStyle = MUTED;
+  ctx.font = TAGLINE_FONT;
+  ctx.fillText(tagline, PAD, y);
+  y += 34;
+  ctx.font = `14px ${FONT}`;
+  ctx.fillStyle = summary.warn ? DANGER : MUTED;
+  for (const line of wrap(ctx, summary.text, inner).slice(0, 3)) {
+    ctx.fillText(line, PAD, y);
+    y += 22;
+  }
+
+  // Twelve month rows: each a bar of that month's days, coloured where a stay falls
+  y += 16;
+  const labelW = 52;
+  const barW = inner - labelW;
+  for (const m of MONTHS) {
+    const range = monthRange(m.month);
+    const days = range.endDay - range.startDay + 1;
+    ctx.font = `600 12px ${FONT}`;
+    ctx.fillStyle = TEXT;
+    ctx.fillText(monthName(m.month), PAD, y + 13);
+    ctx.fillStyle = SUBTLE;
+    ctx.beginPath();
+    ctx.roundRect(PAD + labelW, y + 2, barW, 14, 4);
+    ctx.fill();
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(PAD + labelW, y + 2, barW, 14, 4);
+    ctx.clip();
+    for (const stay of sorted) {
+      const from = Math.max(stay.startDay, range.startDay);
+      const to = Math.min(stay.endDay, range.endDay);
+      if (from > to) continue;
+      const x = PAD + labelW + ((from - range.startDay) / days) * barW;
+      const w = ((to - from + 1) / days) * barW;
+      ctx.fillStyle = colorOf(stay);
+      ctx.fillRect(x + 0.5, y + 2, Math.max(1, w - 1), 14);
+    }
+    ctx.restore();
+    y += P_MONTH_H;
+  }
+
+  // Stays: dot, flag, place, length on the right; dates under the place
+  y += 20;
+  ctx.strokeStyle = LINE;
+  ctx.beginPath();
+  ctx.moveTo(PAD, y - 8);
+  ctx.lineTo(P_W - PAD, y - 8);
+  ctx.stroke();
+  const fits = Math.floor((P_H - PAD - y) / P_ROW_H);
+  const shown = sorted.length > fits ? sorted.slice(0, Math.max(0, fits - 1)) : sorted;
+  for (const stay of shown) {
+    ctx.fillStyle = colorOf(stay);
+    ctx.beginPath();
+    ctx.roundRect(PAD, y + 8, 10, 10, 5);
+    ctx.fill();
+    let x = PAD + 20;
+    const code = flagCode(stay.country);
+    const flag = code ? flags.get(code) : undefined;
+    if (flag) {
+      ctx.drawImage(flag, x, y + 6, 18, 13.5);
+      x += 26;
+    }
+    ctx.font = `13px ${FONT}`;
+    ctx.fillStyle = MUTED;
+    const length = `${weeksLabel(daysOf(stay))}${t('paren', { x: daysText(daysOf(stay)) })}`;
+    const lengthW = ctx.measureText(length).width;
+    ctx.fillText(length, P_W - PAD - lengthW, y + 18);
+    ctx.font = `600 15px ${FONT}`;
+    ctx.fillStyle = TEXT;
+    ctx.fillText(ellipsize(ctx, placeFull(stay), P_W - PAD - lengthW - 16 - x), x, y + 18);
+    ctx.font = `12px ${FONT}`;
+    ctx.fillStyle = MUTED;
+    ctx.fillText(rangeLabel(stay), PAD + 20, y + 36);
+    y += P_ROW_H;
+  }
+  if (shown.length < sorted.length) {
+    ctx.font = `13px ${FONT}`;
+    ctx.fillStyle = MUTED;
+    ctx.fillText(t('share.more', { n: sorted.length - shown.length }), PAD + 20, y + 18);
+  }
 
   return new Promise((resolve, reject) =>
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('PNG export failed'))), 'image/png'),

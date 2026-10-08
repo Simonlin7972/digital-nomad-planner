@@ -27,6 +27,9 @@
 
 * { box-sizing: border-box; }
 
+/* Phones: no grey flash on tap, and no text resizing when turned sideways */
+html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
 body {
   margin: 0;
   background: var(--bg);
@@ -84,14 +87,17 @@ button {
   cursor: pointer;
   transition: box-shadow 0.15s, border-color 0.15s, background 0.15s, transform 0.1s;
 }
-button:hover:not(:disabled) { border-color: var(--text); background: var(--subtle); }
 button:active:not(:disabled) { transform: scale(0.96); }
 button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
 button.primary { background: var(--text); border-color: var(--text); color: #fff; }
-button.primary:hover:not(:disabled) { background: #000; border-color: #000; }
 button.danger { border-color: transparent; background: none; color: var(--danger); text-decoration: underline; padding-inline: 8px; }
-button.danger:hover:not(:disabled) { border-color: transparent; background: var(--subtle); }
+/* Hover only where there is a pointer that hovers: on a touch screen the state sticks after a tap. */
+@media (hover: hover) {
+  button:hover:not(:disabled) { border-color: var(--text); background: var(--subtle); }
+  button.primary:hover:not(:disabled) { background: #000; border-color: #000; }
+  button.danger:hover:not(:disabled) { border-color: transparent; background: var(--subtle); }
+}
 
 /* Switch-style toggle button, used for the holiday sets and in the editor */
 .toggle { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px 8px 10px; font-weight: 500; }
@@ -152,6 +158,8 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
 
 @keyframes fade { from { opacity: 0; } }
 @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
+/* Phone sheets (dialogs and menus) rising from the bottom edge */
+@keyframes sheet-up { from { opacity: 0; transform: translateY(40%); } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -159,10 +167,34 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
 
 /* Phone layout (same query as hooks/useNarrow.ts): a one-row header so "now / next" shows without scrolling */
 @media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
-  .app { padding: 0 16px 40px; }
-  .topbar { flex-wrap: nowrap; gap: 12px; padding: 12px 0; margin-bottom: 16px; }
+  /* The page reaches under the notch and home bar (viewport-fit=cover), so keep content clear of them */
+  .app {
+    padding: 0 max(16px, env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  }
+  .topbar { flex-wrap: nowrap; gap: 12px; padding: calc(12px + env(safe-area-inset-top)) 0 12px; margin-bottom: 16px; }
   .brand { min-width: 0; }
   .brand h1 { gap: 8px; font-size: clamp(18px, 5.6vw, 24px); white-space: nowrap; }
   .brand .tagline { display: none; }
   .panel { min-width: 0; width: 100%; padding: 20px 16px; }
+}
+
+/* A file dragged over the planner: the whole page is the drop target */
+.drop-overlay {
+  position: fixed;
+  inset: 12px;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  border: 2px dashed var(--text);
+  border-radius: var(--radius-lg);
+  background: rgb(250 249 246 / 0.85);
+  pointer-events: none;
+  animation: fade 0.12s ease-out;
+}
+.drop-overlay p { margin: 0; font-size: 18px; font-weight: 600; }
+
+/* Behind a menu opened as a bottom sheet on a phone; on a computer menus drop down with no scrim */
+.menu-scrim { display: none; }
+@media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
+  .menu-scrim { display: block; position: fixed; inset: 0; z-index: 30; background: rgb(0 0 0 / 0.28); animation: fade 0.15s ease-out; }
 }

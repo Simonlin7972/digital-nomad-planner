@@ -1,9 +1,15 @@
+import { CalendarPlus } from '@phosphor-icons/react/dist/csr/CalendarPlus';
+import { Check } from '@phosphor-icons/react/dist/csr/Check';
+import { Copy } from '@phosphor-icons/react/dist/csr/Copy';
+import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin';
 import { Ticket as TicketIcon } from '@phosphor-icons/react/dist/csr/Ticket';
 import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
 import { useMemo, useState } from 'react';
 import type { MouseEvent } from 'react';
 import { daysText, t, useLocale } from '../lib/i18n';
-import { cityOf, colorOf, countryOf, loadYearPlan, ticketLines, type Stay } from '../lib/storage';
+import { download } from '../lib/files';
+import { flightIcs } from '../lib/ics';
+import { cityOf, colorOf, countryOf, loadYearPlan, placeName, type Stay } from '../lib/storage';
 import { noteText, seasonWarning } from '../lib/seasons';
 import { checkSchengen, gapsOf } from '../lib/stayRules';
 import { TOTAL_DAYS, YEAR, YEARS, dateOfDay, daysOf, inYear, longRangeLabel, setYear, todayIndex, weeksLabel } from '../lib/weeks';
@@ -129,7 +135,18 @@ export function MobileItinerary({ stays }: { stays: Stay[] }) {
                   className={today !== null && s.endDay < today ? 'past' : undefined}
                   style={{ borderLeftColor: colorOf(s) }}
                 >
-                  <Place stay={s} />
+                  <div className="mtitle">
+                    <Place stay={s} />
+                    <a
+                      className="mmap"
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([cityOf(s), countryOf(s)].filter(Boolean).join(', '))}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={t('mobile.openMap', { place: placeName(s) })}
+                    >
+                      <MapPin size={18} weight="bold" />
+                    </a>
+                  </div>
                   <p className="when">
                     {longRangeLabel(s)}
                     {t('sep')}
@@ -179,14 +196,61 @@ function Progress({ entry, midnight }: { entry: Entry; midnight: number }) {
   );
 }
 
+// The flight, written out, with what you need at the airport a tap away: copy the flight number or booking
+// reference, put the departure in the calendar.
 function Ticket({ stay }: { stay: Stay }) {
+  const ticket = stay.ticket!;
+  const [copied, setCopied] = useState<string | null>(null);
+  const flight = [ticket.airline, ticket.flightNo].filter(Boolean).join(' ');
+
+  async function copy(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(text);
+      setTimeout(() => setCopied((c) => (c === text ? null : c)), 1500);
+    } catch {
+      // clipboard refused: the text is still on screen to select
+    }
+  }
+
+  function addToCalendar() {
+    const ics = flightIcs(ticket.departure!, t('ics.flight', { flight: flight || t('ticket.booked'), place: placeName(stay) }), ticket.bookingRef ? t('ticket.ref', { ref: ticket.bookingRef }) : '');
+    if (ics) download(ics, 'ics', false, `flight-${(ticket.flightNo || ticket.departure!.slice(0, 10)).replace(/[^\w-]+/g, '')}.ics`);
+  }
+
+  const copyButton = (text: string, label: string) => (
+    <button type="button" className="mact" aria-label={copied === text ? t('mobile.copied') : label} onClick={() => void copy(text)}>
+      {copied === text ? <Check size={16} weight="bold" /> : <Copy size={16} weight="bold" />}
+    </button>
+  );
+  const empty = !flight && !ticket.departure && !ticket.bookingRef && !ticket.price;
+
   return (
     <div className="mticket">
       <TicketIcon size={16} weight="bold" />
       <div>
-        {ticketLines(stay.ticket!).map((line) => (
-          <p key={line}>{line}</p>
-        ))}
+        {empty && <p>{t('ticket.none')}</p>}
+        {flight && (
+          <p>
+            {flight}
+            {ticket.flightNo && copyButton(ticket.flightNo, t('mobile.copyFlight', { no: ticket.flightNo }))}
+          </p>
+        )}
+        {ticket.departure && (
+          <p>
+            {t('ticket.departs', { time: ticket.departure.replace('T', ' ').replace(/-/g, '/') })}
+            <button type="button" className="mact" aria-label={t('mobile.addCalendar')} onClick={addToCalendar}>
+              <CalendarPlus size={16} weight="bold" />
+            </button>
+          </p>
+        )}
+        {ticket.bookingRef && (
+          <p>
+            {t('ticket.ref', { ref: ticket.bookingRef })}
+            {copyButton(ticket.bookingRef, t('mobile.copyRef', { ref: ticket.bookingRef }))}
+          </p>
+        )}
+        {ticket.price && <p>{t('ticket.fare', { fare: ticket.price })}</p>}
       </div>
     </div>
   );

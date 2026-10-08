@@ -2,6 +2,7 @@ import { Fragment, useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { ArrowClockwise } from '@phosphor-icons/react/dist/csr/ArrowClockwise';
 import { ArrowCounterClockwise } from '@phosphor-icons/react/dist/csr/ArrowCounterClockwise';
+import { DeviceMobile } from '@phosphor-icons/react/dist/csr/DeviceMobile';
 import { DotsThree } from '@phosphor-icons/react/dist/csr/DotsThree';
 import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
 import { Info } from '@phosphor-icons/react/dist/csr/Info';
@@ -25,12 +26,13 @@ type Props = {
   onRedo: () => void;
   onShare: () => void;
   onExport: () => void;
+  onTransfer: () => void; // send every year's plan to another device by link
   onImport: (file: File) => void;
 };
 
 // The row of plan-wide actions in the page header. Undo and redo are icons only; the file actions (export,
 // import, share as PNG) sit in a ⋯ menu, with the guide and the product page below a divider.
-export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHelp, onUndo, onRedo, onShare, onExport, onImport }: Props) {
+export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHelp, onUndo, onRedo, onShare, onExport, onTransfer, onImport }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const locale = useLocale();
   const undoLabel = t('toolbar.shortcut', { action: t('toolbar.undo'), keys: `${MOD}Z` });
@@ -51,6 +53,7 @@ export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHel
         items={[
           { label: t('toolbar.export'), icon: <DownloadSimple size={16} weight="bold" />, onSelect: onExport, disabled: !canExport },
           { label: t('toolbar.import'), icon: <UploadSimple size={16} weight="bold" />, onSelect: () => fileRef.current?.click() },
+          { label: t('toolbar.transfer'), icon: <DeviceMobile size={16} weight="bold" />, onSelect: onTransfer, disabled: !canExport },
           { label: t('toolbar.share'), icon: <ShareNetwork size={16} weight="bold" />, onSelect: onShare, disabled: !hasStays },
           { label: t('toolbar.help'), icon: <Question size={16} weight="bold" />, onSelect: onHelp, divider: true },
           {
@@ -135,6 +138,8 @@ function MoreMenu({ items }: { items: MenuItem[] }) {
       >
         <DotsThree size={18} weight="bold" />
       </button>
+      {/* Phone only (CSS): the dimmed page behind the sheet; tapping it closes the menu without reaching the page. */}
+      {open && <div className="menu-scrim" aria-hidden="true" onClick={close} />}
       {open && (
         <div className="more-menu" role="menu" id={menuId}>
           {items.map((item) => (

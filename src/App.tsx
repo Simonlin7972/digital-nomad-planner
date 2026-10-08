@@ -1,8 +1,9 @@
-import { Suspense, lazy, useEffect, useState, useSyncExternalStore } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { BackupReminder } from './components/BackupReminder';
 import { AllMonths, MONTH_INDEXES } from './components/AllMonths';
 import { MobileItinerary } from './components/MobileItinerary';
 import { ShareDialog } from './components/ShareDialog';
+import { TransferDialog } from './components/TransferDialog';
 import { Editor, type Editing, type StayDetails } from './components/Editor';
 import { Footer } from './components/Footer';
 import { HelpDialog } from './components/HelpDialog';
@@ -28,6 +29,7 @@ import { holidaySets as allHolidaySets, type Holiday, type HolidaySet } from './
 import { langTag, t, useLocale } from './lib/i18n';
 import { loadHolidayToggles, loadView, saveHolidayToggles, saveView } from './lib/prefs';
 import { load, pushStays, save, type ColorKey, type Stay, loadYearPlan, saveYearPlan, sanitizeAll, serializeAll, splitStay } from './lib/storage';
+import { decodePlan, onTransferLink, pendingTransfer } from './lib/transfer';
 import { MOD, clamp } from './lib/util';
 import { YEAR, YEARS, getYear, setYear, subscribeYear, todayIndex, yearDirection, type DayRange } from './lib/weeks';
 // The map's frame is sized before the library arrives, so the page doesn't jump when it does.
@@ -63,6 +65,8 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
   const [editing, setEditing] = useState<Editing | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [dropping, setDropping] = useState(false); // a file is being dragged over the page
   // Phones get a read-only layout: no timeline or calendar to drag on, no editor.
   const narrow = useNarrow();
   const [dragging, setDragging] = useState(false);
@@ -93,7 +97,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
     document.title = `${t('app.title')} — ${t('app.tagline')}`;
   }, [locale]);
 
-  const busy = Boolean(dragging || editing || helpOpen || shareOpen);
+  const busy = Boolean(dragging || editing || helpOpen || shareOpen || transferOpen);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey) || e.altKey || busy) return;
@@ -144,38 +148,89 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
     for (const year of YEARS) if (year !== YEAR) markYearBackedUp(year, loadYearPlan(year), now);
   }
 
+  // Puts imported plans in place. The years they hold replace what is there (asking first if that loses stays);
+  // other years are left alone. A file the user keeps counts as a backup; a link doesn't.
+  function applyImport(plans: Map<number, Stay[]>, fromFile: boolean) {
+    if (plans.size === 0) {
+      track('import_result', { ok: false, years: 0 });
+      return alert(t('alert.importEmpty'));
+    }
+    // Ask only when something would be lost: a year in the file that already has stays.
+    const years = [...plans.keys()].sort();
+    const replaced = years.filter((y) => (y === YEAR ? stays : loadYearPlan(y)).length > 0);
+    if (replaced.length && !confirm(t('alert.importConfirm', { years: replaced.join(t('list')) }))) return;
+    track('import_result', { ok: true, years: plans.size });
+    const now = Date.now();
+    for (const [year, next] of plans) {
+      if (year === YEAR) continue;
+      saveYearPlan(year, next);
+      if (fromFile) markYearBackedUp(year, next, now);
+    }
+    const here = plans.get(YEAR);
+    if (here) {
+      // The year on screen goes through setStays, so the import can be undone.
+      setStays(here);
+      if (fromFile) backup.markBackedUp(here);
+    } else {
+      // Nothing for this year in the file: show the first year it brought in.
+      setYear(years[0]);
+    }
+  }
+
   async function importJson(file: File) {
     try {
-      const plans = sanitizeAll(JSON.parse(await file.text()));
-      if (plans.size === 0) {
-        track('import_result', { ok: false, years: 0 });
-        return alert(t('alert.importEmpty'));
-      }
-      // Ask only when something would be lost: a year in the file that already has stays.
-      const years = [...plans.keys()].sort();
-      const replaced = years.filter((y) => (y === YEAR ? stays : loadYearPlan(y)).length > 0);
-      if (replaced.length && !confirm(t('alert.importConfirm', { years: replaced.join(t('list')) }))) return;
-      track('import_result', { ok: true, years: plans.size });
-      const now = Date.now();
-      for (const [year, next] of plans) {
-        if (year === YEAR) continue;
-        saveYearPlan(year, next);
-        markYearBackedUp(year, next, now);
-      }
-      const here = plans.get(YEAR);
-      if (here) {
-        // The year on screen goes through setStays, so the import can be undone.
-        setStays(here);
-        backup.markBackedUp(here);
-      } else {
-        // Nothing for this year in the file: show the first year it brought in.
-        setYear(years[0]);
-      }
+      applyImport(sanitizeAll(JSON.parse(await file.text())), true);
     } catch {
       track('import_result', { ok: false, years: 0 });
       alert(t('alert.importFailed'));
     }
   }
+
+  // Opened from a "send to another device" link, or one pasted into this tab: import what it carries.
+  const linkImport = useRef(applyImport);
+  linkImport.current = applyImport;
+  useEffect(() => {
+    const importLink = (code: string) =>
+      decodePlan(code)
+        .then((data) => linkImport.current(sanitizeAll(data), false))
+        .catch(() => {
+          track('import_result', { ok: false, years: 0 });
+          alert(t('alert.linkFailed'));
+        });
+    const code = pendingTransfer();
+    if (code) void importLink(code);
+    return onTransferLink((next) => void importLink(next));
+  }, []);
+
+  // On a computer a JSON file can be dropped anywhere on the page to import it.
+  const dropImport = useRef(importJson);
+  dropImport.current = busy ? () => Promise.resolve() : importJson;
+  useEffect(() => {
+    if (narrow) return;
+    const withFile = (e: DragEvent) => Boolean(e.dataTransfer?.types.includes('Files'));
+    const over = (e: DragEvent) => {
+      if (!withFile(e)) return;
+      e.preventDefault();
+      setDropping(true);
+    };
+    // Leaving the window has no element to go to.
+    const leave = (e: DragEvent) => e.relatedTarget === null && setDropping(false);
+    const drop = (e: DragEvent) => {
+      if (!withFile(e)) return;
+      e.preventDefault();
+      setDropping(false);
+      const file = e.dataTransfer?.files[0];
+      if (file && (file.type === 'application/json' || /\.json$/i.test(file.name))) void dropImport.current(file);
+    };
+    window.addEventListener('dragover', over);
+    window.addEventListener('dragleave', leave);
+    window.addEventListener('drop', drop);
+    return () => {
+      window.removeEventListener('dragover', over);
+      window.removeEventListener('dragleave', leave);
+      window.removeEventListener('drop', drop);
+    };
+  }, [narrow]);
 
   // Export is possible when any year has stays, not just this one.
   const anyStays = stays.length > 0 || YEARS.some((y) => y !== YEAR && loadYearPlan(y).length > 0);
@@ -213,6 +268,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
             setShareOpen(true);
           }}
           onExport={() => exportJson('menu')}
+          onTransfer={() => setTransferOpen(true)}
           onImport={(file) => void importJson(file)}
         />
       </header>
@@ -342,6 +398,12 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
 
       {helpOpen && <HelpDialog mod={MOD} onClose={() => setHelpOpen(false)} />}
       {shareOpen && <ShareDialog stays={stays} holidaySets={holidaySets} onClose={() => setShareOpen(false)} />}
+      {transferOpen && <TransferDialog stays={stays} onClose={() => setTransferOpen(false)} />}
+      {dropping && (
+        <div className="drop-overlay" aria-hidden="true">
+          <p>{t('import.drop')}</p>
+        </div>
+      )}
 
       {editing && !narrow && (
         <Editor

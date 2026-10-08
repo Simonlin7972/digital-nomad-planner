@@ -82,9 +82,11 @@ The interface is available in Traditional Chinese, English and Japanese; switch 
 - A footer at the bottom of the page: where the data lives, the licence, and links home, to the changelog and to GitHub
 - A changelog page (/changelog/): new features and changes in every release, newest day first, in the interface language (English when the interface is Japanese). It is built from `CHANGELOG.md` at the repository root, so updating that file and pushing publishes it
 - Undo and redo, up to 100 steps
-- JSON export and import: one file holds every year; file names carry the export date (e.g. `nomad-plan_2026-10-06.json`)
-- Share: preview the year as an image, then download it as a PNG (fixed size, with the timeline, country strips and flags, holidays that are switched on, ticket markers, a summary line and the itinerary; flight details left out). On a phone it can open the system share sheet
-- Read-only phone layout: below 720px (or on a phone held sideways) the page becomes view-only — a one-row header; at the top, "now" (dates, progress, days left) and "next" (days until you leave, with the flight right there if you have one), found across years; below, one card per stay (flight details and full notes included), with past stays folded into one line you can open; then the summary and the map. It opens on the current year. Plan on a computer, export, then import on the phone
+- JSON export and import: one file holds every year; file names carry the export date (e.g. `nomad-plan_2026-10-06.json`). On a computer you can also drop the file onto the page to import it
+- Send to another device: the `⋯` menu makes a link and a QR code carrying every year's plan; opening it on another computer or phone imports it there (asking first before replacing years already planned), and pasting it into a tab that already has the planner open works too. The plan is compressed into the part of the address after `#` and never passes through a server; booking references and fares can be left out
+- Share: preview your plan as an image, then download it as a PNG, in two layouts — landscape (fixed size, with the timeline, country strips and flags, holidays that are switched on, ticket markers, a summary line and the itinerary) and portrait 9:16 (for stories: summary, twelve month bars and the itinerary, ending in "N more" when it runs out of room); flight details left out of both. Landscape is the default on a computer, portrait on a phone, where it can also open the system share sheet
+- Read-only phone layout: below 720px (or on a phone held sideways) the page becomes view-only — a one-row header; at the top, "now" (dates, progress, days left) and "next" (days until you leave, with the flight right there if you have one), found across years; below, one card per stay (flight details and full notes included), with past stays folded into one line you can open; then the summary and the map. It opens on the current year. Stay cards let you copy the flight number and booking reference, add the departure to your calendar (.ics), and open the place in Google Maps. Menus and dialogs rise from the bottom of the screen, and the guide shows only the parts that apply on a phone. Plan on a computer, then use "Send to another device" and scan the QR code, or export a file and import it on the phone
+- Installable and usable offline: a service worker keeps the files and fonts the page has loaded, so it opens without a connection (the map aside)
 - Every change is saved automatically
 - Backup reminder: when the plan has changed and gone 7 days without an export, a reminder appears under the header, with buttons to export or to put it off for 3 days
 - Landing page (the site root; the app is at `/app/`): introduces the features, each with a short animation that plays when scrolled into view (drag-select, cut, month view, map route, Schengen and Taiwan day counts, seasons, share image, and a tablet frame showing the desktop app switch from year to month view, then shrinking into the phone layout). The demos are simplified HTML/CSS redraws and never read your plan
@@ -173,7 +175,7 @@ Undo and redo shortcuts are left alone while you are typing in a field, while th
 
 Clearing browser data, or using a different browser or computer, means the plan won't be there. Use Export (in the `⋯` menu) to keep a backup.
 
-The page talks to five outside services:
+The page talks to these outside services:
 
 | Service | What is sent | Why |
 | --- | --- | --- |
@@ -181,9 +183,14 @@ The page talks to five outside services:
 | [OpenFreeMap](https://openfreemap.org/) | Map tile requests | The base map |
 | [emfont](https://font.emtech.cc/) | Font file requests | The interface typeface |
 | [Google Fonts](https://fonts.google.com/) | Font file requests | The pixel typeface of the English tagline under the title |
+| [Google Maps](https://www.google.com/maps) | When you tap the map pin on a phone card, that stay's "city, country" | Opens the place in Google Maps; nothing is sent unless you tap |
 | [Google Analytics](https://analytics.google.com/) (GA4) | Anonymous usage such as page views, scrolling and outbound clicks; events for actions such as opening the planner, adding a stay, exporting, importing and sharing, carrying only interface choices and bucketed counts (e.g. "2–5 stays"); plus browser, device and rough location; sets a `_ga` cookie | Traffic and feature-use figures; the event list is in [ANALYTICS.md](ANALYTICS.md). Loaded on the live site only, not under `npm run dev`; **nothing from your plan is sent** |
 
 Flight details such as booking references are stored in `localStorage` and are written into exported JSON. Keep that in mind before sharing an export.
+
+A "Send to another device" link carries the plan in the part of the address after `#`: browsers never send that part to the server, so the site itself never receives it, and the page removes it from the address before analytics loads. But the link is the plan: anyone who has it can read it, and sending it by chat or email leaves a copy with those services. The QR code is drawn in the browser without calling any service.
+
+The offline service worker (`sw.js`) keeps only this site's files and those from the two font services above, in the browser's Cache Storage (`dnp-v1`), and sends nothing extra.
 
 ---
 
@@ -245,6 +252,8 @@ Import rules: each year in the file **replaces** that year's current stays, and 
 
 Older formats still load: week-based `startWeek`/`endWeek`, a single `location` field (treated as the city), and countries and cities stored by name rather than code.
 
+A "Send to another device" link is `…/app/#plan=<code>`. The code's first character is `z` (followed by JSON compressed with deflate-raw, in base64url) or `j` (uncompressed JSON in base64url, for browsers without CompressionStream). The JSON is packed tighter than an export file so a whole plan fits in one QR code: `{ "v": 3, "y": { "<year>": [stays…] } }`, each stay an array `[days since the previous stay ended, length in days, country, city, color, companions, note, ticket]` (dates counted from 1 January of that year, the ticket as `[airline, flightNo, departure, bookingRef, price]`, empty trailing values dropped), with no ids (an import makes new ones). A year of 20 stays with notes and flights comes to about 700 characters; four years, 100 stays, about 2,400. It holds the same as an export file (minus `bookingRef` and `price` when flight details are left out) and imports by the same rules, except that it doesn't count as a backup, so the backup reminder isn't reset.
+
 ---
 
 ## Project structure
@@ -255,6 +264,9 @@ app/index.html          App entry (/app/); loads the font and favicon
 changelog/index.html    Changelog page entry (/changelog/)
 CHANGELOG.md            The user-facing release notes, source of the changelog page (format in the file's header comment)
 public/favicon.svg      16×16 pixel-art globe
+public/apple-touch-icon.png, icon-192.png, icon-512.png  Home-screen icons (the favicon scaled up with a margin)
+public/manifest.webmanifest  PWA settings: name, icons, opens at /app/
+public/sw.js            Offline service worker (keeps loaded files)
 public/og.png           Link-preview image (1200×630, marks all three languages)
 docs/overview.png       Sample image for the README (downloaded from the app's Share dialog)
 src/
@@ -263,7 +275,7 @@ src/
   landing/              Landing page: Landing (layout), Demos (scripted feature demos), motion (scroll triggers and looping)
   App.tsx               Wires the pieces together; owns the plan and page-level state
   components/           UI components, each with its stylesheet (.css) beside it
-    Toolbar             Header actions and the ⋯ menu (export, import, share, how to use, about)
+    Toolbar             Header actions and the ⋯ menu (export, import, send to another device, share, how to use, about)
     Footer              Page footer: where data lives, licence, links home and to GitHub
     ViewBar             Year/month switch, holiday toggles, zoom
     YearView            The year timeline, including drag, resize and copy handling
@@ -276,7 +288,9 @@ src/
     HelpDialog          The "How to use" guide
     YearSelect          The year drop-down
     SeasonStrip         The twelve-month season strip in the editor
-    ShareDialog         Share: PNG preview, download, system share sheet
+    ShareDialog         Share: landscape / portrait PNG preview, download, system share sheet
+    TransferDialog      Send to another device: link, QR code, flight-details switch
+    QrCode              The QR card: square modules, rounded finder eyes, the pixel mascot on its top edge
     MobileItinerary     The read-only phone itinerary (now / next, stay cards)
     HoverCards          Floating cards for stays, tickets and holidays
     Combobox            Searchable country and city pickers
@@ -308,8 +322,11 @@ src/
     cities.ts           Built-in city list (Chinese and English) and search
     holidays.ts         2026 and 2027 public holiday data
     geocode.ts          Nominatim lookups, rate limiting, cache
-    exportPng.ts        Draws the PNG on a canvas
+    exportPng.ts        Draws the PNG on a canvas (landscape and portrait)
     files.ts            File names and download
+    transfer.ts         Transfer links: compress and encode, decode, take from the address
+    ics.ts              Calendar file (.ics) for a flight
+    offline.ts          Registers the service worker (live site only)
     links.ts            Outbound links (landing page, GitHub)
     util.ts             Small helpers
     i18n.tsx            Dictionaries, current locale, `t()`
@@ -354,7 +371,11 @@ Knowing these before reading the code will save time.
 
 **Season data is fixed and hand-written.** `lib/seasons.ts` has one entry per city: twelve monthly ratings (0 avoid, 1 fine, 2 best), typical daily highs and lows per month (rounded climate normals, shown after each reason as "19 to 36°C"), and reasons tied to months, keyed by how stays store places (ISO code / English city name), with `ALIASES` for a few neighbouring places. It is general guidance (climate, monsoons, smoke, heat, crowds), not a forecast, and calls no API. To add a city, add an entry in the same shape and make sure every month rated 0 has an avoid reason and every month rated 2 a best reason.
 
-**The PNG is drawn separately.** `lib/exportPng.ts` redraws the year on a canvas rather than capturing the screen, so the output has a fixed size regardless of window and zoom — but new on-screen elements don't appear in it unless they are added there too.
+**The PNG is drawn separately.** `lib/exportPng.ts` redraws the year on a canvas rather than capturing the screen, so the output has a fixed size regardless of window and zoom — but new on-screen elements don't appear in it unless they are added there too. Landscape and portrait are two separate drawing functions.
+
+**Moving to another device doesn't touch a server.** There is no backend, so a transfer link packs the whole export, compressed, into the part of the address after `#`, which browsers never send; a static site handles it as is. `main.tsx` takes it out of the address before analytics loads (`takeTransferHash`), so it never reaches the history, a reload or the page address sent to analytics. Importing reuses the JSON import's path (`applyImport`); the only difference is that it doesn't count as a backup.
+
+**Offline means "keep what was loaded", not pre-downloading.** `public/sw.js` is hand-written, with no bundler plugin: pages go to the network first (so a new release applies as soon as there is a connection) and fall back to the kept copy; hashed files under `assets/` come straight from the kept copy; other files and fonts are served from the copy and refreshed behind it. On a first visit the worker isn't in charge yet, so once the page has loaded it hands the worker the list of what it loaded to keep, and built files from older releases that are no longer used are dropped. It is registered on the live site only.
 
 ---
 
@@ -374,7 +395,10 @@ Knowing these before reading the code will save time.
 - **Place names on the map are in the local script and English**, as the base map provides
 - **The built-in city list is limited** (about 330); smaller places have to be typed, and the Chinese names are hand-picked and may differ from the spelling you're used to
 - **Place lookup depends on Nominatim.** Places it can't find don't appear on the map and are left out of the flight estimate
-- **The typefaces depend on the emfont and Google Fonts services**; offline, the page falls back to system fonts
+- **The typefaces depend on the emfont and Google Fonts services**; once loaded, the service worker keeps a copy for offline use, and only characters never loaded fall back to system fonts
+- **Offline, the map is blank** (map tiles aren't kept), and place lookups wait for a connection
+- **A QR code has a size limit** (about 2,950 characters): ordinary plans fit; when many long notes take it over, the QR code leaves the notes out and says so, while the link stays complete
+- **A transfer link is the plan itself**; once sent it can't be taken back
 - **Australian holidays are national ones only**; state holidays aren't listed
 - **Undo history doesn't survive a reload**
 - **Day counts are estimates**: they know nothing of travel before the timeline starts (2026-12-28 for 2027) or of actual entry and exit days, and a day on which you change places counts toward only one stay
@@ -412,6 +436,7 @@ The full product spec and decision history are in [MVP.md](MVP.md) (Chinese).
 | [flag-icons](https://github.com/lipis/flag-icons) | Flags | MIT |
 | [975HazyGo](https://font.emtech.cc/fonts/975HazyGo) (via emfont) | Interface typeface | See the license shown on the font's page |
 | [Pixelify Sans](https://fonts.google.com/specimen/Pixelify+Sans) (via Google Fonts) | Tagline typeface | OFL-1.1 |
+| [uqr](https://github.com/unjs/uqr) | QR code generation | MIT |
 
 The 2026 and 2027 holiday data was compiled by hand. Taiwan's holidays follow press reports of the government's 2026 and 2027 office calendars (for 2027, the Dragon Boat Festival, Mid-Autumn Festival and Teachers' Day are single days worked out from the calendar). Australia lists national holidays only. None of the dates were checked one by one against the original official notices, so treat the official sources as authoritative.
 

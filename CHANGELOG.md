@@ -9,6 +9,16 @@
 
 ## 2026-10-08
 
+- 新增「傳到其他裝置」：⋯ 選單產生一個連結和 QR code，在另一台電腦或手機打開就能匯入所有年份的行程，不用再傳檔案；行程只放在連結裡，不經過伺服器，也可以選擇不含訂位代號與票價
+  EN: New "Send to another device": the ⋯ menu makes a link and a QR code that import every year of your plan on another computer or phone, no file needed; the plan travels only inside the link, never through a server, and booking refs and fares can be left out
+- 在電腦上可以直接把匯出的 JSON 檔拖進頁面匯入
+  EN: On a computer you can now drop an exported JSON file onto the page to import it
+- 分享圖多了直式（9:16）版面，適合 IG 限動；手機上預設直式
+  EN: Share images now come in a portrait (9:16) layout for stories too, the default on phones
+- 手機卡片上可以一鍵複製航班號、訂位代號，把起飛時間加入行事曆，或用 Google 地圖打開地點
+  EN: Phone cards can copy the flight number or booking reference, add the departure to your calendar, or open the place in Google Maps
+- 手機上的選單與視窗改從底部升起；說明改成手機用的內容；可以加入主畫面，沒有網路也打得開（地圖除外）
+  EN: On phones, menus and dialogs now rise from the bottom, the guide covers what applies on a phone, and the planner can be added to your home screen and opens offline (the map aside)
 - 手機版改版：頁首縮成一列，打開就看得到「現在／下一站」；現在這一站多了日期與進度條，下一站直接列出機票；已結束的行程收成一行；打開時自動切到今年
   EN: Phone layout refresh: a one-row header so "now / next" shows straight away; the current stay shows its dates and a progress bar, the next one shows its flight; past stays fold into one line; it opens on the current year
 - 手機版修正：⋯ 選單不再跑出畫面；橫拿手機不會變成編輯版；按鈕都加大到好按的大小；摘要的說明可以點 ⓘ 展開；介紹頁在手機上也能切換語言

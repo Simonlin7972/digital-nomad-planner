@@ -50,6 +50,14 @@
 /* Phone: finger-sized; the picker sits at the right of the itinerary heading, so its menu opens leftwards */
 @media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
   .year-button { height: 44px; padding: 0 14px 0 16px; font-size: 14px; }
-  .mobile .year-menu { left: auto; right: 0; }
-  .year-menu button { min-height: 44px; }
+  /* The menu becomes a sheet at the bottom, like the ⋯ menu */
+  .year-menu {
+    position: fixed;
+    inset: auto 8px calc(8px + env(safe-area-inset-bottom));
+    z-index: 31;
+    padding: 8px;
+    border-radius: var(--radius-lg);
+    animation: sheet-up 0.22s cubic-bezier(0.3, 0.7, 0.2, 1);
+  }
+  .year-menu button { min-height: 48px; font-size: 15px; }
 }

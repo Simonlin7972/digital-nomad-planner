@@ -64,6 +64,8 @@ export function YearSelect() {
         {YEAR}
         <CaretDown size={14} weight="bold" />
       </button>
+      {/* Phone only (CSS): the dimmed page behind the sheet; tapping it closes the menu without reaching the page. */}
+      {open && <div className="menu-scrim" aria-hidden="true" onClick={close} />}
       {open && (
         <div className="year-menu" role="menu" id={listId} aria-label={t('year.label')}>
           {YEARS.map((y) => (

@@ -1,0 +1,16 @@
+/* A white card for the code, with the mascot standing on its top edge */
+.qr-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 40px 0 0;
+  padding: 16px 16px 12px;
+  border-radius: var(--radius-lg);
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--line-strong), var(--shadow-card);
+}
+.qr-card .pixel-nomad { position: absolute; top: -45px; left: 50%; width: 56px; height: 52.5px; transform: translateX(-50%); }
+.qr-code { display: block; width: min(280px, 100%); height: auto; }
+.qr-card figcaption { font-size: 13px; font-weight: 600; color: var(--muted); }
