@@ -75,14 +75,14 @@ README 寫著「不會送出任何行程內容」。事件參數只能是：
 - **`?ga_debug=1`**：正式網址加上它，事件會出現在 GA 的 DebugView。
 - **`?internal=1`**：把這個瀏覽器標成自己（`dnp-ga-internal`），之後事件帶 `traffic_type=internal`，在 GA 用內部流量篩選排除；`?internal=0` 取消。
 - **觸發點放在回呼裡**（`App.tsx`、對話框），不放在 view 的拖曳邏輯裡，跟「view 不持有計劃」一致。
-- **會換頁的連結用 `trackLink()`**：換頁時才送的事件常會遺失（上線實測 `cta_click` 就掉了），所以先攔下換頁，等 gtag 回呼（最多約 1 秒）再前往；新分頁或按著修飾鍵的點擊交給瀏覽器，只照常送事件。
+- **會換頁的連結用 `trackLink()`**：換頁時才送的事件可能遺失，所以先攔下換頁，等 gtag 回呼（最多約 1 秒）再前往；新分頁或按著修飾鍵的點擊交給瀏覽器，只照常送事件。
 
 ## GA 後台設定
 
 1. 資料保留改為 14 個月（管理 → 資料收集與修改 → 資料保留）
 2. 自訂維度（事件範圍），名稱同參數：`location`、`view`、`stay_count`、`source`、`ok`、`method`（第 2、3 階段再加 `kind`、`unit`、`mode`、`set` 等）
 3. 關鍵事件：`cta_click`、`plan_activated`、`export_json`、`share_download`
-4. 內部流量規則：`traffic_type` 等於 `internal`；資料篩選器先設「測試」，確認後改「有效」
+4. 內部流量：GA 內建的「Internal Traffic」資料篩選器已排除 `traffic_type = internal`，`?internal=1` 直接帶這個值，不需要另設 IP 規則；篩選器先維持「測試」，確認後改「有效」
 
 ## 怎麼看
 
@@ -116,16 +116,17 @@ README 寫著「不會送出任何行程內容」。事件參數只能是：
 - [x] `share_open`
 - [x] `share_download`
 - [x] DebugView 確認 `share_open`（2026-10-08）
-- [x] `cta_click` 換頁時遺失 → 改用 `trackLink()`
-- [ ] DebugView 確認 `cta_click`
+- [x] 會換頁的 CTA 改用 `trackLink()`，等事件送出再換頁
+- [x] DebugView 確認 `cta_click`（2026-10-08）
 - [ ] DebugView 確認 `stay_create`、`plan_activated`、`export_json`、`import_result`、`share_download`（會動到真實行程或下載檔案，請自己操作時順便看）
 
 ### GA 後台
-- [ ] 資料保留改 14 個月
-- [ ] 註冊第 1 階段自訂維度
-- [ ] 設定關鍵事件
-- [ ] 內部流量規則與篩選器（測試 → 有效）
-- [ ] 建立漏斗探索
+- [x] 資料保留改 14 個月（事件與使用者資料皆是，2026-10-08）
+- [x] 註冊第 1 階段自訂維度：CTA location（`location`）、Planner view（`view`）、Stay count（`stay_count`）、Export source（`source`）、Import ok（`ok`）、Share method（`method`）
+- [ ] 設定關鍵事件：`cta_click`、`plan_activated`、`export_json`、`share_download`。事件要先被 GA 收到（最多 24 小時）才會出現在「管理 → 事件 → 最近的事件」，到時點星號標記
+- [x] 內部流量篩選器：GA 內建的「Internal Traffic」已存在，排除 `traffic_type = internal`，目前「測試」狀態；`?internal=1` 會帶上這個值，不需要 IP 規則
+- [ ] 確認內部流量篩選正確後，把篩選器改成「有效」（你自己先在正式網址開一次 `?internal=1`）
+- [ ] 建立漏斗探索（有幾天資料後再建）
 
 ### 第 2 階段：功能使用率
 - [ ] `stay_edit`
