@@ -157,8 +157,12 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
-@media (max-width: 720px) {
+/* Phone layout (same query as hooks/useNarrow.ts): a one-row header so "now / next" shows without scrolling */
+@media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
   .app { padding: 0 16px 40px; }
-  .topbar { padding-top: 20px; }
-  .panel { min-width: 0; width: 100%; }
+  .topbar { flex-wrap: nowrap; gap: 12px; padding: 12px 0; margin-bottom: 16px; }
+  .brand { min-width: 0; }
+  .brand h1 { gap: 8px; font-size: clamp(18px, 5.6vw, 24px); white-space: nowrap; }
+  .brand .tagline { display: none; }
+  .panel { min-width: 0; width: 100%; padding: 20px 16px; }
 }

@@ -22,4 +22,21 @@
 .rules li { padding: 3px 0; cursor: help; }
 .rules b { color: var(--text); font-weight: 600; }
 .rules li.over, .rules li.over b { color: var(--danger); }
-.rules li span { display: flex; align-items: center; gap: 6px; font-weight: 600; margin-top: 2px; }
+.rules li .over-note { display: flex; align-items: center; gap: 6px; font-weight: 600; margin-top: 2px; }
+.totals li small.only-city { font-size: 13px; color: var(--muted); }
+
+/* Phone: an ⓘ after a line opens its explanation below it */
+.hint-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin: -10px -10px -10px -4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  vertical-align: middle;
+}
+.hint-toggle[aria-expanded='true'] { color: var(--text); }
+.hint { display: block; margin: 4px 0 6px; font-size: 12px; font-weight: 400; line-height: 1.6; color: var(--muted); }

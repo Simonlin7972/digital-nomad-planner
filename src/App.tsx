@@ -19,7 +19,8 @@ import { useBackupReminder } from './hooks/useBackupReminder';
 import { markYearBackedUp } from './lib/backup';
 import { useCoords } from './hooks/useCoords';
 import { useHistory } from './hooks/useHistory';
-import { useNarrow } from './hooks/useNarrow';
+import { NARROW_QUERY, useNarrow } from './hooks/useNarrow';
+import { useNearView } from './hooks/useNearView';
 import { useZoom } from './hooks/useZoom';
 import { bucket, track, trackActivation } from './lib/analytics';
 import { download } from './lib/files';
@@ -28,10 +29,22 @@ import { langTag, t, useLocale } from './lib/i18n';
 import { loadHolidayToggles, loadView, saveHolidayToggles, saveView } from './lib/prefs';
 import { load, pushStays, save, type ColorKey, type Stay, loadYearPlan, saveYearPlan, sanitizeAll, serializeAll, splitStay } from './lib/storage';
 import { MOD, clamp } from './lib/util';
-import { YEAR, YEARS, getYear, setYear, subscribeYear, yearDirection, type DayRange } from './lib/weeks';
+import { YEAR, YEARS, getYear, setYear, subscribeYear, todayIndex, yearDirection, type DayRange } from './lib/weeks';
+// The map's frame is sized before the library arrives, so the page doesn't jump when it does.
+import './components/MapView.css';
 
 // The map library is large; load it separately from the planner itself.
 const MapView = lazy(() => import('./components/MapView'));
+
+// A phone opens on the year it is today when that year has a plan, since the year last looked at may be another
+// one. Done before the first render: switching once a plan is on screen would race its save. Not when the saved
+// year already has a stay covering today (the borrowed days at its edges).
+if (window.matchMedia(NARROW_QUERY).matches) {
+  const year = new Date().getFullYear();
+  const today = todayIndex();
+  const covered = today !== null && load().some((s) => s.startDay <= today && today <= s.endDay);
+  if (year !== YEAR && (YEARS as readonly number[]).includes(year) && !covered && loadYearPlan(year).length) setYear(year);
+}
 
 const VIEW_FADE_MS = 140; // keep in sync with .view in styles/base.css
 
@@ -61,6 +74,8 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
   const zoom = useZoom();
   const { coords, failed: coordsFailed } = useCoords(stays);
   const backup = useBackupReminder(stays);
+  // The map library loads when the page is scrolled near the map, not with the page.
+  const [mapRef, mapNear] = useNearView();
 
   // The view on screen trails view.mode by one fade-out, so the old view can leave before the new one enters.
   const [shownMode, setShownMode] = useState(view.mode);
@@ -207,9 +222,12 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
       {narrow ? (
         <>
           <MobileItinerary stays={stays} />
-          <section className="panels">
-            <Summary stays={stays} coords={coords} />
-          </section>
+          {/* With nothing planned, all-zero totals and an empty map are just more to scroll past. */}
+          {stays.length > 0 && (
+            <section className="panels">
+              <Summary stays={stays} coords={coords} />
+            </section>
+          )}
         </>
       ) : (
         <>
@@ -296,12 +314,25 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
         </>
       )}
 
-      <section className="panel map-panel">
-        <h2>{t('map.title')}</h2>
-        <Suspense fallback={<p className="map-status">{t('map.loading')}</p>}>
-          <MapView stays={stays} coords={coords} failed={coordsFailed} />
-        </Suspense>
-      </section>
+      {!(narrow && stays.length === 0) && (
+        <section ref={mapRef} className="panel map-panel">
+          <h2>{t('map.title')}</h2>
+          {mapNear ? (
+            <Suspense
+              fallback={
+                <>
+                  <div className="map" />
+                  <p className="map-status">{t('map.loading')}</p>
+                </>
+              }
+            >
+              <MapView stays={stays} coords={coords} failed={coordsFailed} />
+            </Suspense>
+          ) : (
+            <div className="map" />
+          )}
+        </section>
+      )}
 
       <Footer />
 

@@ -137,7 +137,10 @@ h3 { margin: 0 0 8px; font-size: 20px; font-weight: 600; }
 
 @media (max-width: 720px) {
   .landing { padding: 0 16px; }
-  .l-nav nav > a:not(.l-btn), .l-nav nav button { display: none; }
+  /* Only the language switch and the way in stay in the bar, both finger-sized */
+  .l-nav nav { gap: 8px; }
+  .l-nav nav > a:not(.l-btn) { display: none; }
+  .l-nav nav button, .l-nav .l-btn.small { min-height: 44px; }
   .l-brand { font-size: 16px; }
   .l-hero { padding-top: 40px; }
   .l-hero h1 { font-size: 38px; }
@@ -150,6 +153,11 @@ h3 { margin: 0 0 8px; font-size: 20px; font-weight: 600; }
   .l-privacy { padding: 32px 20px; }
   .l-final h2 { font-size: 30px; }
   .l-footer { flex-direction: column; gap: 8px; }
+}
+
+/* The hero repeats the name right below; on small phones the bar keeps only the mascot */
+@media (max-width: 480px) {
+  .l-brand span { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -84,7 +84,7 @@ The interface is available in Traditional Chinese, English and Japanese; switch 
 - Undo and redo, up to 100 steps
 - JSON export and import: one file holds every year; file names carry the export date (e.g. `nomad-plan_2026-10-06.json`)
 - Share: preview the year as an image, then download it as a PNG (fixed size, with the timeline, country strips and flags, holidays that are switched on, ticket markers, a summary line and the itinerary; flight details left out). On a phone it can open the system share sheet
-- Read-only phone layout: below 720px the page becomes view-only — now / next, one card per stay (flight details and full notes included), the summary and the map. Plan on a computer, export, then import on the phone
+- Read-only phone layout: below 720px (or on a phone held sideways) the page becomes view-only — a one-row header; at the top, "now" (dates, progress, days left) and "next" (days until you leave, with the flight right there if you have one), found across years; below, one card per stay (flight details and full notes included), with past stays folded into one line you can open; then the summary and the map. It opens on the current year. Plan on a computer, export, then import on the phone
 - Every change is saved automatically
 - Backup reminder: when the plan has changed and gone 7 days without an export, a reminder appears under the header, with buttons to export or to put it off for 3 days
 - Landing page (the site root; the app is at `/app/`): introduces the features, each with a short animation that plays when scrolled into view (drag-select, cut, month view, map route, Schengen and Taiwan day counts, seasons, share image, and a tablet frame showing the desktop app switch from year to month view, then shrinking into the phone layout). The demos are simplified HTML/CSS redraws and never read your plan
@@ -292,7 +292,8 @@ src/
     usePinchZoom        Trackpad, touch and wheel zoom gestures
     useCoords           Place coordinates, distances and the flight estimate
     useScrollLock       Stops the page scrolling behind a dialog
-    useNarrow           Whether the screen is 720px or narrower (the read-only phone layout)
+    useNarrow           Whether to use the read-only phone layout (720px or narrower, or a touch screen 500px or less tall)
+    useNearView         Whether an element has been scrolled near the viewport (loads the map late)
     useBackupReminder   Tracks time since the last export and decides whether to remind
   lib/                  Logic and data that isn't UI
     weeks.ts            Date model: weeks, day indexes, half-week slots, month ranges, labels
@@ -363,7 +364,7 @@ Knowing these before reading the code will save time.
 - **Three interface languages**, Traditional Chinese, English and Japanese; the product spec (`MVP.md`) is in Chinese only
 - **Japanese has no city names, season notes or changelog of its own**; those three show in English under the Japanese interface
 - **What you type isn't translated**: unlisted countries and cities, notes and companions show as typed in every language
-- **Editing is desktop-only.** Phones (720px and narrower) get a read-only layout; a tablet or laptop window narrower than 720px does too
+- **Editing is desktop-only.** Phones (720px and narrower, held either way) get a read-only layout; a tablet or laptop window narrower than 720px does too
 - **No automated tests**
 - **The month view can't move a whole stay or `Alt`-drag a copy**; drag the ends or change the dates in the editor
 - **A copied stay doesn't carry the flight details** (a flight belongs to one trip)

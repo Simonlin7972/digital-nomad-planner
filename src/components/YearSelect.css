@@ -46,3 +46,10 @@
 .year-menu button:hover:not(:disabled),
 .year-menu button:focus-visible { background: var(--subtle); outline: none; }
 .year-menu button:active:not(:disabled) { transform: none; }
+
+/* Phone: finger-sized; the picker sits at the right of the itinerary heading, so its menu opens leftwards */
+@media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
+  .year-button { height: 44px; padding: 0 14px 0 16px; font-size: 14px; }
+  .mobile .year-menu { left: auto; right: 0; }
+  .year-menu button { min-height: 44px; }
+}

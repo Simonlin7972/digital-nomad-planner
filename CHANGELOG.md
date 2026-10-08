@@ -9,6 +9,12 @@
 
 ## 2026-10-08
 
+- 手機版改版：頁首縮成一列，打開就看得到「現在／下一站」；現在這一站多了日期與進度條，下一站直接列出機票；已結束的行程收成一行；打開時自動切到今年
+  EN: Phone layout refresh: a one-row header so "now / next" shows straight away; the current stay shows its dates and a progress bar, the next one shows its flight; past stays fold into one line; it opens on the current year
+- 手機版修正：⋯ 選單不再跑出畫面；橫拿手機不會變成編輯版；按鈕都加大到好按的大小；摘要的說明可以點 ⓘ 展開；介紹頁在手機上也能切換語言
+  EN: Phone fixes: the ⋯ menu no longer opens off screen; turning a phone sideways no longer switches to the editing layout; buttons are finger-sized; summary explanations open from an ⓘ; the landing page's language switch now shows on phones
+- 地圖捲到附近才載入，頁面開得更快；摘要裡只有一個城市的國家不再重複列一行
+  EN: The map loads when you scroll near it, so the page opens faster; countries with a single city no longer repeat it on a line of its own in the summary
 - 匿名統計多了幾個操作事件（進入規劃工具、新增行程、匯出、匯入、分享），只記次數與分組數量，行程內容一樣不會送出
   EN: Anonymous statistics now count a few actions (opening the planner, adding a stay, exporting, importing, sharing) as counts and ranges only; nothing from your plan is ever sent
 - 新增日文介面；語言鈕顯示目前語言，按一下依序切換 中文 → English → 日本語

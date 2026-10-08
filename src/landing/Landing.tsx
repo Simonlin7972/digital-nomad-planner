@@ -58,7 +58,7 @@ export function Landing() {
   return (
     <div className="landing">
       <header className="l-nav">
-        <a className="l-brand" href="#top">
+        <a className="l-brand" href="#top" aria-label={t('app.title')}>
           <PixelNomad />
           <span>{t('app.title')}</span>
         </a>

@@ -34,3 +34,13 @@
 .actions .more-menu button:active:not(:disabled) { transform: none; }
 .actions .more > button[aria-expanded='true'] { outline: 2px solid var(--text); outline-offset: -1px; border-color: transparent; }
 .more-sep { margin: 6px 4px; border: 0; border-top: 1px solid var(--line); }
+
+/* Phone header: everything on one row beside the title, finger-sized */
+@media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
+  .actions { flex: none; flex-wrap: nowrap; }
+  .actions button.icon,
+  .actions button.lang { width: 44px; height: 44px; padding: 0; justify-content: center; }
+  .actions .lang-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .actions .more-menu button { min-height: 44px; }
+  .more-menu { max-width: calc(100vw - 32px); }
+}

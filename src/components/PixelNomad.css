@@ -10,6 +10,6 @@
   50% { opacity: 0; }
 }
 
-@media (max-width: 720px) {
-  .pixel-nomad { width: 40px; height: 37.5px; }
+@media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
+  .pixel-nomad { width: 32px; height: 30px; }
 }

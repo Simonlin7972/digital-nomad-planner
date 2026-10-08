@@ -18,3 +18,8 @@
 .map-popup { font-family: inherit; font-size: 13px; line-height: 1.5; color: var(--muted); }
 .map-popup strong { display: block; color: var(--text); font-size: 14px; }
 .maplibregl-popup-content { border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow-card); }
+
+/* Phone: short enough to scroll past; two fingers move the map */
+@media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
+  .map { height: 320px; }
+}

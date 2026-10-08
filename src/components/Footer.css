@@ -15,7 +15,9 @@
 .app-footer a { display: inline-flex; align-items: center; gap: 6px; color: inherit; text-decoration: none; }
 .app-footer a:hover { color: var(--text); }
 
-@media (max-width: 720px) {
+@media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
   .app-footer { flex-direction: column; align-items: flex-start; }
-  .app-footer nav { margin-left: 0; }
+  .app-footer nav { flex-wrap: wrap; gap: 0 20px; margin-left: 0; }
+  /* finger-sized rows */
+  .app-footer a { min-height: 44px; }
 }

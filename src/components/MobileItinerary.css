@@ -1,35 +1,60 @@
 /* Phone layout: a "now / next" card, then one card per stay with everything written out */
 .mobile { display: flex; flex-direction: column; gap: 16px; }
-.mobile-year { display: flex; }
-.mobile .panel { padding: 20px 16px; }
 
 .now { display: flex; flex-direction: column; gap: 16px; }
 .now > div + div { padding-top: 16px; border-top: 1px solid var(--line); }
 .now .tag { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.now a { color: inherit; text-decoration: none; }
 .now .mplace { font-size: 20px; }
-.now p { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+.now p { margin: 4px 0 0; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.now .mticket p { margin: 0; }
+.progress { height: 6px; margin-top: 10px; border-radius: 999px; background: var(--subtle); overflow: hidden; }
+.progress i { display: block; height: 100%; border-radius: inherit; }
 
 .mplace { display: flex; align-items: baseline; gap: 8px; font-size: 16px; font-weight: 600; }
 .mplace .flag { align-self: center; }
 .mplace small { font-size: 13px; font-weight: 400; color: var(--muted); }
 
+/* Heading with the year picker at its right */
+.mobile-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.mobile-head h2 { margin: 0; }
+
 .mstays { display: flex; flex-direction: column; gap: 10px; }
-.mstays > li:not(.mgap) {
+.mstays > li:not(.mgap, .mpast) {
   padding: 12px 14px;
   border: 1px solid var(--line);
   border-left: 4px solid;
   border-radius: var(--radius);
   background: var(--surface);
+  scroll-margin-top: 16px;
 }
-.mstays li.past { opacity: 0.5; }
+/* Past stays: the text greys, the colour bar stays */
+.mstays li.past .mplace,
+.mstays li.past p { color: var(--muted); }
 .mstays p { margin: 4px 0 0; font-size: 14px; color: var(--muted); line-height: 1.5; }
 .mstays .when { font-variant-numeric: tabular-nums; }
 .mstays .warn { display: flex; align-items: center; gap: 6px; color: var(--danger); font-weight: 600; }
 .mstays .note { color: var(--text); white-space: pre-wrap; }
-.mticket { display: flex; gap: 8px; margin-top: 8px; padding: 10px 12px; border-radius: 8px; background: var(--subtle); }
+.mticket { display: flex; gap: 8px; margin-top: 8px; padding: 10px 12px; border-radius: 8px; background: var(--subtle); font-size: 14px; line-height: 1.5; }
 .mticket svg { flex: none; margin-top: 3px; }
 .mticket p { margin: 0; color: var(--text); }
 .mticket p + p { color: var(--muted); }
 .mgap { padding: 2px 14px; font-size: 13px; color: var(--muted); }
+
+/* The folded past stays: one full-width row */
+.mpast button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  border-style: dashed;
+  border-radius: var(--radius);
+  background: none;
+  font-weight: 400;
+  color: var(--muted);
+}
+.mpast button span { font-weight: 600; color: var(--text); }
+.mpast button:active:not(:disabled) { transform: none; }
 
 .readonly { margin: 16px 0 0; font-size: 12px; color: var(--muted); text-align: center; }
