@@ -6,6 +6,7 @@ import { CloudSlash } from '@phosphor-icons/react/dist/csr/CloudSlash';
 import { Code } from '@phosphor-icons/react/dist/csr/Code';
 import { LockSimple } from '@phosphor-icons/react/dist/csr/LockSimple';
 import { PixelNomad } from '../components/PixelNomad';
+import { track } from '../lib/analytics';
 import { Tagline } from '../components/Tagline';
 import { langTag, nextLocale, setLocale, t, useLocale } from '../lib/i18n';
 import type { Key } from '../lib/i18n';
@@ -71,11 +72,11 @@ export function Landing() {
           <button
             onClick={() => setLocale(nextLocale(locale))}
             title={t('toolbar.languageHint')}
-            lang={langTag(nextLocale(locale))}
+            lang={langTag(locale)}
           >
             {t('toolbar.language')}
           </button>
-          <a className="l-btn primary small" href={APP_URL}>
+          <a className="l-btn primary small" href={APP_URL} onClick={() => track('cta_click', { location: 'nav' })}>
             {t('landing.cta.open')}
           </a>
         </nav>
@@ -86,7 +87,7 @@ export function Landing() {
         <Tagline />
         <p className="l-lead">{t('landing.hero.lead')}</p>
         <div className="l-actions">
-          <a className="l-btn primary" href={APP_URL}>
+          <a className="l-btn primary" href={APP_URL} onClick={() => track('cta_click', { location: 'hero' })}>
             {t('landing.hero.cta')} <ArrowRight weight="bold" />
           </a>
           <a className="l-btn" href="#features">
@@ -175,7 +176,7 @@ export function Landing() {
       <section className="l-final">
         <PixelNomad />
         <h2>{t('landing.final.title')}</h2>
-        <a className="l-btn primary" href={APP_URL}>
+        <a className="l-btn primary" href={APP_URL} onClick={() => track('cta_click', { location: 'final' })}>
           {t('landing.hero.cta')} <ArrowRight weight="bold" />
         </a>
       </section>

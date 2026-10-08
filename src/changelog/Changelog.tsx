@@ -4,6 +4,7 @@ import { PixelNomad } from '../components/PixelNomad';
 import { CHANGELOG } from '../lib/changelog';
 import { langTag, nextLocale, setLocale, t, useLocale } from '../lib/i18n';
 import { REPO_URL } from '../lib/links';
+import { track } from '../lib/analytics';
 import './Changelog.css';
 
 // This page lives at /changelog/, beside the planner at /app/ and the landing page at the root.
@@ -27,10 +28,10 @@ export function Changelog() {
         </a>
         <nav>
           {/* Labelled in the language it switches to, as in the app's toolbar. */}
-          <button onClick={() => setLocale(nextLocale(locale))} title={t('toolbar.languageHint')} lang={langTag(nextLocale(locale))}>
+          <button onClick={() => setLocale(nextLocale(locale))} title={t('toolbar.languageHint')} lang={langTag(locale)}>
             {t('toolbar.language')}
           </button>
-          <a className="c-open" href={APP_URL}>
+          <a className="c-open" href={APP_URL} onClick={() => track('cta_click', { location: 'changelog' })}>
             {t('landing.cta.open')} <ArrowRight size={14} weight="bold" />
           </a>
         </nav>

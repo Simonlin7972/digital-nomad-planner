@@ -21,6 +21,7 @@ import { useCoords } from './hooks/useCoords';
 import { useHistory } from './hooks/useHistory';
 import { useNarrow } from './hooks/useNarrow';
 import { useZoom } from './hooks/useZoom';
+import { bucket, track, trackActivation } from './lib/analytics';
 import { download } from './lib/files';
 import { holidaySets as allHolidaySets, type Holiday, type HolidaySet } from './lib/holidays';
 import { langTag, t, useLocale } from './lib/i18n';
@@ -100,6 +101,10 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
   function saveEditing(details: StayDetails, range: DayRange, color: ColorKey) {
     if (!editing) return;
     const fields = { ...details, color, ...range };
+    if (!editing.id) {
+      track('stay_create', { view: view.mode, stay_count: bucket(stays.length + 1) });
+      trackActivation();
+    }
     setStays((prev) =>
       editing.id
         ? prev.map((s) => (s.id === editing.id ? { ...s, ...fields } : s))
@@ -115,8 +120,9 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
   }
 
   // Export and import cover every year in one file, so one backup is enough.
-  function exportJson() {
+  function exportJson(source: 'menu' | 'reminder') {
     const file = serializeAll(stays);
+    track('export_json', { years: Object.keys(file.years).length, source });
     download(new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' }), 'json', false);
     backup.markBackedUp(stays);
     const now = Date.now();
@@ -126,11 +132,15 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
   async function importJson(file: File) {
     try {
       const plans = sanitizeAll(JSON.parse(await file.text()));
-      if (plans.size === 0) return alert(t('alert.importEmpty'));
+      if (plans.size === 0) {
+        track('import_result', { ok: false, years: 0 });
+        return alert(t('alert.importEmpty'));
+      }
       // Ask only when something would be lost: a year in the file that already has stays.
       const years = [...plans.keys()].sort();
       const replaced = years.filter((y) => (y === YEAR ? stays : loadYearPlan(y)).length > 0);
       if (replaced.length && !confirm(t('alert.importConfirm', { years: replaced.join(t('list')) }))) return;
+      track('import_result', { ok: true, years: plans.size });
       const now = Date.now();
       for (const [year, next] of plans) {
         if (year === YEAR) continue;
@@ -147,6 +157,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
         setYear(years[0]);
       }
     } catch {
+      track('import_result', { ok: false, years: 0 });
       alert(t('alert.importFailed'));
     }
   }
@@ -182,13 +193,16 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
           onHelp={() => setHelpOpen(true)}
           onUndo={undo}
           onRedo={redo}
-          onShare={() => setShareOpen(true)}
-          onExport={exportJson}
+          onShare={() => {
+            track('share_open', {});
+            setShareOpen(true);
+          }}
+          onExport={() => exportJson('menu')}
           onImport={(file) => void importJson(file)}
         />
       </header>
 
-      {backup.remind && <BackupReminder daysSince={backup.daysSince} onExport={exportJson} onSnooze={backup.snooze} />}
+      {backup.remind && <BackupReminder daysSince={backup.daysSince} onExport={() => exportJson('reminder')} onSnooze={backup.snooze} />}
 
       {narrow ? (
         <>

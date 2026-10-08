@@ -9,8 +9,12 @@
 
 ## 2026-10-08
 
-- 新增日文介面；語言鈕改成 中文 → English → 日本語 依序循環
-  EN: The interface is now also in Japanese; the language button cycles 中文 → English → 日本語
+- 匿名統計多了幾個操作事件（進入規劃工具、新增行程、匯出、匯入、分享），只記次數與分組數量，行程內容一樣不會送出
+  EN: Anonymous statistics now count a few actions (opening the planner, adding a stay, exporting, importing, sharing) as counts and ranges only; nothing from your plan is ever sent
+- 新增日文介面；語言鈕顯示目前語言，按一下依序切換 中文 → English → 日本語
+  EN: The interface is now also in Japanese; the language button shows the current language and cycles 中文 → English → 日本語
+- 分享連結時的預覽：說明改成中英日三語，預覽圖標出三種語言
+  EN: Link previews now describe the planner in Chinese, English and Japanese, and the preview image names all three languages
 - 新增產品介紹首頁；規劃工具搬到 /app/
   EN: A new landing page introduces the planner, which now lives at /app/
 - 規劃工具底部加上 footer：資料存放提醒、授權、首頁與 GitHub 連結

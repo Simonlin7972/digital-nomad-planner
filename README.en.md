@@ -77,7 +77,7 @@ The interface is available in Traditional Chinese, English and Japanese; switch 
 ### Also
 
 - A built-in "How to use" guide in sections that open and close: gestures, where data lives, backup and transfer
-- Traditional Chinese, English and Japanese interface, cycled with one toolbar button; defaults to the browser's language and remembers your choice
+- Traditional Chinese, English and Japanese interface, switched with one toolbar button that shows the current language and moves to the next on each press (中文 → English → 日本語); defaults to the browser's language and remembers your choice
 - A compact toolbar: undo and redo are icons; export, import and Share live in the `⋯` menu, with "How to use" and "About this app" (opens the landing page in a new tab) below a divider
 - A footer at the bottom of the page: where the data lives, the licence, and links home, to the changelog and to GitHub
 - A changelog page (/changelog/): new features and changes in every release, newest day first, in the interface language (English when the interface is Japanese). It is built from `CHANGELOG.md` at the repository root, so updating that file and pushing publishes it
@@ -168,6 +168,7 @@ Undo and redo shortcuts are left alone while you are typing in a field, while th
 | `dnp-view` | Current view (year or month) and month |
 | `dnp-holidays` | Which holiday sets are on |
 | `dnp-lang` | Interface language |
+| `dnp-ga-activated`, `dnp-ga-internal` | Analytics only: whether the "first stay created" event has been sent; whether this browser is marked as the owner's (`?internal=1` in the address) |
 | `dnp-backup`, `dnp-backup-<year>` | Time of the last export (or import) and a fingerprint of the plan, used to decide when to show the backup reminder; 2027 uses `dnp-backup`, other years one each |
 
 Clearing browser data, or using a different browser or computer, means the plan won't be there. Use Export (in the `⋯` menu) to keep a backup.
@@ -180,7 +181,7 @@ The page talks to five outside services:
 | [OpenFreeMap](https://openfreemap.org/) | Map tile requests | The base map |
 | [emfont](https://font.emtech.cc/) | Font file requests | The interface typeface |
 | [Google Fonts](https://fonts.google.com/) | Font file requests | The pixel typeface of the English tagline under the title |
-| [Google Analytics](https://analytics.google.com/) (GA4) | Anonymous usage such as page views, scrolling and outbound clicks, plus browser, device and rough location; sets a `_ga` cookie | Daily traffic figures. Loaded on the live site only, not under `npm run dev`; **nothing from your plan is sent** |
+| [Google Analytics](https://analytics.google.com/) (GA4) | Anonymous usage such as page views, scrolling and outbound clicks; events for actions such as opening the planner, adding a stay, exporting, importing and sharing, carrying only interface choices and bucketed counts (e.g. "2–5 stays"); plus browser, device and rough location; sets a `_ga` cookie | Traffic and feature-use figures; the event list is in [ANALYTICS.md](ANALYTICS.md). Loaded on the live site only, not under `npm run dev`; **nothing from your plan is sent** |
 
 Flight details such as booking references are stored in `localStorage` and are written into exported JSON. Keep that in mind before sharing an export.
 
@@ -254,7 +255,7 @@ app/index.html          App entry (/app/); loads the font and favicon
 changelog/index.html    Changelog page entry (/changelog/)
 CHANGELOG.md            The user-facing release notes, source of the changelog page (format in the file's header comment)
 public/favicon.svg      16×16 pixel-art globe
-public/og.png           Link-preview image (1200×630)
+public/og.png           Link-preview image (1200×630, marks all three languages)
 docs/overview.png       Sample image for the README (downloaded from the app's Share dialog)
 src/
   main.tsx              React mount point; sets the stylesheet order
@@ -300,7 +301,7 @@ src/
     stayRules.ts        Free stretches, Schengen 90/180 and Taiwan's 183 days
     seasons.ts          Season data for popular cities (monthly ratings and reasons) and the warning rule
     backup.ts           Backup reminder state and rules
-    analytics.ts        Google Analytics (live site only)
+    analytics.ts        Google Analytics: loading and track() events (live site only)
     changelog.ts        Parses CHANGELOG.md into dated, bilingual entries
     flags.ts            Country list, search, name → ISO code
     cities.ts           Built-in city list (Chinese and English) and search

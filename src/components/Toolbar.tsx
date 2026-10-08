@@ -61,8 +61,8 @@ export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHel
           },
         ]}
       />
-      {/* Labelled in the language it switches to, so it can be found by someone who can't read the current one. */}
-      <button onClick={() => setLocale(nextLocale(locale))} title={t('toolbar.languageHint')} lang={langTag(nextLocale(locale))}>
+      {/* Shows the current language; each press moves to the next one (中文 → English → 日本語). */}
+      <button onClick={() => setLocale(nextLocale(locale))} title={t('toolbar.languageHint')} lang={langTag(locale)}>
         <Translate size={16} weight="bold" />
         {t('toolbar.language')}
       </button>

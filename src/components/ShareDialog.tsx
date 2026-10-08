@@ -4,6 +4,7 @@ import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork';
 import { X } from '@phosphor-icons/react/dist/csr/X';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { renderPng } from '../lib/exportPng';
+import { track } from '../lib/analytics';
 import { download, fileName } from '../lib/files';
 import type { HolidaySet } from '../lib/holidays';
 import { t, useLocale } from '../lib/i18n';
@@ -52,6 +53,7 @@ export function ShareDialog({ stays, holidaySets, onClose }: Props) {
     if (!file) return;
     try {
       await navigator.share({ files: [file], title: t('app.title') });
+      track('share_download', { method: 'native_share' });
     } catch {
       // cancelled from the share sheet, or the browser refused: nothing to do
     }
@@ -82,7 +84,11 @@ export function ShareDialog({ stays, holidaySets, onClose }: Props) {
               {t('share.share')}
             </button>
           )}
-          <button type="button" className="primary" disabled={!image} onClick={() => image && download(image.blob, 'png')}>
+          <button type="button" className="primary" disabled={!image} onClick={() => {
+              if (!image) return;
+              download(image.blob, 'png');
+              track('share_download', { method: 'download' });
+            }}>
             <DownloadSimple size={16} weight="bold" />
             {t('share.download')}
           </button>

@@ -75,7 +75,7 @@
 ### 其他
 
 - 內建「如何使用」說明（可展開收合的分段）：操作方式、資料存在哪、備份與搬移
-- 繁體中文、英文、日文介面，工具列一顆鈕依序循環切換；預設依瀏覽器語言，選擇會記住
+- 繁體中文、英文、日文介面，工具列一顆鈕顯示目前語言，按一下換到下一個（中文 → English → 日本語）；預設依瀏覽器語言，選擇會記住
 - 工具列精簡：復原、重做只有圖示；匯出、匯入、分享收在 `⋯` 選單裡，分隔線下方是「如何使用」與「產品介紹」（新分頁開啟首頁）
 - 頁面底部的 footer：資料只存在瀏覽器的提醒、授權、首頁、更新日誌與 GitHub 連結
 - 更新日誌頁（/changelog/）：每次發布的新功能與改動，依日期由新到舊，跟著介面語言切換中英文（日文介面顯示英文）。內容來自根目錄的 `CHANGELOG.md`，build 時讀入，所以更新那個檔案再推上去就會發布
@@ -165,6 +165,7 @@ npm run dev
 | `dnp-view` | 目前檢視（年／月）與月份 |
 | `dnp-holidays` | 假日開關狀態 |
 | `dnp-lang` | 介面語言 |
+| `dnp-ga-activated`、`dnp-ga-internal` | 統計用：是否已送過「第一次建立行程」事件；這個瀏覽器是否標成站長自己（網址加 `?internal=1`） |
 | `dnp-backup`、`dnp-backup-<年份>` | 上次匯出（或匯入）的時間與行程指紋，用來決定何時出現備份提醒；2027 用 `dnp-backup`，其他年份各一個 |
 
 清除瀏覽器資料、換瀏覽器或換電腦都會看不到行程，請用 `⋯` 選單裡的「匯出」備份。
@@ -177,7 +178,7 @@ npm run dev
 | [OpenFreeMap](https://openfreemap.org/) | 地圖圖磚請求 | 地圖底圖 |
 | [emfont](https://font.emtech.cc/) | 字型檔請求 | 介面字體 |
 | [Google Fonts](https://fonts.google.com/) | 字型檔請求 | 標題下方英文副標的像素字體 |
-| [Google Analytics](https://analytics.google.com/)（GA4） | 瀏覽頁面、捲動、外連點擊等匿名使用紀錄，以及瀏覽器、裝置與大致地區；會設 `_ga` cookie | 統計每日流量。只在線上版載入，`npm run dev` 不送；**不會送出任何行程內容** |
+| [Google Analytics](https://analytics.google.com/)（GA4） | 瀏覽頁面、捲動、外連點擊等匿名使用紀錄；點「開始規劃」、新增行程、匯出、匯入、分享等操作事件，只帶介面選擇與分組後的數量（例如「2–5 段行程」）；以及瀏覽器、裝置與大致地區；會設 `_ga` cookie | 統計流量與功能使用情形，事件清單見 [ANALYTICS.md](ANALYTICS.md)。只在線上版載入，`npm run dev` 不送；**不會送出任何行程內容** |
 
 機票的訂位代號等欄位會存在 `localStorage`，也會寫進匯出的 JSON。分享匯出檔之前請留意。
 
@@ -251,7 +252,7 @@ app/index.html          App 的入口（/app/），載入字體與 favicon
 changelog/index.html    更新日誌頁的入口（/changelog/）
 CHANGELOG.md            給使用者看的更新紀錄，更新日誌頁的內容來源（格式見檔案開頭的註解）
 public/favicon.svg      16×16 像素風地球圖示
-public/og.png           分享連結時的預覽圖（1200×630）
+public/og.png           分享連結時的預覽圖（1200×630，三語標示）
 docs/overview.png       README 用的範例圖（由 app 的「分享」下載）
 src/
   main.tsx              React 掛載點；決定樣式載入順序
@@ -297,7 +298,7 @@ src/
     stayRules.ts        空檔、申根 90/180、台灣 183 天的計算
     seasons.ts          熱門城市的季節資料（每月評分與原因）與警示判斷
     backup.ts           備份提醒的狀態與判斷
-    analytics.ts        Google Analytics（只在線上版載入）
+    analytics.ts        Google Analytics：載入、事件 track()（只在線上版）
     changelog.ts        把 CHANGELOG.md 解析成依日期分組的中英文條目
     flags.ts            國家清單、搜尋、名稱 → ISO 代碼對照
     cities.ts           內建城市清單（中英文）與搜尋

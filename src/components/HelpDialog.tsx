@@ -90,7 +90,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           所以換瀏覽器、換電腦、用無痕視窗，或清除瀏覽器資料，都會<b>看不到原本的行程</b>。
         </>,
         <>
-          只有兩種資訊會送出去：你填的<b>地名</b>（用來在地圖上找位置），以及載入地圖與字體時的一般連線。另外網站用 Google Analytics 統計匿名瀏覽人次，不含任何行程內容。
+          只有兩種資訊會送出去：你填的<b>地名</b>（用來在地圖上找位置），以及載入地圖與字體時的一般連線。另外網站用 Google Analytics 統計匿名的瀏覽人次與操作次數（例如新增、匯出、分享），不含任何行程內容。
         </>,
       ],
     },
@@ -194,7 +194,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         </>,
         <>
           Only two things leave your device: the <b>place names</b> you enter (to find them on the map), and ordinary requests to load
-          the map and the font. The site also counts anonymous visits with Google Analytics, which never sees your plan.
+          the map and the font. The site also counts anonymous visits and actions (such as adding, exporting and sharing) with Google Analytics, which never sees your plan.
         </>,
       ],
     },
@@ -293,7 +293,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           そのため、別のブラウザや別のパソコン、プライベートウィンドウ、閲覧データの消去では<b>この計画は表示されません</b>。
         </>,
         <>
-          外に送られるのは 2 つだけ：入力した<b>地名</b>（地図上の位置を探すため）と、地図やフォントを読み込む通常の通信です。サイトでは Google Analytics で匿名の訪問数を集計しますが、計画の内容は含みません。
+          外に送られるのは 2 つだけ：入力した<b>地名</b>（地図上の位置を探すため）と、地図やフォントを読み込む通常の通信です。サイトでは Google Analytics で匿名の訪問数と操作回数（追加・書き出し・共有など）を集計しますが、計画の内容は含みません。
         </>,
       ],
     },
