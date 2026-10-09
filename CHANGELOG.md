@@ -7,6 +7,26 @@
   people using the planner, not for developers: what they can now do or what changed for them.
 -->
 
+## 2026-10-10
+
+- 頁面上不再放 GitHub 連結；更新日誌頁變寬、項目符號更清楚
+  EN: The GitHub links are gone from the pages; the changelog page is wider and its bullets easier to see
+- 新增設定頁（工具列最右邊的人像圖示）：可以填暱稱、家、護照、稅務居住地，設定語言、假日、溫度單位（°C／°F）與備份提醒間隔
+  EN: New settings page (the person icon at the right of the toolbar): add a nickname, home, passport and tax residence, and choose the language, holidays, temperature unit (°C / °F) and backup reminder interval
+- 填了家之後，飛行估算會加上從家出發與回家；歐盟、歐洲經濟區、瑞士護照不再顯示申根 90/180；183 天可以改算其他國家
+  EN: With a home set, the flight estimate counts the trips from and back home; EU, EEA and Swiss passports no longer see the Schengen 90/180 count; the 183-day count can follow another country
+- 語言改在設定頁選擇，工具列不再有語言按鈕
+  EN: The language is now chosen on the settings page; the toolbar no longer has a language button
+- ⋯ 選單新增「問題回報」：寫下標題和遇到的問題，可附最多 3 張截圖，留 Email 的話會回覆你；行程內容不會送出
+  EN: New "Report a problem" in the ⋯ menu: describe what went wrong, attach up to 3 screenshots, and leave an email if you'd like a reply; nothing from your plan is sent
+
+## 2026-10-09
+
+- 機票的航空公司改成搜尋選單：約 75 家常見航空，中文、英文或代號（例如 BR）都搜得到；航班編號會帶出航空公司代號和你用過的航班
+  EN: The ticket's airline is now a searchable list of about 75 common airlines, by Chinese or English name or code (such as BR); the flight number offers the airline's code and flights you have used before
+- 航空公司選單每一家都顯示 logo，選好後欄位也會換成那家的 logo
+  EN: Every airline in the picker shows its logo, and the field shows it once you pick one
+
 ## 2026-10-08
 
 - 新增「傳到其他裝置」：⋯ 選單產生一個連結和 QR code，在另一台電腦或手機打開就能匯入所有年份的行程，不用再傳檔案；行程只放在連結裡，不經過伺服器，也可以選擇不含訂位代號與票價

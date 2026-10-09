@@ -10,7 +10,7 @@ A single-page planner for a year of digital nomading. The year is laid out as 53
 
 ![Year timeline and itinerary, with sample data](docs/overview.png)
 
-The interface is available in Traditional Chinese, English and Japanese; switch from the toolbar.
+The interface is available in Traditional Chinese, English and Japanese; choose on the settings page.
 
 ---
 
@@ -66,13 +66,13 @@ The interface is available in Traditional Chinese, English and Japanese; switch 
 - Exact start and end dates
 - Color (black plus 8 others; a new place starts black, a place you've used before keeps its color)
 - Who you're travelling with
-- Flight booked: airline, flight number, departure time, booking reference, fare
+- Flight booked: airline, flight number, departure time, booking reference, fare. The airline is picked from a searchable list of about 75 common airlines, each with its logo (by Chinese or English name or two-letter code, or typed freely); the flight number picker offers that airline's code and flight numbers already in the plan
 - A note
 
 ### Overview
 
 - **Summary**: weeks planned and free, countries and cities visited, an estimate of flights and hours in the air, and weeks and days per country and city
-- **Days of stay**: the summary works out the most days spent in the Schengen area within any 180 days (the limit is 90; when exceeded it says from which date), and the days planned in Taiwan during 2027 (183 days is the tax-residency threshold). Only days on the timeline are counted
+- **Days of stay**: the summary works out the most days spent in the Schengen area within any 180 days (the limit is 90; when exceeded it says from which date), and the days planned in your tax-residence country that year (Taiwan unless changed in settings; 183 days is the usual tax-residency line). Only days on the timeline are counted
 - **Itinerary**: one line per stay — dates, flag and country, city, weeks (days), companions, note; filter by Q1–Q4; stays with a flight show a ticket icon; stays that overrun the Schengen limit show a warning icon
 - **Seasons**: about 71 popular nomad bases (Chiang Mai, Bali, Lisbon, Mexico City…) carry a best / fine / avoid rating for each month, with reasons. The editor has a "When to go" button that opens the twelve months and reasons (it flags a poor season even when closed); stays that land in months to avoid (Chiang Mai's burning season in March–April, Dubai's summer) get a warning on the block, in the itinerary and on the hover card
 - **Free stretches**: unplanned days between stays are listed in the itinerary too; press `+` to add a stay in that gap
@@ -85,10 +85,16 @@ The interface is available in Traditional Chinese, English and Japanese; switch 
 ### Also
 
 - A built-in "How to use" guide in sections that open and close: gestures, where data lives, backup and transfer
-- Traditional Chinese, English and Japanese interface, switched with one toolbar button that shows the current language and moves to the next on each press (中文 → English → 日本語); defaults to the browser's language and remembers your choice
-- A compact toolbar: undo and redo are icons; export, import and Share live in the `⋯` menu, with "How to use" and "About this app" (opens the landing page in a new tab) below a divider
-- A footer at the bottom of the page: where the data lives, the licence, and links home, to the changelog and to GitHub
+- Traditional Chinese, English and Japanese interface, chosen on the settings page (the landing and changelog pages can switch it from their headers too); defaults to the browser's language and remembers your choice
+- A compact toolbar: undo and redo are icons; export, import and Share live in the `⋯` menu, with "How to use", "About this app" (opens the landing page in a new tab) and "Report a problem" (a title, a description, up to 3 screenshots and an optional email, sent straight to the developer) below a divider
+- A footer at the bottom of the page: where the data lives, the licence, and links home and to the changelog
 - A changelog page (/changelog/): new features and changes in every release, newest day first, in the interface language (English when the interface is Japanese). It is built from `CHANGELOG.md` at the repository root, so updating that file and pushing publishes it
+- A settings page (/profile/, from the person icon at the right end of the toolbar):
+  - About me: a nickname (shown on the shared image), home (the flight estimate adds the trips from and back home), passport (an EU, EEA or Swiss passport hides the Schengen 90/180 count) and tax residence (the country whose 183 days are counted; Taiwan by default, empty to hide)
+  - Display: language, public holiday switches, temperature unit (°C / °F)
+  - Data: how long before the backup reminder (3 / 7 / 14 days, or off)
+  - About: the last update date and links home, to the changelog and to GitHub
+  - Changes save at once, stay in this browser and are not part of exports
 - Undo and redo, up to 100 steps
 - JSON export and import: one file holds every year; file names carry the export date (e.g. `nomad-plan_2026-10-06.json`). On a computer you can also drop the file onto the page to import it
 - Send to another device: the `⋯` menu makes a link and a QR code carrying every year's plan; opening it on another computer or phone imports it there (asking first before replacing years already planned), and pasting it into a tab that already has the planner open works too. The plan is compressed into the part of the address after `#` and never passes through a server; booking references and fares can be left out
@@ -173,6 +179,7 @@ Undo and redo shortcuts are left alone while you are typing in a field, while th
 | --- | --- |
 | `dnp-plan-2026`, `dnp-plan-2027`, `dnp-plan-2028` | The plan for each year |
 | `dnp-year` | The year being planned |
+| `dnp-profile` | The settings page's "about me", temperature unit and backup reminder interval |
 | `dnp-geocode` | Cached coordinates for place names |
 | `dnp-zoom` | Timeline zoom level |
 | `dnp-view` | Current view (year or month) and month |
@@ -192,6 +199,7 @@ The page talks to these outside services:
 | [emfont](https://font.emtech.cc/) | Font file requests | The interface typeface |
 | [Google Fonts](https://fonts.google.com/) | Font file requests | The pixel typeface of the English tagline under the title |
 | [Google Maps](https://www.google.com/maps) | When you tap the map pin on a phone card, that stay's "city, country" | Opens the place in Google Maps; nothing is sent unless you tap |
+| [FormSubmit](https://formsubmit.co/) | Only when you send "Report a problem": the title, description and screenshots you add (scaled down to JPEG), the optional email, and the page, language, year, window size and browser | Delivers the report to the developer's inbox; **nothing from your plan is sent** |
 | [Google Analytics](https://analytics.google.com/) (GA4) | Anonymous usage such as page views, scrolling and outbound clicks; events for actions such as opening the planner, adding a stay, exporting, importing and sharing, carrying only interface choices and bucketed counts (e.g. "2–5 stays"); plus browser, device and rough location; sets a `_ga` cookie | Traffic and feature-use figures; the event list is in [ANALYTICS.md](ANALYTICS.md). Loaded on the live site only, not under `npm run dev`; **nothing from your plan is sent** |
 
 Flight details such as booking references are stored in `localStorage` and are written into exported JSON. Keep that in mind before sharing an export.
@@ -270,6 +278,7 @@ A "Send to another device" link is `…/app/#plan=<code>`. The code's first char
 index.html              Landing page entry (the site root)
 app/index.html          App entry (/app/); loads the font and favicon
 changelog/index.html    Changelog page entry (/changelog/)
+profile/index.html      Settings page entry (/profile/)
 design/index.html       Design system page entry (/design/; served by `npm run dev` only, not built)
 CHANGELOG.md            The user-facing release notes, source of the changelog page (format in the file's header comment)
 public/favicon.svg      16×16 pixel-art globe
@@ -277,17 +286,20 @@ public/apple-touch-icon.png, icon-192.png, icon-512.png  Home-screen icons (the 
 public/manifest.webmanifest  PWA settings: name, icons, opens at /app/
 public/sw.js            Offline service worker (keeps loaded files)
 public/og.png           Link-preview image (1200×630, marks all three languages)
+public/airlines/        Airline logos (<code>.png), downloaded once by scripts/fetch-airline-logos.mjs
+scripts/fetch-airline-logos.mjs  Downloads a logo for every airline in airlines.ts; rerun after adding airlines
 docs/overview.png       Sample image for the README (downloaded from the app's Share dialog)
 docs/demo-*.gif         Feature demos for the README (English interface, sample data)
 src/
   main.tsx              React mount point; sets the stylesheet order
   changelog/            The changelog page (renders CHANGELOG.md as parsed by `lib/changelog.ts`)
+  profile/              The settings page
   design/               Design system page: colour, type, spacing, layout, radius and shadow, plus every state of the buttons, toggles, tabs, dropdowns, inputs and other base components; uses the app's own CSS, and forceStates copies :hover / :focus / :active rules to classes so states sit side by side
   landing/              Landing page: Landing (layout), Demos (scripted feature demos), motion (scroll triggers and looping)
   App.tsx               Wires the pieces together; owns the plan and page-level state
   components/           UI components, each with its stylesheet (.css) beside it
-    Toolbar             Header actions and the ⋯ menu (export, import, send to another device, share, how to use, about)
-    Footer              Page footer: where data lives, licence, links home and to GitHub
+    Toolbar             Header actions and the ⋯ menu (export, import, send to another device, share, how to use, about, report a problem)
+    Footer              Page footer: where data lives, licence, links home and to the changelog
     ViewBar             Year/month switch, holiday toggles, zoom
     YearView            The year timeline, including drag, resize and copy handling
     MonthView           The month calendar
@@ -301,6 +313,7 @@ src/
     SeasonStrip         The twelve-month season strip in the editor
     ShareDialog         Share: landscape / portrait PNG preview, download, system share sheet
     TransferDialog      Send to another device: link, QR code, flight-details switch
+    ReportDialog        Report a problem: title, description, screenshots, contact email
     QrCode              The QR card: square modules, rounded finder eyes, the pixel mascot on its top edge
     MobileItinerary     The read-only phone itinerary (now / next, stay cards)
     HoverCards          Floating cards for stays, tickets and holidays
@@ -324,13 +337,14 @@ src/
     weeks.ts            Date model: weeks, day indexes, half-week slots, month ranges, labels
     storage.ts          Types, load/save, import sanitising, reorder/push/insert algorithms, colors
     prefs.ts            View, holiday toggles and zoom preferences
-    stayRules.ts        Free stretches, Schengen 90/180 and Taiwan's 183 days
+    stayRules.ts        Free stretches, Schengen 90/180 and the tax-residence 183 days
     seasons.ts          Season data for popular cities (monthly ratings and reasons) and the warning rule
     backup.ts           Backup reminder state and rules
     analytics.ts        Google Analytics: loading and track() events (live site only)
     changelog.ts        Parses CHANGELOG.md into dated, bilingual entries
     flags.ts            Country list, search, name → ISO code
     cities.ts           Built-in city list (Chinese and English) and search
+    airlines.ts         Built-in list of common airlines (code, Chinese and English names, home country) and search
     holidays.ts         2026 and 2027 public holiday data
     geocode.ts          Nominatim lookups, rate limiting, cache
     exportPng.ts        Draws the PNG on a canvas (landscape and portrait)
@@ -338,7 +352,9 @@ src/
     transfer.ts         Transfer links: compress and encode, decode, take from the address
     ics.ts              Calendar file (.ics) for a flight
     offline.ts          Registers the service worker (live site only)
-    links.ts            Outbound links (landing page, GitHub)
+    links.ts            Links between the pages (home, planner, changelog, settings)
+    report.ts           Problem reports: shrink screenshots, send by e-mail through FormSubmit
+    profile.ts          Settings (nickname, home, passport, tax residence, temperature unit, backup reminder) and whether the Schengen rule applies
     util.ts             Small helpers
     i18n.tsx            Dictionaries, current locale, `t()`
   styles/base.css       Design tokens, page background, shared buttons and panels
@@ -392,6 +408,8 @@ Knowing these before reading the code will save time.
 
 ## Known limits
 
+- **Settings aren't exported or sent to other devices**: set them again in another browser or on another device
+
 - **Only 2025, 2026, 2027 and 2028** (`YEARS` in `lib/weeks.ts`); holiday data exists for 2026 and 2027 only; switching year clears the undo history
 - **Three interface languages**, Traditional Chinese, English and Japanese; the product spec (`MVP.md`) is in Chinese only
 - **Japanese has no city names, season notes or changelog of its own**; those three show in English under the Japanese interface
@@ -439,6 +457,7 @@ The full product spec and decision history are in [MVP.md](MVP.md) (Chinese).
 | Resource | Used for | License / terms |
 | --- | --- | --- |
 | [React](https://react.dev/) | UI | MIT |
+| Airline logos (public images from [Kiwi.com](https://www.kiwi.com/)) | Icons in the ticket's airline picker; downloaded into `public/airlines/` and deployed with the site, so nothing is fetched from Kiwi.com at runtime | Each airline's trademark, used only to identify it |
 | [Vite](https://vite.dev/) | Development and bundling | MIT |
 | [MapLibre GL JS](https://maplibre.org/) | Map engine | BSD-3-Clause |
 | [OpenFreeMap](https://openfreemap.org/) | Map tiles (Positron style) | See the site; data © OpenStreetMap contributors |

@@ -1,9 +1,9 @@
 // Remembers what was last exported, so the page can nudge when the plan has gone a while without a backup.
 // Kept per browser like the other preferences; it is not part of the plan, the export or the undo history.
 import { serialize, type Stay } from './storage';
+import { getProfile } from './profile';
 import { YEAR, inYear } from './weeks';
 
-export const REMIND_AFTER_DAYS = 7; // unbacked changes this old bring up the reminder
 export const SNOOZE_DAYS = 3;
 const DAY_MS = 86_400_000;
 // One record per year, like the plans. 2027's record predates multiple years and kept the plain key.
@@ -75,7 +75,9 @@ export const snoozed = (state: BackupState, now: number): BackupState => ({ ...s
 export function shouldRemind(state: BackupState, now: number): boolean {
   if (state.dirtySince === null) return false;
   if (state.snoozeUntil !== null && now < state.snoozeUntil) return false;
-  return now - state.dirtySince >= REMIND_AFTER_DAYS * DAY_MS;
+  // How old unbacked changes must be, from the profile (7 days unless changed); 0 turns the reminder off.
+  const after = getProfile().backupDays;
+  return after > 0 && now - state.dirtySince >= after * DAY_MS;
 }
 
 // Whole days since the last backup, or null if there has never been one.

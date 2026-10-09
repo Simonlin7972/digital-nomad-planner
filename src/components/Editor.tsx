@@ -6,7 +6,7 @@ import { normalizeCountry } from '../lib/flags';
 import { daysText, t, useLocale } from '../lib/i18n';
 import { PALETTE, cleanTicket, colorKeyOf, defaultColor, overlaps, placeName, type ColorKey, type Stay, type Ticket } from '../lib/storage';
 import { TOTAL_DAYS, dayOfIso, daysOf, isoOfDay, rangeLabel, weeksLabel, type DayRange } from '../lib/weeks';
-import { CityCombobox, CountryCombobox } from './Combobox';
+import { CityCombobox, CountryCombobox, AirlineCombobox, FlightNoCombobox } from './Combobox';
 import { DatePicker } from './DatePicker';
 import { SeasonStrip } from './SeasonStrip';
 import './Dialog.css';
@@ -45,6 +45,9 @@ export function Editor(props: {
     maxLength: 80,
   });
   const knownCompanions = [...new Set(others.map((s) => s.companions).filter(Boolean))];
+  // Airlines and flight numbers from the other stays' tickets, offered first in their pickers.
+  const usedAirlines = [...new Set(others.map((s) => s.ticket?.airline ?? '').filter(Boolean))];
+  const usedFlights = others.map((s) => s.ticket?.flightNo ?? '').filter(Boolean);
   // null = follow the suggested colour for the typed place until the user picks one
   const [picked, setPicked] = useState<ColorKey | null>(stay ? colorKeyOf(stay) : null);
   const color = picked ?? defaultColor(place, others);
@@ -184,14 +187,22 @@ export function Editor(props: {
           </button>
           {hasTicket && (
             <div className="ticket-fields">
-              <label>
-                {t('editor.airline')}
-                <input {...ticketField('airline')} placeholder={t('editor.airlinePh')} />
-              </label>
-              <label>
-                {t('editor.flightNo')}
-                <input {...ticketField('flightNo')} placeholder={t('editor.flightNoPh')} />
-              </label>
+              {/* Laid out like the country / city row, so the airline list spans both fields */}
+              <div className="dates place wide">
+                <label>
+                  {t('editor.airline')}
+                  <AirlineCombobox value={ticket.airline ?? ''} onChange={(v) => setTicket((tk) => ({ ...tk, airline: v }))} recent={usedAirlines} />
+                </label>
+                <label>
+                  {t('editor.flightNo')}
+                  <FlightNoCombobox
+                    value={ticket.flightNo ?? ''}
+                    airline={ticket.airline ?? ''}
+                    onChange={(v) => setTicket((tk) => ({ ...tk, flightNo: v }))}
+                    recent={usedFlights}
+                  />
+                </label>
+              </div>
               <div className="field wide">
                 {t('editor.departure')}
                 <div className="date-time">

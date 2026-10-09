@@ -32,3 +32,8 @@
 .combo-list li small { margin-left: auto; padding-left: 12px; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .combo-list li.none { color: var(--muted); cursor: default; }
 .combo-hint { font-size: 12px; font-weight: 400; color: var(--muted); }
+/* Airline logos: a small rounded square where a flag would be; the flag moves to the right end, after the names */
+.combo-logo { flex: none; width: 24px; height: 24px; border-radius: 6px; object-fit: contain; background: #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08); }
+.combo .field-icon .combo-logo { width: 22px; height: 22px; }
+.combo-list li small { display: inline-flex; align-items: center; gap: 6px; }
+.combo-list li small .flag { width: 16px; height: 12px; }

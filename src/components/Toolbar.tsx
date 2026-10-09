@@ -2,17 +2,18 @@ import { Fragment, useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { ArrowClockwise } from '@phosphor-icons/react/dist/csr/ArrowClockwise';
 import { ArrowCounterClockwise } from '@phosphor-icons/react/dist/csr/ArrowCounterClockwise';
+import { Bug } from '@phosphor-icons/react/dist/csr/Bug';
 import { DeviceMobile } from '@phosphor-icons/react/dist/csr/DeviceMobile';
 import { DotsThree } from '@phosphor-icons/react/dist/csr/DotsThree';
 import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
 import { Info } from '@phosphor-icons/react/dist/csr/Info';
 import { Question } from '@phosphor-icons/react/dist/csr/Question';
+import { UserCircle } from '@phosphor-icons/react/dist/csr/UserCircle';
 import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork';
 import { UploadSimple } from '@phosphor-icons/react/dist/csr/UploadSimple';
-import { Translate } from '@phosphor-icons/react/dist/csr/Translate';
-import { langTag, nextLocale, setLocale, t, useLocale } from '../lib/i18n';
+import { t, useLocale } from '../lib/i18n';
 import { MOD } from '../lib/util';
-import { HOME_URL } from '../lib/links';
+import { HOME_URL, PROFILE_URL } from '../lib/links';
 import './Toolbar.css';
 
 type Props = {
@@ -27,14 +28,15 @@ type Props = {
   onShare: () => void;
   onExport: () => void;
   onTransfer: () => void; // send every year's plan to another device by link
+  onReport: () => void; // e-mail a problem report
   onImport: (file: File) => void;
 };
 
 // The row of plan-wide actions in the page header. Undo and redo are icons only; the file actions (export,
 // import, share as PNG) sit in a ⋯ menu, with the guide and the product page below a divider.
-export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHelp, onUndo, onRedo, onShare, onExport, onTransfer, onImport }: Props) {
+export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHelp, onUndo, onRedo, onShare, onExport, onTransfer, onReport, onImport }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const locale = useLocale();
+  useLocale();
   const undoLabel = t('toolbar.shortcut', { action: t('toolbar.undo'), keys: `${MOD}Z` });
   const redoLabel = t('toolbar.shortcut', { action: t('toolbar.redo'), keys: `${MOD}⇧Z` });
   return (
@@ -62,14 +64,13 @@ export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHel
             // The landing page, in a new tab so the plan stays open here.
             onSelect: () => window.open(HOME_URL, '_blank', 'noopener'),
           },
+          { label: t('toolbar.report'), icon: <Bug size={16} weight="bold" />, onSelect: onReport },
         ]}
       />
-      {/* Shows the current language; each press moves to the next one (中文 → English → 日本語). */}
-      {/* On a phone only the icon shows; the label stays readable to screen readers. */}
-      <button className="lang" onClick={() => setLocale(nextLocale(locale))} title={t('toolbar.languageHint')} lang={langTag(locale)}>
-        <Translate size={16} weight="bold" />
-        <span className="lang-label">{t('toolbar.language')}</span>
-      </button>
+      {/* Settings live on their own page (/profile/), so this is a link rather than a button. */}
+      <a className="profile-link" href={PROFILE_URL} aria-label={t('profile.open')} title={t('profile.open')}>
+        <UserCircle size={20} weight="bold" />
+      </a>
       <input
         ref={fileRef}
         type="file"

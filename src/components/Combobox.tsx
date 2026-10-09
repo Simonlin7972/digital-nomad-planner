@@ -3,6 +3,9 @@ import type { KeyboardEvent, ReactNode } from 'react';
 import { cityLabel, searchCities } from '../lib/cities';
 import { GlobeHemisphereWest } from '@phosphor-icons/react/dist/csr/GlobeHemisphereWest';
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin';
+import { Airplane } from '@phosphor-icons/react/dist/csr/Airplane';
+import { Hash } from '@phosphor-icons/react/dist/csr/Hash';
+import { airlineCode, airlineLogo, searchAirlines } from '../lib/airlines';
 import { countryLabel, flagCode, isListedCountry, searchCountries } from '../lib/flags';
 import { t, useLocale } from '../lib/i18n';
 import { Flag } from './Flag';
@@ -13,6 +16,7 @@ type Option = {
   name: string; // shown in the list and in the field
   sub: string; // secondary text on the right
   flag: string; // country to draw a flag for; '' leaves the slot empty
+  logo?: string; // an image to show instead of the flag at the start (airlines); the flag then goes after `sub`
 };
 
 type Props<T extends Option> = {
@@ -142,9 +146,12 @@ function Combobox<T extends Option>({
               }}
               onMouseEnter={() => setActive(i)}
             >
-              <Flag country={o.flag} />
+              {o.logo ? <Logo src={o.logo} /> : <Flag country={o.flag} />}
               <span>{o.name}</span>
-              <small>{o.sub}</small>
+              <small>
+                {o.sub}
+                {o.logo && o.flag && <Flag country={o.flag} />}
+              </small>
             </li>
           ))}
           {options.length === 0 && <li className="none">{emptyText}</li>}
@@ -224,4 +231,69 @@ export function CityCombobox(props: {
       icon={<MapPin size={16} weight="bold" />}
     />
   );
+}
+
+// Airline in the flight details: picked from a list of common airlines (with the home country's flag) or typed.
+export function AirlineCombobox(props: { value: string; onChange: (value: string) => void; recent: string[] }) {
+  const { value, onChange, recent } = props;
+  const locale = useLocale();
+  const code = airlineCode(value);
+  const recentKey = recent.join('|');
+  const search = useMemo(
+    () => (query: string) =>
+      searchAirlines(query, recent).map((a) => ({ value: a.value, name: a.name, sub: a.sub, flag: a.country, logo: airlineLogo(a.code) })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- recentKey stands in for the array; names follow the locale
+    [recentKey, locale],
+  );
+  return (
+    <Combobox
+      value={value}
+      display={(v) => v}
+      onChange={onChange}
+      search={search}
+      placeholder={t('editor.airlinePh')}
+      emptyText={t('airline.empty')}
+      // Once the field names a listed airline, its logo replaces the plane (as a country's flag replaces the globe).
+      icon={code ? <Logo src={airlineLogo(code)} /> : <Airplane size={16} weight="bold" />}
+    />
+  );
+}
+
+// Flight number: there is no list of every flight, so the picker offers the chosen airline's code to start from
+// and the flight numbers already in the plan.
+export function FlightNoCombobox(props: { value: string; airline: string; onChange: (value: string) => void; recent: string[] }) {
+  const { value, airline, onChange, recent } = props;
+  useLocale();
+  const code = airlineCode(airline);
+  const recentKey = recent.join('|');
+  const search = useMemo(
+    () => (query: string) => {
+      const q = query.trim().toUpperCase();
+      const used = [...new Set(recent.map((r) => r.trim().toUpperCase()).filter(Boolean))];
+      // This airline's own flights first, then any others.
+      used.sort((a, b) => Number(Boolean(code && b.startsWith(code))) - Number(Boolean(code && a.startsWith(code))));
+      const options = used.filter((f) => f.includes(q)).map((f) => ({ value: f, name: f, sub: t('flightNo.used'), flag: '' }));
+      if (code && !used.includes(code) && (!q || code.startsWith(q) || q.startsWith(code)))
+        options.unshift({ value: code, name: code, sub: t('flightNo.code', { airline }), flag: '' });
+      return options;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- recentKey stands in for the array
+    [recentKey, code, airline],
+  );
+  return (
+    <Combobox
+      value={value}
+      display={(v) => v}
+      onChange={onChange}
+      search={search}
+      placeholder={code ? `${code}211` : t('editor.flightNoPh')}
+      emptyText={t('flightNo.empty')}
+      icon={<Hash size={16} weight="bold" />}
+    />
+  );
+}
+
+// An airline logo. Hidden rather than shown broken if the file is missing.
+function Logo({ src }: { src: string }) {
+  return <img className="combo-logo" src={src} alt="" loading="lazy" onError={(e) => (e.currentTarget.style.visibility = 'hidden')} />;
 }

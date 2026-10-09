@@ -5,6 +5,8 @@ import { CaretDown } from '@phosphor-icons/react/dist/csr/CaretDown';
 import { Check } from '@phosphor-icons/react/dist/csr/Check';
 import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
 import { GlobeHemisphereWest } from '@phosphor-icons/react/dist/csr/GlobeHemisphereWest';
+import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
+import { Flag } from '../components/Flag';
 import { PALETTE } from '../lib/storage';
 import '../components/Dialog.css';
 import '../components/Editor.css';
@@ -13,6 +15,7 @@ import '../components/DatePicker.css';
 import '../components/ViewBar.css';
 import '../components/YearSelect.css';
 import '../components/Toolbar.css';
+import '../components/YearView.css';
 import './DesignSystem.css';
 
 // A dev-only reference of the planner's foundations and base components. The tokens and component styles are
@@ -42,6 +45,8 @@ const SECTIONS = [
   ['dropdown', 'Dropdown 下拉選單'],
   ['input', 'Input 輸入框'],
   ['slider', 'Slider 滑桿'],
+  ['stay', 'Stay 停留區塊'],
+  ['country', 'Country bar 國家條'],
   ['swatch', 'Swatch 色票'],
   ['dialog', 'Dialog 對話框'],
 ] as const;
@@ -394,6 +399,41 @@ export function DesignSystem() {
           />
         </Section>
 
+        <Section id="stay" title="Stay 停留區塊" note="年檢視時間軸上的一段停留（.stay）。底色是停留選的顏色，兩端是拉長用的把手（.handle）。Hover 浮起並露出淡淡的把手線；滑到把手上把手變暗、線變實；拖曳中浮更高、第二行改成日期；複製時和別段重疊就變成虛線外框。">
+          <StateTable
+            states={[DEFAULT, HOVER, { label: 'Edge hover' }, { label: 'Dragging' }, { label: 'Blocked' }]}
+            rows={[
+              ['Stay', '.stay', (s, i) => <StayBlock state={s} i={i} place="雪梨" color={PALETTE[8].hex} />],
+              ['季節警示', '.stay strong svg', (s, i) => <StayBlock state={s} i={i} place="曼谷" color={PALETTE[2].hex} warn />],
+              ['窄區塊', '文字截斷', (s, i) => <StayBlock state={s} i={i} place="布宜諾斯艾利斯" color={PALETTE[6].hex} narrow />],
+            ]}
+          />
+          <h3>Selection 拖選中</h3>
+          <p className="ds-note">在空白處拖曳新增停留時的預覽（.selection）：深色虛線框、8% 黑底，中間顯示長度。</p>
+          <div className="ds-track"><div className="selection">4 週</div></div>
+        </Section>
+
+        <Section id="country" title="Country bar 國家條" note="時間軸下方的國家條（.country-bar），把同一國家連續的停留併成一條：國旗加國名，底色是停留顏色的 30%（color-mix），文字一律 --text。沒有互動狀態；太窄時國名截斷。">
+          <div className="ds-cbars">
+            {COUNTRIES.map(([code, name], i) => (
+              <div key={code} className="ds-cbar">
+                <div className="country-bar" style={{ '--c': PALETTE[i].hex } as CSSProperties}>
+                  <Flag country={code} />
+                  <span>{name}</span>
+                </div>
+                <code>{PALETTE[i].key}</code>
+              </div>
+            ))}
+            <div className="ds-cbar narrow">
+              <div className="country-bar" style={{ '--c': PALETTE[6].hex } as CSSProperties}>
+                <Flag country="AR" />
+                <span>阿根廷共和國</span>
+              </div>
+              <code>窄：截斷</code>
+            </div>
+          </div>
+        </Section>
+
         <Section id="swatch" title="Swatch 色票" note="編輯器挑停留顏色。選中的那個外圍兩圈：白色 2px，再深色 2px。">
           <StateTable
             states={[DEFAULT, HOVER, FOCUS, { label: 'Selected' }]}
@@ -476,6 +516,39 @@ function Toggle({ state, on, color = 'var(--text)', label = '全部假日' }: { 
       <span className="knob" />
       {label}
     </button>
+  );
+}
+
+const COUNTRIES = [
+  ['TW', '台灣'],
+  ['JP', '日本'],
+  ['PT', '葡萄牙'],
+  ['MX', '墨西哥'],
+  ['GE', '喬治亞'],
+  ['VN', '越南'],
+  ['ID', '印尼'],
+  ['TH', '泰國'],
+  ['AU', '澳洲'],
+];
+
+// Columns: default, hover, edge hover, dragging, blocked (see the stay section's states).
+function StayBlock({ state, i, place, color, warn, narrow }: { state: State; i: number; place: string; color: string; warn?: boolean; narrow?: boolean }) {
+  const hover = i === 1 || i === 2;
+  const className = ['stay', hover && 'is-hover', i === 3 && 'active', i === 4 && 'blocked'].filter(Boolean).join(' ');
+  return (
+    <div className={narrow ? 'ds-track narrow' : 'ds-track'} title={state.label}>
+      <div className={className} style={{ background: color }}>
+        <span className="handle" data-edge="l" />
+        <span className="label">
+          <strong>
+            {warn && <Warning size={12} weight="bold" aria-label="季節提醒" />}
+            {place}
+          </strong>
+          <small>{i === 3 ? '2027/3/1 – 4/8' : '5.5 週'}</small>
+        </span>
+        <span className={i === 2 ? 'handle is-hover' : 'handle'} data-edge="r" />
+      </div>
+    </div>
   );
 }
 

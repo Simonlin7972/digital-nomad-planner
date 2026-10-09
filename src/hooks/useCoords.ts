@@ -50,8 +50,14 @@ const CRUISE_KMH = 850;
 const OVERHEAD_H = 0.5; // taxi, climb and descent per flight
 
 // Rough flight tally for moving between consecutive stays, straight-line and non-stop.
-export function flightStats(stays: Stay[], coords: Coords): { legs: number; hours: number; unknown: number } {
-  const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
+// With a home place (from the profile), the trip out from home and the one back are counted too.
+export function flightStats(
+  stays: Stay[],
+  coords: Coords,
+  home: Pick<Stay, 'country' | 'city'> | null = null,
+): { legs: number; hours: number; unknown: number } {
+  const trip = [...stays].sort((a, b) => a.startDay - b.startDay);
+  const sorted: Pick<Stay, 'country' | 'city'>[] = home && trip.length ? [home, ...trip, home] : trip;
   let legs = 0;
   let hours = 0;
   let unknown = 0;

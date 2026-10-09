@@ -8,7 +8,8 @@ import { cityLabel } from '../lib/cities';
 import { countryLabel } from '../lib/flags';
 import { daysText, t, tr, useLocale } from '../lib/i18n';
 import type { Stay } from '../lib/storage';
-import { checkSchengen, taiwanDays } from '../lib/stayRules';
+import { getProfile } from '../lib/profile';
+import { checkSchengen, residenceDays } from '../lib/stayRules';
 import { TOTAL_DAYS, YEAR, dateOfDay, daysOf, fullDate, weeksLabel } from '../lib/weeks';
 import { Flag } from './Flag';
 import './Summary.css';
@@ -36,10 +37,14 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
   }, [stays]);
   const countryCount = totals.filter((g) => g.country).length;
   const cityCount = totals.reduce((n, g) => n + g.cities.filter(([city]) => city).length, 0);
-  const flights = useMemo(() => flightStats(stays, coords), [stays, coords]);
+  const profile = getProfile();
+  const home = profile.homeCountry || profile.homeCity ? { country: profile.homeCountry, city: profile.homeCity } : null;
+  const flights = useMemo(() => flightStats(stays, coords, home), [stays, coords, home?.country, home?.city]);
   const plannedDays = stays.reduce((n, s) => n + daysOf(s), 0);
   const schengen = useMemo(() => checkSchengen(stays), [stays]);
-  const twDays = taiwanDays(stays);
+  const residence = profile.taxResidence;
+  const twDays = residenceDays(stays, residence);
+  const residenceName = countryLabel(residence);
 
   return (
     <div className="panel">
@@ -49,7 +54,7 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
         <br />
         {tr('summary.places', { countries: <b>{countryCount}</b>, cities: <b>{cityCount}</b> })}
         <br />
-        <Hint text={t('summary.flightsHint')}>
+        <Hint text={t(home ? 'summary.flightsHintHome' : 'summary.flightsHint')}>
           {tr('summary.flights', { legs: <b>{flights.legs}</b>, hours: <b>{Math.round(flights.hours)}</b> })}
           {flights.unknown > 0 && t('summary.flightsSkipped', { n: flights.unknown })}
         </Hint>
@@ -69,7 +74,9 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
           )}
           {twDays > 0 && (
             <li>
-              <Hint text={t('rules.taiwanHint')}>{tr('rules.taiwan', { days: <b>{daysText(twDays)}</b>, year: YEAR })}</Hint>
+              <Hint text={t('rules.residenceHint', { country: residenceName })}>
+                {tr('rules.residence', { country: residenceName, days: <b>{daysText(twDays)}</b>, year: YEAR })}
+              </Hint>
             </li>
           )}
         </ul>

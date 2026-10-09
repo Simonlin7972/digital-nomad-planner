@@ -4,6 +4,7 @@ import { AllMonths, MONTH_INDEXES } from './components/AllMonths';
 import { MobileItinerary } from './components/MobileItinerary';
 import { ShareDialog } from './components/ShareDialog';
 import { TransferDialog } from './components/TransferDialog';
+import { ReportDialog } from './components/ReportDialog';
 import { Editor, type Editing, type StayDetails } from './components/Editor';
 import { Footer } from './components/Footer';
 import { HelpDialog } from './components/HelpDialog';
@@ -17,6 +18,7 @@ import { Toolbar } from './components/Toolbar';
 import { ViewBar } from './components/ViewBar';
 import YearView from './components/YearView';
 import { useBackupReminder } from './hooks/useBackupReminder';
+import { getProfile } from './lib/profile';
 import { markYearBackedUp } from './lib/backup';
 import { useCoords } from './hooks/useCoords';
 import { useHistory } from './hooks/useHistory';
@@ -66,6 +68,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
   const [helpOpen, setHelpOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [dropping, setDropping] = useState(false); // a file is being dragged over the page
   // Phones get a read-only layout: no timeline or calendar to drag on, no editor.
   const narrow = useNarrow();
@@ -76,7 +79,12 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
   const [ticketCard, setTicketCard] = useState<({ id: string } & Anchor) | null>(null);
   const [holidayCard, setHolidayCard] = useState<({ holiday: Holiday; set: HolidaySet } & Anchor) | null>(null);
   const zoom = useZoom();
-  const { coords, failed: coordsFailed } = useCoords(stays);
+  // Home (from the profile) is looked up with the stays, so the flight estimate can count the trips to and from it.
+  const homePlace = (() => {
+    const p = getProfile();
+    return p.homeCountry || p.homeCity ? [{ country: p.homeCountry, city: p.homeCity } as Stay] : [];
+  })();
+  const { coords, failed: coordsFailed } = useCoords([...stays, ...homePlace]);
   const backup = useBackupReminder(stays);
   // The map library loads when the page is scrolled near the map, not with the page.
   const [mapRef, mapNear] = useNearView();
@@ -97,7 +105,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
     document.title = `${t('app.title')} — ${t('app.tagline')}`;
   }, [locale]);
 
-  const busy = Boolean(dragging || editing || helpOpen || shareOpen || transferOpen);
+  const busy = Boolean(dragging || editing || helpOpen || shareOpen || transferOpen || reportOpen);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey) || e.altKey || busy) return;
@@ -269,6 +277,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
           }}
           onExport={() => exportJson('menu')}
           onTransfer={() => setTransferOpen(true)}
+          onReport={() => setReportOpen(true)}
           onImport={(file) => void importJson(file)}
         />
       </header>
@@ -399,6 +408,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
       {helpOpen && <HelpDialog mod={MOD} onClose={() => setHelpOpen(false)} />}
       {shareOpen && <ShareDialog stays={stays} holidaySets={holidaySets} onClose={() => setShareOpen(false)} />}
       {transferOpen && <TransferDialog stays={stays} onClose={() => setTransferOpen(false)} />}
+      {reportOpen && <ReportDialog onClose={() => setReportOpen(false)} />}
       {dropping && (
         <div className="drop-overlay" aria-hidden="true">
           <p>{t('import.drop')}</p>

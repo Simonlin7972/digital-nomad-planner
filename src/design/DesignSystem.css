@@ -1,4 +1,8 @@
 /* The dev-only design system page: a sticky table of contents beside one long column of sections */
+/* Only this page loads this file, so the smooth scroll for the contents links can sit on html */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
 .ds { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 48px; max-width: 1440px; margin: 0 auto; padding: 0 40px; }
 
 .ds-nav {
@@ -112,6 +116,17 @@
 .ds-combo-demo .combo-list { margin-top: 4px; }
 
 .ds-dialog { animation: none; }
+
+/* A stretch of timeline track for one stay or selection; the real track sets the row height and top margin */
+.ds-track { display: grid; grid-template-rows: 56px; width: 148px; }
+.ds-track.narrow { width: 64px; }
+.ds-track .stay,
+.ds-track .selection { margin: 0; }
+.ds-cbars { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
+.ds-cbar { display: flex; flex-direction: column; gap: 6px; }
+.ds-cbar .country-bar { height: 22px; }
+.ds-cbar.narrow .country-bar { width: 64px; }
+.ds-cbar code { color: var(--muted); }
 
 @media (max-width: 900px) {
   .ds { grid-template-columns: 1fr; gap: 0; padding: 0 16px; }

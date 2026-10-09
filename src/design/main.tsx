@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import 'flag-icons/css/flag-icons.min.css';
 import '../styles/base.css';
 import { DesignSystem } from './DesignSystem';
 import { mirrorStates } from './forceStates';

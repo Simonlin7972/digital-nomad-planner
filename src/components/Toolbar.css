@@ -38,9 +38,7 @@
 /* Phone header: everything on one row beside the title, finger-sized */
 @media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
   .actions { flex: none; flex-wrap: nowrap; }
-  .actions button.icon,
-  .actions button.lang { width: 44px; height: 44px; padding: 0; justify-content: center; }
-  .actions .lang-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .actions button.icon { width: 44px; height: 44px; padding: 0; justify-content: center; }
   /* The ⋯ menu becomes a sheet at the bottom, over a scrim that takes the tap that closes it */
   .more-menu {
     position: fixed;
@@ -51,4 +49,24 @@
     animation: sheet-up 0.22s cubic-bezier(0.3, 0.7, 0.2, 1);
   }
   .actions .more-menu button { min-height: 48px; font-size: 15px; }
+}
+
+/* Settings: a round icon link at the right end, the same size as the icon buttons */
+.actions .profile-link {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+}
+@media (hover: hover) {
+  .actions .profile-link:hover { border-color: var(--text); background: var(--subtle); }
+}
+.actions .profile-link:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+/* Phone: finger-sized, like the other header buttons (after the base rule so it wins) */
+@media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
+  .actions .profile-link { width: 44px; height: 44px; }
 }

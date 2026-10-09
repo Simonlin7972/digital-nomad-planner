@@ -2,7 +2,8 @@ import { flagCode } from './flags';
 import type { HolidaySet } from './holidays';
 import { daysText, getLocale, t } from './i18n';
 import { colorOf, countryOf, placeFull, placeName, type Stay } from './storage';
-import { checkSchengen, taiwanDays } from './stayRules';
+import { getProfile } from './profile';
+import { checkSchengen, residenceDays } from './stayRules';
 import { MONTHS, SLOTS, TOTAL_DAYS, WEEKS, YEAR, daysOf, monthName, monthRange, rangeLabel, slotsOf, weeksLabel } from './weeks';
 
 const FONT = '"975HazyGo", -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
@@ -91,14 +92,17 @@ function summaryLine(stays: Stay[]): { text: string; warn: boolean } {
   const planned = stays.reduce((n, s) => n + daysOf(s), 0);
   const countries = new Set(stays.filter((s) => s.country).map((s) => s.country)).size;
   const cities = new Set(stays.filter((s) => s.city).map((s) => `${s.country}/${s.city}`)).size;
+  const profile = getProfile();
   const parts = [
+    // The nickname from the profile, if any, leads the line: "Simon 的遊牧計畫".
+    ...(profile.nickname ? [t('png.owner', { name: profile.nickname })] : []),
     t('summary.time', { planned: weeksLabel(planned), free: weeksLabel(TOTAL_DAYS - planned) }),
     t('summary.places', { countries, cities }),
   ];
   const schengen = checkSchengen(stays);
   if (schengen.days > 0) parts.push(t('rules.schengen', { peak: schengen.peak }));
-  const tw = taiwanDays(stays);
-  if (tw > 0) parts.push(t('rules.taiwan', { days: daysText(tw), year: YEAR }));
+  const tw = residenceDays(stays, profile.taxResidence);
+  if (tw > 0) parts.push(t('rules.residence', { country: countryOf({ country: profile.taxResidence, city: '' }), days: daysText(tw), year: YEAR }));
   return { text: parts.join(t('sep')), warn: schengen.firstOver !== null };
 }
 

@@ -1,5 +1,6 @@
 // Day-count rules that depend on where you are: the Schengen 90/180 limit and Taiwan's 183-day residency line.
 // Both are worked out from the plan alone, so they only know about days that are on the timeline.
+import { schengenApplies } from './profile';
 import type { Stay } from './storage';
 import { TOTAL_DAYS, daysOf, monthRange, type DayRange } from './weeks';
 
@@ -39,6 +40,8 @@ export type SchengenCheck = {
 // Every day spent in Schengen counts toward the 180 days that end on it. A day is over the limit when that
 // window holds more than 90 of them. Days before the timeline starts are unknown and taken as outside.
 export function checkSchengen(stays: Stay[]): SchengenCheck {
+  // An EU / EEA / Swiss passport (from the profile) isn't bound by the limit: report nothing, so nothing shows.
+  if (!schengenApplies()) return { days: 0, peak: 0, firstOver: null, overBy: new Map() };
   const inside = new Uint8Array(TOTAL_DAYS);
   const owner: (string | null)[] = new Array(TOTAL_DAYS).fill(null);
   for (const s of stays) {
@@ -65,11 +68,13 @@ export function checkSchengen(stays: Stay[]): SchengenCheck {
   return result;
 }
 
-// Days planned in Taiwan within the calendar year, which is the tax year the 183-day line is counted over.
-export function taiwanDays(stays: Stay[]): number {
+// Days planned in a country (the profile's tax residence, Taiwan by default) within the calendar year, which is
+// the tax year most 183-day lines are counted over.
+export function residenceDays(stays: Stay[], country: string): number {
+  if (!country) return 0;
   const year = { startDay: monthRange(0).startDay, endDay: monthRange(11).endDay };
   return stays
-    .filter((s) => s.country === 'tw')
+    .filter((s) => s.country === country)
     .reduce((n, s) => {
       const startDay = Math.max(s.startDay, year.startDay);
       const endDay = Math.min(s.endDay, year.endDay);

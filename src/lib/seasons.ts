@@ -2,6 +2,7 @@
 // (climate normals, monsoons, smoke, heat, crowds), not a forecast. Only listed cities have it; every other place
 // simply shows nothing.
 import { getLocale } from './i18n';
+import { getProfile } from './profile';
 import type { Stay } from './storage';
 import { dateOfDay, type DayRange } from './weeks';
 
@@ -398,9 +399,16 @@ export const noteText = (n: SeasonNote) => (getLocale() === 'zh' ? n.zh : n.en);
 
 // The coolest night to the warmest day across some months, e.g. { lo: '19', hi: '36' }. Below zero gets a real
 // minus sign, which reads better than a hyphen next to the range mark.
-export function tempRange(season: Season, months: number[]): { lo: string; hi: string } {
+// In the profile's unit: the data is in °C, shown in °F when chosen.
+export function tempRange(season: Season, months: number[]): { lo: string; hi: string; unit: string } {
+  const f = getProfile().tempUnit === 'f';
+  const conv = (c: number) => (f ? Math.round((c * 9) / 5 + 32) : c);
   const deg = (n: number) => (n < 0 ? `−${-n}` : String(n));
-  return { lo: deg(Math.min(...months.map((m) => season.lows[m]))), hi: deg(Math.max(...months.map((m) => season.highs[m]))) };
+  return {
+    lo: deg(conv(Math.min(...months.map((m) => season.lows[m])))),
+    hi: deg(conv(Math.max(...months.map((m) => season.highs[m])))),
+    unit: f ? '°F' : '°C',
+  };
 }
 
 // Days of a range in each calendar month (0–11), whatever the year.

@@ -1,0 +1,64 @@
+/* The profile page: the changelog page's frame, with settings in titled sections */
+.profile { max-width: 760px; margin: 0 auto; padding: 0 40px 64px; }
+
+.p-nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 24px 0; }
+.p-brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-size: 18px; font-weight: 600; }
+.p-brand .pixel-nomad { width: 34px; height: 32px; }
+.p-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--text);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+@media (hover: hover) {
+  .p-back:hover { background: #000; }
+}
+
+/* The page reuses the editor's field styles (.editor), without its dialog shell */
+.profile main.editor { display: block; padding: 24px 0 0; }
+.p-head { display: flex; align-items: center; gap: 16px; }
+.profile h1 { margin: 0; font-size: 40px; font-weight: 600; }
+.p-saved { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); opacity: 0; transition: opacity 0.2s; }
+.p-saved.on { opacity: 1; }
+.p-lead { margin: 12px 0 32px; font-size: 16px; color: var(--muted); }
+
+.p-section { padding: 8px 24px 16px; margin-bottom: 24px; border: 1px solid var(--line-strong); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-card); }
+.p-section h2 { margin: 16px 0 4px; font-size: 18px; }
+.p-row { display: grid; grid-template-columns: 220px 1fr; gap: 8px 24px; align-items: start; padding: 16px 0; }
+.p-row + .p-row { border-top: 1px solid var(--line); }
+.p-label { display: flex; flex-direction: column; gap: 4px; padding-top: 10px; font-size: 14px; font-weight: 600; }
+.p-label small { font-size: 12px; font-weight: 400; line-height: 1.5; color: var(--muted); }
+.p-control { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.p-control > input { width: 100%; }
+.p-control .dates.place { display: flex; gap: 12px; }
+.p-control .dates.place > * { flex: 1; min-width: 0; }
+
+/* Choices as pills; the chosen one is black, like the quarter filter */
+.p-options { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 4px; }
+.p-options button { padding: 8px 16px; font-size: 13px; }
+.p-options button[aria-checked='true'] { background: var(--text); border-color: var(--text); color: #fff; }
+.p-toggles { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
+
+.p-note { margin: 8px 0; font-size: 13px; color: var(--muted); }
+.p-about { margin: 12px 0 4px; font-size: 15px; line-height: 1.7; }
+.p-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 12px 0; }
+.p-links a { display: inline-flex; align-items: center; gap: 6px; color: var(--text); text-decoration: none; font-size: 14px; font-weight: 600; }
+@media (hover: hover) {
+  .p-links a:hover { text-decoration: underline; }
+}
+
+@media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
+  .profile { padding: 0 16px 48px; }
+  .profile h1 { font-size: 32px; }
+  .p-brand span { display: none; }
+  .p-section { padding: 4px 16px 12px; }
+  .p-row { grid-template-columns: 1fr; }
+  .p-label { padding-top: 0; }
+  .p-control .dates.place { flex-direction: column; }
+}

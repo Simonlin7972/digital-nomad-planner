@@ -8,7 +8,7 @@
 
 ![整年時間軸與行程清單（範例資料）](docs/overview.png)
 
-> A single-page planner for a year of digital nomading. Drag across a 53-week timeline to block out where you'll be, refine exact dates in a month view, and see the route on a map. Everything stays in your browser — no account, no backend. The interface is available in Traditional Chinese, English and Japanese (switch from the toolbar). **[English README](README.en.md)**
+> A single-page planner for a year of digital nomading. Drag across a 53-week timeline to block out where you'll be, refine exact dates in a month view, and see the route on a map. Everything stays in your browser — no account, no backend. The interface is available in Traditional Chinese, English and Japanese (chosen on the settings page). **[English README](README.en.md)**
 
 ---
 
@@ -64,13 +64,13 @@
 - 確切開始日、結束日
 - 顏色（黑色加 8 色；新地點預設黑色，同一個地點沿用既有顏色）
 - 跟誰去
-- 已買機票：航空公司、航班編號、起飛時間、訂位代號、票價
+- 已買機票：航空公司、航班編號、起飛時間、訂位代號、票價。航空公司從約 75 家常見航空的搜尋選單挑選（每家有 logo；中文、英文或兩碼代號都搜得到，也可以直接輸入）；航班編號的選單會帶出該航空的代號和行程裡用過的航班
 - 備註
 
 ### 總覽
 
 - **摘要**：已安排／未安排週數、去了幾個國家與城市、估計航段數與飛行時數、依國家分組的停留週數與天數
-- **停留天數**：摘要裡算出申根區任 180 天內最多待幾天（上限 90，超過會標出從哪天開始），以及 2027 年排在台灣幾天（183 天是稅務居住者的門檻）。只算排進時間軸的日子
+- **停留天數**：摘要裡算出申根區任 180 天內最多待幾天（上限 90，超過會標出從哪天開始），以及當年排在稅務居住地幾天（預設台灣，可在設定頁改；183 天是多數國家的稅務居住者門檻）。只算排進時間軸的日子
 - **行程列表**：一段行程一列——日期、國旗與國家、城市、週數（天數）、跟誰去、備註；可依 Q1–Q4 篩選；有機票的行程顯示票券圖示；申根超待的行程顯示警示圖示
 - **季節**：約 71 個熱門遊牧城市（清邁、峇里島、里斯本、墨西哥城……）內建 12 個月的推薦／普通／避開與原因。編輯視窗有「適合的季節」按鈕，展開看 12 個月與原因（季節不佳時按鈕上直接標示）；排到該避開的月份（例如清邁 3–4 月燒山季、杜拜盛夏）時，色塊、列表與資訊卡會示警
 - **空檔**：行程之間還沒排的日子也列在行程列表裡，按 `+` 直接在那段空檔新增行程
@@ -83,10 +83,16 @@
 ### 其他
 
 - 內建「如何使用」說明（可展開收合的分段）：操作方式、資料存在哪、備份與搬移
-- 繁體中文、英文、日文介面，工具列一顆鈕顯示目前語言，按一下換到下一個（中文 → English → 日本語）；預設依瀏覽器語言，選擇會記住
-- 工具列精簡：復原、重做只有圖示；匯出、匯入、分享收在 `⋯` 選單裡，分隔線下方是「如何使用」與「產品介紹」（新分頁開啟首頁）
-- 頁面底部的 footer：資料只存在瀏覽器的提醒、授權、首頁、更新日誌與 GitHub 連結
+- 繁體中文、英文、日文介面，在設定頁選擇（首頁和更新日誌頁的頁首也能切換）；預設依瀏覽器語言，選擇會記住
+- 工具列精簡：復原、重做只有圖示；匯出、匯入、分享收在 `⋯` 選單裡，分隔線下方是「如何使用」、「產品介紹」（新分頁開啟首頁）與「問題回報」（填標題、內容，可附最多 3 張截圖與聯絡 Email，直接寄給開發者）
+- 頁面底部的 footer：資料只存在瀏覽器的提醒、授權、首頁與更新日誌連結
 - 更新日誌頁（/changelog/）：每次發布的新功能與改動，依日期由新到舊，跟著介面語言切換中英文（日文介面顯示英文）。內容來自根目錄的 `CHANGELOG.md`，build 時讀入，所以更新那個檔案再推上去就會發布
+- 設定頁（/profile/，從工具列最右邊的人像圖示進入）：
+  - 關於我：暱稱（顯示在分享圖上）、家（飛行估算加上從家出發與回家）、護照（歐盟、歐洲經濟區、瑞士護照不顯示申根 90/180）、稅務居住地（183 天改算這個國家，預設台灣，清空就不顯示）
+  - 顯示偏好：語言、國定假日開關、溫度單位（°C／°F）
+  - 資料：備份提醒的間隔（3／7／14 天或不提醒）
+  - 關於：最近更新日期、首頁、更新日誌、GitHub
+  - 改了就自動儲存，只存在這個瀏覽器，不會寫進匯出檔
 - 復原／重做，最多 100 步
 - JSON 匯出／匯入：一個檔案包含所有年份，檔名帶匯出當天日期（例：`nomad-plan_2026-10-06.json`）。在電腦上把檔案直接拖進頁面也能匯入
 - 傳到其他裝置：`⋯` 選單產生一個帶著所有年份行程的連結與 QR code，在另一台電腦或手機打開就會匯入（會取代那邊已有的年份前先問）；已經開著 App 的分頁貼上連結也行。行程壓縮後放在網址 `#` 後面，不經過伺服器；可以選擇不含訂位代號與票價
@@ -170,6 +176,7 @@ npm run dev
 | --- | --- |
 | `dnp-plan-2026`、`dnp-plan-2027`、`dnp-plan-2028` | 各年份的行程本體 |
 | `dnp-year` | 目前選的年份 |
+| `dnp-profile` | 設定頁的「關於我」與溫度單位、備份提醒間隔 |
 | `dnp-geocode` | 地名查到的座標快取 |
 | `dnp-zoom` | 時間軸縮放比例 |
 | `dnp-view` | 目前檢視（年／月）與月份 |
@@ -189,6 +196,7 @@ npm run dev
 | [emfont](https://font.emtech.cc/) | 字型檔請求 | 介面字體 |
 | [Google Fonts](https://fonts.google.com/) | 字型檔請求 | 標題下方英文副標的像素字體 |
 | [Google 地圖](https://www.google.com/maps) | 你在手機卡片上點地圖圖釘時，該段行程的「城市, 國家」 | 在 Google 地圖打開那個地點；只有點了才會連線 |
+| [FormSubmit](https://formsubmit.co/) | 只有你送出「問題回報」時：你填的標題、內容、截圖（縮小成 JPEG）、選填的 Email，以及頁面、語言、年份、視窗大小與瀏覽器版本 | 把回報寄到開發者信箱；**不含任何行程內容** |
 | [Google Analytics](https://analytics.google.com/)（GA4） | 瀏覽頁面、捲動、外連點擊等匿名使用紀錄；點「開始規劃」、新增行程、匯出、匯入、分享等操作事件，只帶介面選擇與分組後的數量（例如「2–5 段行程」）；以及瀏覽器、裝置與大致地區；會設 `_ga` cookie | 統計流量與功能使用情形，事件清單見 [ANALYTICS.md](ANALYTICS.md)。只在線上版載入，`npm run dev` 不送；**不會送出任何行程內容** |
 
 機票的訂位代號等欄位會存在 `localStorage`，也會寫進匯出的 JSON。分享匯出檔之前請留意。
@@ -267,6 +275,7 @@ npm run dev
 index.html              產品介紹頁的入口（網站根網址）
 app/index.html          App 的入口（/app/），載入字體與 favicon
 changelog/index.html    更新日誌頁的入口（/changelog/）
+profile/index.html      設定頁的入口（/profile/）
 design/index.html       設計系統頁的入口（/design/，只在 `npm run dev` 時有，不進 build）
 CHANGELOG.md            給使用者看的更新紀錄，更新日誌頁的內容來源（格式見檔案開頭的註解）
 public/favicon.svg      16×16 像素風地球圖示
@@ -274,17 +283,20 @@ public/apple-touch-icon.png, icon-192.png, icon-512.png  加入主畫面用的�
 public/manifest.webmanifest  PWA 設定：名稱、圖示、從 /app/ 開啟
 public/sw.js            離線用的 service worker（保存載入過的檔案）
 public/og.png           分享連結時的預覽圖（1200×630，三語標示）
+public/airlines/        航空公司 logo（<代號>.png），由 scripts/fetch-airline-logos.mjs 一次性下載
+scripts/fetch-airline-logos.mjs  下載 airlines.ts 裡每家航空的 logo；新增航空公司後重跑
 docs/overview.png       README 用的範例圖（由 app 的「分享」下載）
 docs/demo-*.gif         README 的功能示範動畫（英文介面、範例資料）
 src/
   main.tsx              React 掛載點；決定樣式載入順序
   changelog/            更新日誌頁（讀 `lib/changelog.ts` 解析好的 CHANGELOG.md）
+  profile/              設定頁
   design/               設計系統頁：顏色、字體、間距、版面、圓角、陰影，以及按鈕、開關、分頁、下拉選單、輸入框等元件的各種狀態；直接套用 app 的 CSS，forceStates 把 :hover／:focus／:active 規則複製成 class 好並排呈現
   landing/              產品介紹頁：Landing（版面）、Demos（腳本化的功能示範）、motion（捲動觸發與循環動畫）
   App.tsx               組裝各元件，持有行程與頁面層級的狀態
   components/           畫面元件，每個元件的樣式（.css）放在旁邊
-    Toolbar             頁首的動作按鈕與 ⋯ 選單（匯出、匯入、傳到其他裝置、分享、如何使用、產品介紹）
-    Footer              頁面底部：資料存放提醒、授權、首頁與 GitHub 連結
+    Toolbar             頁首的動作按鈕與 ⋯ 選單（匯出、匯入、傳到其他裝置、分享、如何使用、產品介紹、問題回報）
+    Footer              頁面底部：資料存放提醒、授權、首頁與更新日誌連結
     ViewBar             年／月切換、假日開關、縮放控制
     YearView            年檢視時間軸，含拖曳、伸縮、複製的指標處理
     MonthView           月檢視月曆
@@ -298,6 +310,7 @@ src/
     SeasonStrip         編輯視窗裡的 12 個月季節條
     ShareDialog         分享：橫式／直式 PNG 預覽、下載、系統分享
     TransferDialog      傳到其他裝置：連結、QR code、是否含機票細節
+    ReportDialog        問題回報：標題、內容、截圖、聯絡 Email
     QrCode              QR code 卡片：方點、圓角定位眼，像素小人站在卡片上緣
     MobileItinerary     手機唯讀版的行程（現在／下一站、行程卡片）
     HoverCards          行程、機票、假日的浮動資訊卡
@@ -321,13 +334,14 @@ src/
     weeks.ts            日期模型：週、日索引、半週格、月份範圍、標籤格式
     storage.ts          資料型別、讀寫、匯入清理、換序／推擠／插入演算法、配色
     prefs.ts            檢視、假日開關、縮放等偏好的讀寫
-    stayRules.ts        空檔、申根 90/180、台灣 183 天的計算
+    stayRules.ts        空檔、申根 90/180、稅務居住地 183 天的計算
     seasons.ts          熱門城市的季節資料（每月評分與原因）與警示判斷
     backup.ts           備份提醒的狀態與判斷
     analytics.ts        Google Analytics：載入、事件 track()（只在線上版）
     changelog.ts        把 CHANGELOG.md 解析成依日期分組的中英文條目
     flags.ts            國家清單、搜尋、名稱 → ISO 代碼對照
     cities.ts           內建城市清單（中英文）與搜尋
+    airlines.ts         內建常見航空公司清單（代號、中英文名、母國）與搜尋
     holidays.ts         2026、2027 國定假日資料
     geocode.ts          Nominatim 查詢、限速、快取
     exportPng.ts        用 canvas 繪製 PNG（橫式與直式）
@@ -335,7 +349,9 @@ src/
     transfer.ts         轉移連結：壓縮編碼、解碼、從網址取出
     ics.ts              航班的行事曆檔（.ics）
     offline.ts          註冊 service worker（只在線上版）
-    links.ts            對外連結（首頁、GitHub）
+    links.ts            頁面之間的連結（首頁、規劃、更新日誌、設定）
+    report.ts           問題回報：縮小截圖、經 FormSubmit 寄信
+    profile.ts          設定（暱稱、家、護照、稅務居住地、溫度單位、備份提醒）的讀寫，以及護照是否適用申根規則
     util.ts             小工具
     i18n.tsx            翻譯字典、目前語言、`t()`
   styles/base.css       設計變數、頁面底、按鈕與面板等共用樣式
@@ -388,6 +404,8 @@ CLAUDE.md               給 Claude Code 的專案須知
 
 ## 已知限制
 
+- **設定不會跟著匯出或傳到其他裝置**：換瀏覽器或裝置要重新設定一次
+
 - **年份只有 2025、2026、2027、2028**（`lib/weeks.ts` 的 `YEARS`）；國定假日資料只有 2026、2027 年；切換年份時復原紀錄會清空
 - **介面語言有繁體中文、英文、日文**；規格文件（`MVP.md`）只有中文
 - **日文版沒有自己的城市名、季節說明與更新日誌**，這三處在日文介面顯示英文
@@ -435,6 +453,7 @@ CLAUDE.md               給 Claude Code 的專案須知
 | 資源 | 用途 | 授權／條款 |
 | --- | --- | --- |
 | [React](https://react.dev/) | UI | MIT |
+| 航空公司 logo（[Kiwi.com](https://www.kiwi.com/) 的公開圖檔） | 機票航空公司選單的圖示；已下載進 `public/airlines/` 隨網站部署，執行時不連 Kiwi.com | 各航空公司的商標，僅用於標示是哪家航空 |
 | [Vite](https://vite.dev/) | 開發與打包 | MIT |
 | [MapLibre GL JS](https://maplibre.org/) | 地圖引擎 | BSD-3-Clause |
 | [OpenFreeMap](https://openfreemap.org/) | 地圖圖磚（Positron 樣式） | 見該站說明；資料 © OpenStreetMap 貢獻者 |
