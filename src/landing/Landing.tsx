@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { GithubLogo } from '@phosphor-icons/react/dist/csr/GithubLogo';
 import { ArrowRight } from '@phosphor-icons/react/dist/csr/ArrowRight';
 import { UserCircleMinus } from '@phosphor-icons/react/dist/csr/UserCircleMinus';
 import { CloudSlash } from '@phosphor-icons/react/dist/csr/CloudSlash';
@@ -26,7 +25,6 @@ import { useInView } from './motion';
 import './Landing.css';
 
 const APP_URL = './app/';
-const REPO_URL = 'https://github.com/Simonlin7972/digital-nomad-planner';
 
 // Fades a block up the first time it scrolls into view.
 function Reveal({ children, className = '' }: { children: ReactNode; className?: string }) {
@@ -65,9 +63,6 @@ export function Landing() {
         <nav>
           <a href="#features">{t('landing.nav.features')}</a>
           <a href="#privacy">{t('landing.nav.privacy')}</a>
-          <a href={REPO_URL} target="_blank" rel="noreferrer" aria-label={t('landing.nav.github')}>
-            <GithubLogo weight="bold" />
-          </a>
           {/* Labelled in the language it switches to, as in the app's toolbar. */}
           <button
             onClick={() => setLocale(nextLocale(locale))}
@@ -183,9 +178,6 @@ export function Landing() {
 
       <footer className="l-footer">
         <span>{t('landing.footer')}</span>
-        <a href={REPO_URL} target="_blank" rel="noreferrer">
-          <GithubLogo weight="bold" /> {t('landing.nav.github')}
-        </a>
       </footer>
     </div>
   );

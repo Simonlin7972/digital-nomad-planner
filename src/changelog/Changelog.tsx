@@ -1,9 +1,7 @@
 import { ArrowRight } from '@phosphor-icons/react/dist/csr/ArrowRight';
-import { GithubLogo } from '@phosphor-icons/react/dist/csr/GithubLogo';
 import { PixelNomad } from '../components/PixelNomad';
 import { CHANGELOG } from '../lib/changelog';
 import { langTag, nextLocale, setLocale, t, useLocale } from '../lib/i18n';
-import { REPO_URL } from '../lib/links';
 import { trackLink } from '../lib/analytics';
 import './Changelog.css';
 
@@ -39,7 +37,6 @@ export function Changelog() {
 
       <main>
         <h1>{t('changelog.title')}</h1>
-        <p className="c-lead">{t('changelog.lead')}</p>
         <ol className="c-days">
           {CHANGELOG.map((day) => (
             <li key={day.date} className="c-day">
@@ -57,9 +54,6 @@ export function Changelog() {
 
       <footer className="c-footer">
         <span>{t('landing.footer')}</span>
-        <a href={REPO_URL} target="_blank" rel="noreferrer">
-          <GithubLogo size={14} weight="bold" /> {t('landing.nav.github')}
-        </a>
       </footer>
     </div>
   );
