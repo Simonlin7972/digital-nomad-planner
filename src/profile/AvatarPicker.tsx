@@ -21,8 +21,9 @@ import {
   TOPS,
   presetOf,
   randomAvatar,
-  withHand,
+  withOption,
   type Avatar as AvatarData,
+  type Slot,
 } from '../lib/avatar';
 import { t, type Key } from '../lib/i18n';
 import './AvatarPicker.css';
@@ -76,8 +77,12 @@ export function AvatarPicker({ value, onChange }: { value: AvatarData; onChange:
   const current = TABS.find((x) => x.id === tab)!;
   const group = current.groups ? (groups[tab] ?? current.groups[0]) : undefined;
 
-  // One tile per option: the figure as it is shown, with that option applied.
+  // One tile per option: just that part, so the eye compares the parts and not ten near-identical people; the
+  // large figure on the left shows the whole. Parts of the face keep a grey silhouette of the head for position;
+  // everything else is drawn alone and the tile zooms to it.
+  const WITH_HEAD: Slot[] = ['skin', 'hair', 'head', 'eyes', 'lower'];
   const tiles = <T extends string | number>(
+    slot: Slot,
     options: readonly T[],
     apply: (a: AvatarData, o: T) => AvatarData,
     isOn: (o: T) => boolean,
@@ -88,20 +93,21 @@ export function AvatarPicker({ value, onChange }: { value: AvatarData; onChange:
     <Tiles>
       {options.map((o, i) => (
         <Tile key={String(o)} checked={isOn(o)} label={label(o, i)} showLabel={showLabel} next={apply(value, o)} onClick={() => onChange(apply(value, o))}>
-          <Avatar avatar={apply(shown, o)} crop={crop} />
+          <Avatar avatar={apply(shown, o)} crop={crop} focus={slot} bare={!WITH_HEAD.includes(slot)} />
         </Tile>
       ))}
     </Tiles>
   );
-  // The common case: one field, its options named `avatar.<prefix>.<option>`.
-  const field = <K extends keyof AvatarData>(key: K, options: readonly AvatarData[K][], crop: Crop, prefix: string = key) =>
-    tiles(options, (a, o) => ({ ...a, [key]: o }), (o) => value[key] === o, crop, (o) => t(`avatar.${prefix}.${o}` as Key));
+  // The common case: one field, its options named `avatar.<prefix>.<option>`. An extra arrives in its own default
+  // colour (withOption); clothes keep the colour already chosen.
+  const field = <K extends keyof AvatarData & Slot>(key: K, options: readonly AvatarData[K][], crop: Crop, prefix: string = key) =>
+    tiles(key, options, (a, o) => withOption(a, key, o), (o) => value[key] === o, crop, (o) => t(`avatar.${prefix}.${o}` as Key));
   const colours = <K extends keyof AvatarData>(key: K, list: readonly string[]) => (
     <Swatches colours={list} value={value[key] as number} apply={(i) => ({ ...value, [key]: i })} onChange={onChange} />
   );
   const hand = (side: 'handL' | 'handR') => (
     <>
-      {tiles(HANDS, (a, o) => withHand(a, side, o), (o) => value[side] === o, HANDS_VIEW, (o) => t(`avatar.hand.${o}` as Key))}
+      {tiles(side, HANDS, (a, o) => withOption(a, side, o), (o) => value[side] === o, HANDS_VIEW, (o) => t(`avatar.hand.${o}` as Key))}
       {COLOURED.hand.includes(value[side]) && colours(side === 'handL' ? 'handLColour' : 'handRColour', CLOTH)}
     </>
   );
@@ -225,7 +231,7 @@ export function AvatarPicker({ value, onChange }: { value: AvatarData; onChange:
               </Tiles>
             )}
             {tab === 'skin' &&
-              tiles(SKIN_TONES.map((_, i) => i), (a, i) => ({ ...a, skin: i }), (i) => value.skin === i, HEAD, (_, i) => t('avatar.colour', { n: i + 1 }), false)}
+              tiles('skin', SKIN_TONES.map((_, i) => i), (a, i) => ({ ...a, skin: i }), (i) => value.skin === i, HEAD, (_, i) => t('avatar.colour', { n: i + 1 }), false)}
             {tab === 'hair' && (
               <>
                 {field('hair', HAIRS, HEAD)}

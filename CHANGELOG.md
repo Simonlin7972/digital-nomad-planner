@@ -9,6 +9,10 @@
 
 ## 2026-10-10
 
+- 帽子、背包、圍巾這些配件現在各有自己合適的預設顏色，選了再改也可以，不會全部跟著上一個選的顏色跑
+  EN: Hats, bags, scarves and other extras now each start in a colour that suits them; you can still change it, and it no longer follows whatever colour you picked last
+- 角色選項的縮圖只畫那個部位：髮型、帽子、眼鏡襯著頭型剪影，衣服和隨身物則單獨放大，挑的時候一眼就能比較
+  EN: Character option tiles now show just that part: hairstyles, hats and glasses on a head silhouette, clothes and things to carry on their own and zoomed in, so they are easier to compare at a glance
 - 在個人檔案與設定頁點左上角的名稱，現在會回到規劃頁，而不是首頁
   EN: On Profile & settings, the name at the top left now takes you back to the planner instead of the landing page
 - 個人檔案與設定頁的「關於」不再放 GitHub 連結

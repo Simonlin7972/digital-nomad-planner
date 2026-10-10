@@ -497,8 +497,35 @@ export const presetOf = (a: Avatar): PresetId | undefined => PRESETS.find((p) =>
 // Putting something in one hand. A two-handed thing fills both; anything else frees the other hand from one.
 export function withHand(a: Avatar, side: 'handL' | 'handR', hand: Hand): Avatar {
   const other = side === 'handL' ? 'handR' : 'handL';
-  if (TWO_HANDED.includes(hand)) return { ...a, handL: hand, handR: hand };
-  return { ...a, [side]: hand, [other]: TWO_HANDED.includes(a[other]) ? 'none' : a[other] };
+  const colour = { [`${side}Colour`]: DEFAULT_COLOUR.hand?.[hand] ?? a[`${side}Colour`] };
+  if (TWO_HANDED.includes(hand)) return { ...a, handL: hand, handR: hand, ...colour };
+  return { ...a, [side]: hand, [other]: TWO_HANDED.includes(a[other]) ? 'none' : a[other], ...colour };
+}
+
+// The colour an extra starts in when picked (an index into CLOTH), so a straw-coloured hat isn't red because the
+// last one was. The swatches change it afterwards. Clothes have no default: they keep the colour already chosen.
+const K = { red: 0, yellow: 1, teal: 2, forest: 3, olive: 4, sky: 5, denim: 6, navy: 7, lavender: 8, plum: 9, khaki: 10, sand: 11, cream: 12, grey: 13, charcoal: 14, black: 15 };
+export const DEFAULT_COLOUR: { [slot: string]: Record<string, number> | undefined } = {
+  head: { cap: K.navy, beanie: K.red, bucket: K.olive, cowboy: K.khaki, bandana: K.red, headband: K.teal, bunny: K.cream },
+  eyes: { sleepmask: K.lavender },
+  lower: { mask: K.cream },
+  neck: { scarf: K.red, pillow: K.teal, tie: K.navy, bowtie: K.red, lanyard: K.yellow },
+  back: { backpack: K.navy, hiking: K.olive, messenger: K.khaki, skateboard: K.teal, cape: K.red },
+  hand: { book: K.plum, umbrella: K.red },
+  side: { suitcase: K.red, surfboard: K.yellow, yogamat: K.lavender, tent: K.teal },
+};
+// The colour field that goes with a slot, and the DEFAULT_COLOUR table it reads.
+const COLOUR_OF: Partial<Record<Slot, [keyof Avatar, string]>> = {
+  head: ['headColour', 'head'], eyes: ['eyesColour', 'eyes'], lower: ['lowerColour', 'lower'], neck: ['neckColour', 'neck'],
+  back: ['backColour', 'back'], handL: ['handLColour', 'hand'], handR: ['handRColour', 'hand'], sideL: ['sideLColour', 'side'], sideR: ['sideRColour', 'side'],
+};
+
+// An avatar with `option` in `slot`, in that option's default colour (hands go through withHand).
+export function withOption<S extends Slot>(a: Avatar, slot: S, option: Avatar[S]): Avatar {
+  if (slot === 'handL' || slot === 'handR') return withHand(a, slot, option as Hand);
+  const c = COLOUR_OF[slot];
+  const colour = c ? DEFAULT_COLOUR[c[1]]?.[option as string] : undefined;
+  return { ...a, [slot]: option, ...(colour !== undefined && c ? { [c[0]]: colour } : {}) };
 }
 
 const pick = <T>(list: readonly T[]): T => list[Math.floor(Math.random() * list.length)];
@@ -516,26 +543,35 @@ export function randomAvatar(): Avatar {
     bottomColour: index(CLOTH),
     shoes: pick(SHOES),
     shoesColour: index(CLOTH),
-    head: maybe(HEADS),
-    headColour: index(CLOTH),
-    eyes: maybe(EYES),
-    eyesColour: index(CLOTH),
-    lower: maybe(LOWERS),
-    lowerColour: index(CLOTH),
-    neck: maybe(NECKS),
-    neckColour: index(CLOTH),
-    back: maybe(BACKS),
-    backColour: index(CLOTH),
+    head: 'none',
+    headColour: 0,
+    eyes: 'none',
+    eyesColour: 0,
+    lower: 'none',
+    lowerColour: 0,
+    neck: 'none',
+    neckColour: 0,
+    back: 'none',
+    backColour: 0,
     handL: 'none',
-    handLColour: index(CLOTH),
+    handLColour: 0,
     handR: 'none',
-    handRColour: index(CLOTH),
-    sideL: maybe(SIDES),
-    sideLColour: index(CLOTH),
-    sideR: maybe(SIDES),
-    sideRColour: index(CLOTH),
+    handRColour: 0,
+    sideL: 'none',
+    sideLColour: 0,
+    sideR: 'none',
+    sideRColour: 0,
   };
-  return withHand(withHand(a, 'handL', maybe(HANDS)), 'handR', maybe(HANDS));
+  // Extras go on through withOption, so each arrives in its own default colour
+  let r = withOption(a, 'head', maybe(HEADS));
+  r = withOption(r, 'eyes', maybe(EYES));
+  r = withOption(r, 'lower', maybe(LOWERS));
+  r = withOption(r, 'neck', maybe(NECKS));
+  r = withOption(r, 'back', maybe(BACKS));
+  r = withOption(r, 'handL', maybe(HANDS));
+  r = withOption(r, 'handR', maybe(HANDS));
+  r = withOption(r, 'sideL', maybe(SIDES));
+  return withOption(r, 'sideR', maybe(SIDES));
 }
 
 // Whatever was stored, an avatar every field of which is valid; unknown parts fall back to the default's.
@@ -595,15 +631,21 @@ export type Pixels = (string | null)[][]; // [row][column] → colour, null wher
 // The figure row where the shoes start: on a dip, everything above it sinks a pixel and the legs get shorter.
 const ANKLE = 22;
 
+// The parts of an avatar a picker can focus on: everything else is drawn as a flat silhouette.
+export type Slot = 'skin' | 'hair' | 'top' | 'bottom' | 'shoes' | 'head' | 'eyes' | 'lower' | 'neck' | 'back' | 'handL' | 'handR' | 'sideL' | 'sideR';
+const GHOST = '#d6d2ca';
+
 export type Pose = {
   blink?: boolean; // eyes closed
   dip?: boolean; // the low half of the idle bob: the figure sinks a pixel, its shoes stay on the floor
   wag?: boolean; // the animals beside the figure in their second frame
   only?: 'figure' | 'beside'; // draw just the figure (with what it wears and carries) or just what stands beside it
+  focus?: Slot; // draw this slot in colour and the rest as one grey silhouette, for the picker's tiles
+  bare?: boolean; // with `focus`: leave the rest out altogether, so only that part is drawn
 };
 
 // One pose of the avatar as a SIZE×SIZE grid of colours. With no pose: eyes open, standing still, everything drawn.
-export function compose(a: Avatar, { blink = false, dip = false, wag = false, only }: Pose = {}): Pixels {
+export function compose(a: Avatar, { blink = false, dip = false, wag = false, only, focus, bare = false }: Pose = {}): Pixels {
   const grid: Pixels = Array.from({ length: SIZE }, () => Array<string | null>(SIZE).fill(null));
   const top = CLOTH[a.topColour];
   const bottom = CLOTH[a.bottomColour];
@@ -635,11 +677,14 @@ export function compose(a: Avatar, { blink = false, dip = false, wag = false, on
       for (let x = 0; x < line.length; x++) put(x + x0, y + OY, line[x], pal);
     });
   };
-  const drawSide = (side: Side, colour: number, right: boolean) => {
+  // With a focus, every layer but the focused one is painted in the ghost colour.
+  const ghost = (pal: Record<string, string>) => Object.fromEntries(Object.keys(pal).map((k) => [k, bare ? '' : GHOST]));
+  const palFor = (slots: Slot[], pal: Record<string, string> = base) => (focus && !slots.includes(focus) ? ghost(pal) : pal);
+  const drawSide = (side: Side, colour: number, right: boolean, slot: Slot) => {
     const shape = SIDE_SHAPES[side];
     if (!shape) return;
     const rows = (wag && shape.b) || shape.a;
-    const pal = { ...base, ...own(colour), L: LEAF, B: DOG };
+    const pal = palFor([slot], { ...base, ...own(colour), L: LEAF, B: DOG });
     rows.forEach((row, i) => {
       const y = FLOOR - (rows.length - 1 - i) + OY;
       for (let x = 0; x < SIDE_W; x++) put(right ? SIZE - 1 - x : x, y, row[x], pal);
@@ -650,27 +695,30 @@ export function compose(a: Avatar, { blink = false, dip = false, wag = false, on
     const hair = HAIR_SHAPES[a.hair];
     const bag = BACK_SHAPES[a.back];
     const bagPal = { ...base, ...own(a.backColour) };
-    draw(bag?.behind, bagPal);
-    draw(hair.back);
-    draw(blink ? BODY_B : BODY_A);
-    draw(BOTTOM_SHAPES[a.bottom]);
-    draw(SHOE_SHAPES[a.shoes], { ...base, ...own(a.shoesColour) }, { planted: true });
-    draw(TOP_SHAPES[a.top]);
-    draw(bag?.front, bagPal);
-    draw(hair.front, base, a.head === 'none' || OVER_HAIR.includes(a.head) ? {} : { from: HAT_LINE });
-    draw(LOWER_SHAPES[a.lower], { ...base, ...own(a.lowerColour) });
-    draw(HEAD_SHAPES[a.head], { ...base, ...own(a.headColour) });
-    draw(EYES_SHAPES[a.eyes], { ...base, ...own(a.eyesColour) });
-    draw(NECK_SHAPES[a.neck], { ...base, ...own(a.neckColour) }); // headphones go over hats
-    if (TWO_HANDED.includes(a.handR)) draw(HAND_SHAPES[a.handR]);
+    // Focusing the skin shows a bare face (no hair or glasses over it); focusing the hair leaves the hat off.
+    const bareFace = focus === 'skin';
+    const bareHead = bareFace || focus === 'hair';
+    draw(bag?.behind, palFor(['back'], bagPal));
+    if (!bareFace) draw(hair.back, palFor(['hair']));
+    draw(blink ? BODY_B : BODY_A, palFor(['skin']));
+    draw(BOTTOM_SHAPES[a.bottom], palFor(['bottom']));
+    draw(SHOE_SHAPES[a.shoes], palFor(['shoes'], { ...base, ...own(a.shoesColour) }), { planted: true });
+    draw(TOP_SHAPES[a.top], palFor(['top']));
+    draw(bag?.front, palFor(['back'], bagPal));
+    if (!bareFace) draw(hair.front, palFor(['hair']), bareHead || a.head === 'none' || OVER_HAIR.includes(a.head) ? {} : { from: HAT_LINE });
+    if (!bareFace) draw(LOWER_SHAPES[a.lower], palFor(['lower'], { ...base, ...own(a.lowerColour) }));
+    if (!bareHead) draw(HEAD_SHAPES[a.head], palFor(['head'], { ...base, ...own(a.headColour) }));
+    if (!bareFace) draw(EYES_SHAPES[a.eyes], palFor(['eyes'], { ...base, ...own(a.eyesColour) }));
+    draw(NECK_SHAPES[a.neck], palFor(['neck'], { ...base, ...own(a.neckColour) })); // headphones go over hats
+    if (TWO_HANDED.includes(a.handR)) draw(HAND_SHAPES[a.handR], palFor(['handL', 'handR']));
     else {
-      draw(HAND_SHAPES[a.handR], { ...base, ...own(a.handRColour) });
-      draw(HAND_SHAPES[a.handL], { ...base, ...own(a.handLColour) }, { flip: true });
+      draw(HAND_SHAPES[a.handR], palFor(['handR'], { ...base, ...own(a.handRColour) }));
+      draw(HAND_SHAPES[a.handL], palFor(['handL'], { ...base, ...own(a.handLColour) }), { flip: true });
     }
   }
   if (only !== 'figure') {
-    drawSide(a.sideL, a.sideLColour, false);
-    drawSide(a.sideR, a.sideRColour, true);
+    drawSide(a.sideL, a.sideLColour, false, 'sideL');
+    drawSide(a.sideR, a.sideRColour, true, 'sideR');
   }
   return grid;
 }

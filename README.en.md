@@ -281,6 +281,7 @@ app/index.html          App entry (/app/); loads the font and favicon
 changelog/index.html    Changelog page entry (/changelog/)
 profile/index.html      Settings page entry (/profile/)
 design/index.html       Design system page entry (/design/; served by `npm run dev` only, not built)
+pixel/index.html        Pixel style guide entry (/pixel/; dev only as well)
 CHANGELOG.md            The user-facing release notes, source of the changelog page (format in the file's header comment)
 public/favicon.svg      16×16 pixel-art globe
 public/apple-touch-icon.png, icon-192.png, icon-512.png  Home-screen icons (the favicon scaled up with a margin)
@@ -297,6 +298,7 @@ src/
   main.tsx              React mount point; sets the stylesheet order
   changelog/            The changelog page (renders CHANGELOG.md as parsed by `lib/changelog.ts`)
   profile/              The settings page (AvatarPicker is the character picker)
+  pixel/                Pixel style guide: the rules behind the avatar and the mascot (grid, palette, layers, crops, motion, scaling, brand use), every picture drawn live by lib/avatar.ts; scenes.ts holds the 21:9 city scenes (Sydney, Tokyo, Taipei)
   design/               Design system page: colour, type, spacing, layout, radius and shadow, plus every state of the buttons, toggles, tabs, dropdowns, inputs and other base components; uses the app's own CSS, and forceStates copies :hover / :focus / :active rules to classes so states sit side by side
   landing/              Landing page: Landing (layout), Demos (scripted feature demos), motion (scroll triggers and looping)
   App.tsx               Wires the pieces together; owns the plan and page-level state

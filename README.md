@@ -278,6 +278,7 @@ app/index.html          App 的入口（/app/），載入字體與 favicon
 changelog/index.html    更新日誌頁的入口（/changelog/）
 profile/index.html      設定頁的入口（/profile/）
 design/index.html       設計系統頁的入口（/design/，只在 `npm run dev` 時有，不進 build）
+pixel/index.html        像素風格指南的入口（/pixel/，同樣只在 dev 時有）
 CHANGELOG.md            給使用者看的更新紀錄，更新日誌頁的內容來源（格式見檔案開頭的註解）
 public/favicon.svg      16×16 像素風地球圖示
 public/apple-touch-icon.png, icon-192.png, icon-512.png  加入主畫面用的圖示（由 favicon 放大、加邊距產生）
@@ -294,6 +295,7 @@ src/
   main.tsx              React 掛載點；決定樣式載入順序
   changelog/            更新日誌頁（讀 `lib/changelog.ts` 解析好的 CHANGELOG.md）
   profile/              設定頁（AvatarPicker 是角色選擇器）
+  pixel/                像素風格指南：角色與品牌小人背後的規則（網格、調色盤、圖層、裁切、動態、縮放、品牌用法），圖都由 lib/avatar.ts 即時畫出；scenes.ts 是 21:9 的城市場景（雪梨、東京、台北）
   design/               設計系統頁：顏色、字體、間距、版面、圓角、陰影，以及按鈕、開關、分頁、下拉選單、輸入框等元件的各種狀態；直接套用 app 的 CSS，forceStates 把 :hover／:focus／:active 規則複製成 class 好並排呈現
   landing/              產品介紹頁：Landing（版面）、Demos（腳本化的功能示範）、motion（捲動觸發與循環動畫）
   App.tsx               組裝各元件，持有行程與頁面層級的狀態
