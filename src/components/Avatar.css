@@ -1,0 +1,23 @@
+.avatar { display: block; width: 64px; height: 64px; }
+
+/* A blink every few seconds. Without animation (reduced motion) the eyes just stay open. */
+.avatar-blink { opacity: 0; animation: avatar-blink 4.2s steps(1, end) infinite; }
+@keyframes avatar-blink {
+  0% { opacity: 0; }
+  95% { opacity: 1; }
+}
+
+/* The idle loop, like a game sprite: poses swapped with a hard cut. The figure bobs (high / low) and the animals
+   beside it move (still / wag) on a different beat. Without animation (reduced motion) only the first of each shows. */
+.avatar .avatar-high { animation: avatar-first 0.9s steps(1, end) infinite; }
+.avatar .avatar-low { opacity: 0; animation: avatar-second 0.9s steps(1, end) infinite; }
+.avatar .avatar-still { animation: avatar-first 0.6s steps(1, end) infinite; }
+.avatar .avatar-wag { opacity: 0; animation: avatar-second 0.6s steps(1, end) infinite; }
+@keyframes avatar-first {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+}
+@keyframes avatar-second {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+}

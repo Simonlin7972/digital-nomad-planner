@@ -1,0 +1,66 @@
+/* The paper-doll picker on the profile page: the figure on the left, tabs of choices on the right */
+.ap { display: grid; grid-template-columns: 192px 1fr; gap: 24px; align-items: start; padding: 12px 0 8px; }
+
+/* The figure large on a tint, with the dice under it. The padding keeps things beside the figure off the edge;
+   the canvas inside stays a whole multiple of 32 (5× here, 4× on a phone) so pixels stay crisp. */
+.ap-stage { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.ap-stage .avatar { width: 160px; height: 160px; padding: 16px; box-sizing: content-box; border-radius: var(--radius); background: var(--subtle); }
+.ap-random { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; font-size: 13px; }
+
+.ap-panel { min-width: 0; }
+
+/* Tabs in a grey track; the chosen one is a white pill, like the year / month switch */
+.ap-tabs { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--subtle); overflow-x: auto; scrollbar-width: none; }
+.ap-tabs::-webkit-scrollbar { display: none; }
+.ap-tabs button { flex: 1 0 auto; padding: 6px 8px; border: 0; background: none; font-size: 13px; color: var(--muted); }
+.ap-tabs button[aria-selected='true'] { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgb(0 0 0 / 0.12); }
+.ap-tabs button:focus-visible { outline-offset: -2px; }
+@media (hover: hover) {
+  .ap-tabs button:hover { color: var(--text); }
+}
+
+/* Room for the tallest tab, so switching doesn't make the page jump */
+.ap-body { display: flex; flex-direction: column; gap: 14px; min-height: 228px; padding-top: 16px; }
+.ap-sub { margin: 4px 0 -4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+
+/* Each choice is a picture of the figure wearing it */
+.ap-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
+.ap-tiles button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 4px 6px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+.ap-tiles .avatar { width: 64px; height: 64px; }
+.ap-tiles span { max-width: 100%; text-align: center; color: var(--muted); }
+.ap-tiles button[aria-checked='true'] { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
+.ap-tiles button[aria-checked='true'] span { color: var(--text); font-weight: 600; }
+@media (hover: hover) {
+  .ap-tiles button:hover { background: var(--subtle); }
+}
+
+.ap-swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.ap-swatches button { width: 24px; height: 24px; padding: 0; border: 1px solid rgb(0 0 0 / 0.12); border-radius: 50%; }
+.ap-swatches button[aria-checked='true'] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text); }
+
+@media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
+  .ap { grid-template-columns: 1fr; }
+  .ap-stage .avatar { width: 128px; height: 128px; }
+  .ap-tiles { grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); }
+  .ap-tiles .avatar { width: 56px; height: 56px; }
+  .ap-body { min-height: 0; }
+}
+
+/* Smaller chips inside a tab (top / bottom / shoes…); a dot marks a group with something in it */
+.ap-groups { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -4px; }
+.ap-groups button { position: relative; padding: 5px 12px; font-size: 12px; font-weight: 400; color: var(--muted); }
+.ap-groups button[aria-selected='true'] { border-color: var(--text); color: var(--text); font-weight: 600; }
+.ap-dot { position: absolute; top: 3px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+@media (hover: hover) {
+  .ap-groups button:hover { background: var(--subtle); }
+}

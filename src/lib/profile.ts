@@ -3,6 +3,8 @@
 // getProfile() each time it is needed (the profile page is a separate document, so the planner picks up changes
 // on its next load).
 
+import { sanitizeAvatar, type Avatar } from './avatar';
+
 export type TempUnit = 'c' | 'f';
 export const BACKUP_DAYS = [0, 3, 7, 14] as const; // 0: no reminder
 
@@ -14,6 +16,7 @@ export type Profile = {
   taxResidence: string; // ISO code of the country whose 183-day line to count; '' to hide it
   tempUnit: TempUnit;
   backupDays: (typeof BACKUP_DAYS)[number];
+  avatar: Avatar | null; // the paper-doll character (lib/avatar.ts); null until one is saved
 };
 
 export const DEFAULT_PROFILE: Profile = {
@@ -25,6 +28,7 @@ export const DEFAULT_PROFILE: Profile = {
   taxResidence: 'tw',
   tempUnit: 'c',
   backupDays: 7,
+  avatar: null,
 };
 
 const KEY = 'dnp-profile';
@@ -44,6 +48,7 @@ export function getProfile(): Profile {
       backupDays: (BACKUP_DAYS as readonly unknown[]).includes(raw.backupDays)
         ? (raw.backupDays as Profile['backupDays'])
         : DEFAULT_PROFILE.backupDays,
+      avatar: raw.avatar ? sanitizeAvatar(raw.avatar) : null,
     };
   } catch {
     return DEFAULT_PROFILE;

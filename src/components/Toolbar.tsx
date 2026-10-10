@@ -14,6 +14,9 @@ import { UploadSimple } from '@phosphor-icons/react/dist/csr/UploadSimple';
 import { t, useLocale } from '../lib/i18n';
 import { MOD } from '../lib/util';
 import { HOME_URL, PROFILE_URL } from '../lib/links';
+import { FACE_CROP } from '../lib/avatar';
+import { getProfile } from '../lib/profile';
+import { Avatar } from './Avatar';
 import './Toolbar.css';
 
 type Props = {
@@ -35,6 +38,8 @@ type Props = {
 // The row of plan-wide actions in the page header. Undo and redo are icons only; the file actions (export,
 // import, share as PNG) sit in a ⋯ menu, with the guide and the product page below a divider.
 export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHelp, onUndo, onRedo, onShare, onExport, onTransfer, onReport, onImport }: Props) {
+  // Read once: the profile only changes on the settings page, which is another page load away.
+  const [avatar] = useState(() => getProfile().avatar);
   const fileRef = useRef<HTMLInputElement>(null);
   useLocale();
   const undoLabel = t('toolbar.shortcut', { action: t('toolbar.undo'), keys: `${MOD}Z` });
@@ -67,9 +72,10 @@ export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHel
           { label: t('toolbar.report'), icon: <Bug size={16} weight="bold" />, onSelect: onReport },
         ]}
       />
-      {/* Settings live on their own page (/profile/), so this is a link rather than a button. */}
-      <a className="profile-link" href={PROFILE_URL} aria-label={t('profile.open')} title={t('profile.open')}>
-        <UserCircle size={20} weight="bold" />
+      {/* Settings live on their own page (/profile/), so this is a link rather than a button. It shows the saved
+          character's face, or a plain person icon before one is saved. */}
+      <a className={`profile-link${avatar ? ' has-avatar' : ''}`} href={PROFILE_URL} aria-label={t('profile.open')} title={t('profile.open')}>
+        {avatar ? <Avatar avatar={avatar} crop={FACE_CROP} /> : <UserCircle size={20} weight="bold" />}
       </a>
       <input
         ref={fileRef}

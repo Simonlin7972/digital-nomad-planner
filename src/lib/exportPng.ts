@@ -2,6 +2,7 @@ import { flagCode } from './flags';
 import type { HolidaySet } from './holidays';
 import { daysText, getLocale, t } from './i18n';
 import { colorOf, countryOf, placeFull, placeName, type Stay } from './storage';
+import { compose, SIZE as AVATAR_SIZE, type Avatar } from './avatar';
 import { getProfile } from './profile';
 import { checkSchengen, residenceDays } from './stayRules';
 import { MONTHS, SLOTS, TOTAL_DAYS, WEEKS, YEAR, daysOf, monthName, monthRange, rangeLabel, slotsOf, weeksLabel } from './weeks';
@@ -87,6 +88,17 @@ function countryBars(sorted: Stay[]) {
   return bars;
 }
 
+// The saved character, if any, as squares of `size` px per pixel (whole numbers keep the edges sharp).
+function drawAvatar(ctx: CanvasRenderingContext2D, avatar: Avatar, x: number, y: number, size: number) {
+  compose(avatar).forEach((row, py) =>
+    row.forEach((colour, px) => {
+      if (!colour) return;
+      ctx.fillStyle = colour;
+      ctx.fillRect(x + px * size, y + py * size, size, size);
+    }),
+  );
+}
+
 // The line under the title: time planned, places, and the day-count rules when they apply.
 function summaryLine(stays: Stay[]): { text: string; warn: boolean } {
   const planned = stays.reduce((n, s) => n + daysOf(s), 0);
@@ -154,7 +166,11 @@ export async function renderPng(stays: Stay[], { holidaySets = [] }: PngOptions 
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, width, height);
 
-  // Title, tagline and the summary line
+  // Title, tagline and the summary line; the character, if one is saved, at the right end of them
+  const avatar = getProfile().avatar;
+  const avatarW = AVATAR_SIZE * 2;
+  if (avatar) drawAvatar(ctx, avatar, PAD + trackW - avatarW, PAD - 12, 2);
+  const headW = avatar ? trackW - avatarW - 16 : trackW;
   ctx.fillStyle = TEXT;
   ctx.font = `600 28px ${FONT}`;
   ctx.fillText(title, PAD, PAD + 28);
@@ -164,7 +180,7 @@ export async function renderPng(stays: Stay[], { holidaySets = [] }: PngOptions 
   ctx.fillText(tagline, PAD + titleW + 14, PAD + 28);
   ctx.font = `14px ${FONT}`;
   ctx.fillStyle = summary.warn ? DANGER : MUTED;
-  ctx.fillText(ellipsize(ctx, summary.text, trackW), PAD, PAD + 58);
+  ctx.fillText(ellipsize(ctx, summary.text, headW), PAD, PAD + 58);
 
   // Track background, week lines and dates
   const gridBottom = trackY + TRACK_H;
@@ -364,11 +380,14 @@ export async function renderPortraitPng(stays: Stay[]): Promise<Blob> {
   ctx.fillRect(0, 0, P_W, P_H);
   const inner = P_W - PAD * 2;
 
-  // Title, tagline, summary
+  // Title, tagline, summary; the character, if one is saved, beside the title and tagline
+  const avatar = getProfile().avatar;
+  const avatarW = AVATAR_SIZE * 3;
+  if (avatar) drawAvatar(ctx, avatar, P_W - PAD - avatarW, PAD - 16, 3);
   let y = PAD + 30;
   ctx.fillStyle = TEXT;
   ctx.font = `600 30px ${FONT}`;
-  ctx.fillText(ellipsize(ctx, title, inner), PAD, y);
+  ctx.fillText(ellipsize(ctx, title, avatar ? inner - avatarW - 12 : inner), PAD, y);
   y += 30;
   ctx.fillStyle = MUTED;
   ctx.font = TAGLINE_FONT;

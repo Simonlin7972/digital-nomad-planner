@@ -45,6 +45,12 @@
 .p-options button[aria-checked='true'] { background: var(--text); border-color: var(--text); color: #fff; }
 .p-toggles { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
 
+/* Save and cancel under the character, the only setting that waits for a button */
+.p-save { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 16px 0 4px; border-top: 1px solid var(--line); }
+.p-save button { padding: 8px 18px; font-size: 13px; }
+.p-unsaved { margin-right: auto; font-size: 13px; color: var(--muted); }
+.p-unsaved::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: var(--accent); vertical-align: 1px; }
+
 .p-note { margin: 8px 0; font-size: 13px; color: var(--muted); }
 .p-about { margin: 12px 0 4px; font-size: 15px; line-height: 1.7; }
 .p-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 12px 0; }

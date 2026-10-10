@@ -9,6 +9,12 @@
 
 ## 2026-10-10
 
+- 英文與日文介面有了自己的名字：Not WFH、今日は在宅じゃない；切換語言時頁面標題與分頁標題跟著換
+  EN: The English and Japanese interfaces now have their own names, Not WFH and 今日は在宅じゃない; the page and tab titles follow the language
+- 標題下方的打字副標有了中文與日文版本，各用自己的像素字體
+  EN: The typing tagline under the title now has Chinese and Japanese versions, each in its own pixel typeface
+- 設定頁新增「我的角色」：挑一個像你的像素數位遊牧，有 10 個預設角色，也能自己搭配髮型、衣服、鞋子，加上帽子、眼鏡、背包、吉他、手上的東西，旁邊再放行李箱、衝浪板或貓狗；膚色和髮型各有 10 種（也有綠色、藍色這種怪顏色）；角色會眨眼、上下呼吸，旁邊的貓狗也會動；滑鼠指著就先預覽，按「儲存角色」才存。存好之後，工具列的設定按鈕會變成你的角色，分享圖上也會出現
+  EN: New "My character" on the settings page: pick a pixel nomad who looks like you from 10 ready-made ones, or dress one up with hair, clothes and shoes, a hat, glasses, a bag or guitar, things in each hand and a suitcase, surfboard, cat or dog alongside; 10 skin tones (a few unlikely ones too) and 10 hairstyles; it blinks and bobs, and the cat or dog beside it fidgets; point at a choice to preview it, and press Save character to keep it. Once saved, your character shows on the toolbar's settings button and on the shared image
 - 頁面上不再放 GitHub 連結；更新日誌頁變寬、項目符號更清楚
   EN: The GitHub links are gone from the pages; the changelog page is wider and its bullets easier to see
 - 新增設定頁（工具列最右邊的人像圖示）：可以填暱稱、家、護照、稅務居住地，設定語言、假日、溫度單位（°C／°F）與備份提醒間隔

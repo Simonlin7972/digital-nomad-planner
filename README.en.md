@@ -1,6 +1,6 @@
-# 今天不在家工作
+# Not WFH
 
-**A Digital Nomad Planner** — the Chinese name means "not working from home today".
+**A Digital Nomad Planner** — 今天不在家工作 in Chinese, 今日は在宅じゃない in Japanese: the same joke in three languages. The interface shows whichever name matches its language.
 
 [繁體中文](README.md) · **English**
 
@@ -89,16 +89,17 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 - A compact toolbar: undo and redo are icons; export, import and Share live in the `⋯` menu, with "How to use", "About this app" (opens the landing page in a new tab) and "Report a problem" (a title, a description, up to 3 screenshots and an optional email, sent straight to the developer) below a divider
 - A footer at the bottom of the page: where the data lives, the licence, and links home and to the changelog
 - A changelog page (/changelog/): new features and changes in every release, newest day first, in the interface language (English when the interface is Japanese). It is built from `CHANGELOG.md` at the repository root, so updating that file and pushing publishes it
-- A settings page (/profile/, from the person icon at the right end of the toolbar):
+- A settings page (/profile/, from the person icon at the right end of the toolbar; once a character is saved, the button shows its face):
+  - My character: a front-facing pixel paper doll. Pick one of 10 ready-made nomads (engineer, designer, surfer, backpacker…) or put one together from skin tone, hair, top, bottom and shoes, plus separate slots for the head, face, neck, back, each hand and each side (hats, glasses, bags, a guitar, coffee, a suitcase, a surfboard, a cat or dog…); or roll a random one. Pointing at a choice previews it; this one is saved with its own Save button, and leaving without saving drops the changes. Once saved, it appears on the toolbar's settings button and on the shared image
   - About me: a nickname (shown on the shared image), home (the flight estimate adds the trips from and back home), passport (an EU, EEA or Swiss passport hides the Schengen 90/180 count) and tax residence (the country whose 183 days are counted; Taiwan by default, empty to hide)
   - Display: language, public holiday switches, temperature unit (°C / °F)
   - Data: how long before the backup reminder (3 / 7 / 14 days, or off)
   - About: the last update date and links home, to the changelog and to GitHub
-  - Changes save at once, stay in this browser and are not part of exports
+  - Everything but the character saves at once; it all stays in this browser and is not part of exports
 - Undo and redo, up to 100 steps
 - JSON export and import: one file holds every year; file names carry the export date (e.g. `nomad-plan_2026-10-06.json`). On a computer you can also drop the file onto the page to import it
 - Send to another device: the `⋯` menu makes a link and a QR code carrying every year's plan; opening it on another computer or phone imports it there (asking first before replacing years already planned), and pasting it into a tab that already has the planner open works too. The plan is compressed into the part of the address after `#` and never passes through a server; booking references and fares can be left out
-- Share: preview your plan as an image, then download it as a PNG, in two layouts — landscape (fixed size, with the timeline, country strips and flags, holidays that are switched on, ticket markers, a summary line and the itinerary) and portrait 9:16 (for stories: summary, twelve month bars and the itinerary, ending in "N more" when it runs out of room); flight details left out of both. Landscape is the default on a computer, portrait on a phone, where it can also open the system share sheet
+- Share: preview your plan as an image, then download it as a PNG, in two layouts — landscape (fixed size, with the timeline, country strips and flags, holidays that are switched on, ticket markers, a summary line and the itinerary) and portrait 9:16 (for stories: summary, twelve month bars and the itinerary, ending in "N more" when it runs out of room); a saved character is drawn to the right of the title; flight details left out of both. Landscape is the default on a computer, portrait on a phone, where it can also open the system share sheet
 - Read-only phone layout: below 720px (or on a phone held sideways) the page becomes view-only — a one-row header; at the top, "now" (dates, progress, days left) and "next" (days until you leave, with the flight right there if you have one), found across years; below, one card per stay (flight details and full notes included), with past stays folded into one line you can open; then the summary and the map. It opens on the current year. Stay cards let you copy the flight number and booking reference, add the departure to your calendar (.ics), and open the place in Google Maps. Menus and dialogs rise from the bottom of the screen, and the guide shows only the parts that apply on a phone. Plan on a computer, then use "Send to another device" and scan the QR code, or export a file and import it on the phone
 - Installable and usable offline: a service worker keeps the files and fonts the page has loaded, so it opens without a connection (the map aside)
 - Every change is saved automatically
@@ -179,7 +180,7 @@ Undo and redo shortcuts are left alone while you are typing in a field, while th
 | --- | --- |
 | `dnp-plan-2026`, `dnp-plan-2027`, `dnp-plan-2028` | The plan for each year |
 | `dnp-year` | The year being planned |
-| `dnp-profile` | The settings page's "about me", temperature unit and backup reminder interval |
+| `dnp-profile` | The settings page's character, "about me", temperature unit and backup reminder interval |
 | `dnp-geocode` | Cached coordinates for place names |
 | `dnp-zoom` | Timeline zoom level |
 | `dnp-view` | Current view (year or month) and month |
@@ -197,7 +198,7 @@ The page talks to these outside services:
 | [Nominatim](https://nominatim.openstreetmap.org/) (OpenStreetMap) | The "city, country" text for each place | To find coordinates for the map and the flight estimate. Each place is looked up once |
 | [OpenFreeMap](https://openfreemap.org/) | Map tile requests | The base map |
 | [emfont](https://font.emtech.cc/) | Font file requests | The interface typeface |
-| [Google Fonts](https://fonts.google.com/) | Font file requests | The pixel typeface of the English tagline under the title |
+| [Google Fonts](https://fonts.google.com/) | Font file requests | The pixel typefaces of the tagline under the title (English, Japanese); the Chinese one ships with the site, no extra request |
 | [Google Maps](https://www.google.com/maps) | When you tap the map pin on a phone card, that stay's "city, country" | Opens the place in Google Maps; nothing is sent unless you tap |
 | [FormSubmit](https://formsubmit.co/) | Only when you send "Report a problem": the title, description and screenshots you add (scaled down to JPEG), the optional email, and the page, language, year, window size and browser | Delivers the report to the developer's inbox; **nothing from your plan is sent** |
 | [Google Analytics](https://analytics.google.com/) (GA4) | Anonymous usage such as page views, scrolling and outbound clicks; events for actions such as opening the planner, adding a stay, exporting, importing and sharing, carrying only interface choices and bucketed counts (e.g. "2–5 stays"); plus browser, device and rough location; sets a `_ga` cookie | Traffic and feature-use figures; the event list is in [ANALYTICS.md](ANALYTICS.md). Loaded on the live site only, not under `npm run dev`; **nothing from your plan is sent** |
@@ -287,13 +288,15 @@ public/manifest.webmanifest  PWA settings: name, icons, opens at /app/
 public/sw.js            Offline service worker (keeps loaded files)
 public/og.png           Link-preview image (1200×630, marks all three languages)
 public/airlines/        Airline logos (<code>.png), downloaded once by scripts/fetch-airline-logos.mjs
+scripts/subset-tagline-font.mjs  Cuts the characters of the Chinese tagline out of Cubic 11; re-run after changing the Chinese tagline
+src/assets/              The subset tagline font file
 scripts/fetch-airline-logos.mjs  Downloads a logo for every airline in airlines.ts; rerun after adding airlines
 docs/overview.png       Sample image for the README (downloaded from the app's Share dialog)
 docs/demo-*.gif         Feature demos for the README (English interface, sample data)
 src/
   main.tsx              React mount point; sets the stylesheet order
   changelog/            The changelog page (renders CHANGELOG.md as parsed by `lib/changelog.ts`)
-  profile/              The settings page
+  profile/              The settings page (AvatarPicker is the character picker)
   design/               Design system page: colour, type, spacing, layout, radius and shadow, plus every state of the buttons, toggles, tabs, dropdowns, inputs and other base components; uses the app's own CSS, and forceStates copies :hover / :focus / :active rules to classes so states sit side by side
   landing/              Landing page: Landing (layout), Demos (scripted feature demos), motion (scroll triggers and looping)
   App.tsx               Wires the pieces together; owns the plan and page-level state
@@ -322,6 +325,7 @@ src/
     MapView             Map (lazy-loaded)
     Flag                Country flag
     PixelNomad          The pixel-art animation in the header (someone on a laptop under a palm tree)
+    Avatar              The paper-doll character (SVG, blinks; the large one on the settings page also bobs, with its cat or dog moving)
     Tagline             The typewriter tagline under the title
     Dialog.css          Shell shared by the editor and help dialogs
   hooks/
@@ -354,7 +358,8 @@ src/
     offline.ts          Registers the service worker (live site only)
     links.ts            Links between the pages (home, planner, changelog, settings)
     report.ts           Problem reports: shrink screenshots, send by e-mail through FormSubmit
-    profile.ts          Settings (nickname, home, passport, tax residence, temperature unit, backup reminder) and whether the Schengen rule applies
+    avatar.ts           The paper doll: each part's pixel art, colours, ready-made characters, composing a 32×32 image
+    profile.ts          Settings (character, nickname, home, passport, tax residence, temperature unit, backup reminder) and whether the Schengen rule applies
     util.ts             Small helpers
     i18n.tsx            Dictionaries, current locale, `t()`
   styles/base.css       Design tokens, page background, shared buttons and panels
@@ -465,7 +470,9 @@ The full product spec and decision history are in [MVP.md](MVP.md) (Chinese).
 | [Phosphor Icons](https://phosphoricons.com/) | Icons | MIT |
 | [flag-icons](https://github.com/lipis/flag-icons) | Flags | MIT |
 | [975HazyGo](https://font.emtech.cc/fonts/975HazyGo) (via emfont) | Interface typeface | See the license shown on the font's page |
-| [Pixelify Sans](https://fonts.google.com/specimen/Pixelify+Sans) (via Google Fonts) | Tagline typeface | OFL-1.1 |
+| [Pixelify Sans](https://fonts.google.com/specimen/Pixelify+Sans) (via Google Fonts) | English tagline typeface | OFL-1.1 |
+| [DotGothic16](https://fonts.google.com/specimen/DotGothic16) (via Google Fonts) | Japanese tagline typeface | OFL-1.1 |
+| [Cubic 11 (俐方體 11 號)](https://github.com/ACh-K/Cubic-11) | Chinese tagline typeface (only the tagline's characters, in `src/assets/`) | OFL-1.1 |
 | [uqr](https://github.com/unjs/uqr) | QR code generation | MIT |
 
 The 2026 and 2027 holiday data was compiled by hand. Taiwan's holidays follow press reports of the government's 2026 and 2027 office calendars (for 2027, the Dragon Boat Festival, Mid-Autumn Festival and Teachers' Day are single days worked out from the calendar). Australia lists national holidays only. None of the dates were checked one by one against the original official notices, so treat the official sources as authoritative.

@@ -1,3 +1,11 @@
+/* 俐方體 11 號 (Cubic 11, OFL), cut down to the characters of the Chinese tagline by scripts/subset-tagline-font.mjs */
+@font-face {
+  font-family: 'Cubic 11 Tagline';
+  src: url('../assets/cubic11-tagline.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
 .tagline {
   margin: 6px 0 0;
   /* One line tall even while empty, so nothing below moves as it types. */
@@ -9,6 +17,9 @@
   white-space: nowrap;
   color: var(--muted);
 }
+/* Each language gets a pixel face that has its characters: Pixelify Sans has no CJK glyphs. */
+.tagline:lang(zh-Hant) { font-family: 'Cubic 11 Tagline', 'Pixelify Sans', sans-serif; font-size: 22px; }
+.tagline:lang(ja) { font-family: 'DotGothic16', 'Pixelify Sans', sans-serif; font-size: 22px; }
 .tagline .caret {
   display: inline-block;
   width: 9px;

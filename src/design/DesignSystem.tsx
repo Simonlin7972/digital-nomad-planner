@@ -6,7 +6,9 @@ import { Check } from '@phosphor-icons/react/dist/csr/Check';
 import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
 import { GlobeHemisphereWest } from '@phosphor-icons/react/dist/csr/GlobeHemisphereWest';
 import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
+import { Avatar } from '../components/Avatar';
 import { Flag } from '../components/Flag';
+import { PRESETS } from '../lib/avatar';
 import { PALETTE } from '../lib/storage';
 import '../components/Dialog.css';
 import '../components/Editor.css';
@@ -49,6 +51,7 @@ const SECTIONS = [
   ['country', 'Country bar 國家條'],
   ['swatch', 'Swatch 色票'],
   ['dialog', 'Dialog 對話框'],
+  ['avatar', 'Avatar 紙娃娃'],
 ] as const;
 
 const COLOR_TOKENS = [
@@ -459,6 +462,17 @@ export function DesignSystem() {
               <button type="button">取消</button>
               <button type="button" className="primary">儲存</button>
             </div>
+          </div>
+        </Section>
+
+        <Section id="avatar" title="Avatar 紙娃娃" note="設定頁挑的角色（lib/avatar.ts）。畫布 32×32，人物 16×24 置中；部位用字元畫，8 字元的列左右鏡像。幾秒眨一次眼（減少動態時不眨）。這裡是 10 個預設角色，64px（2 倍）。">
+          <div className="ds-avatars">
+            {PRESETS.map((p) => (
+              <div key={p.id}>
+                <Avatar avatar={p.avatar} />
+                <code>{p.id}</code>
+              </div>
+            ))}
           </div>
         </Section>
       </main>

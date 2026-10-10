@@ -65,6 +65,9 @@
 @media (hover: hover) {
   .actions .profile-link:hover { border-color: var(--text); background: var(--subtle); }
 }
+/* The saved character as a bust (16 canvas pixels at 2×), set low so the circle's edge cuts off the shoulders */
+.actions .profile-link.has-avatar { overflow: hidden; background: var(--subtle); }
+.actions .profile-link .avatar { width: 32px; height: 32px; margin-top: 10px; }
 .actions .profile-link:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 /* Phone: finger-sized, like the other header buttons (after the base rule so it wins) */
 @media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {

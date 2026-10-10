@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft';
 import { CheckCircle } from '@phosphor-icons/react/dist/csr/CheckCircle';
@@ -14,12 +14,14 @@ import { LOCALES, LOCALE_NAMES, langTag, setLocale, t, useLocale } from '../lib/
 import { APP_URL, CHANGELOG_URL, HOME_URL, REPO_URL } from '../lib/links';
 import { loadHolidayToggles, saveHolidayToggles, type HolidayToggles } from '../lib/prefs';
 import { BACKUP_DAYS, getProfile, saveProfile, type Profile as ProfileData } from '../lib/profile';
+import { DEFAULT_AVATAR, sameAvatar } from '../lib/avatar';
+import { AvatarPicker } from './AvatarPicker';
 import '../components/Editor.css';
 import './Profile.css';
 
-// The profile page (/profile/): who you are, how things are shown, how often to remind about backups, and what
+// The profile page (/profile/): your paper-doll character, who you are, how things are shown, how often to remind about backups, and what
 // this is. Everything saves as soon as it changes, to this browser only; the planner reads it
-// on its next load.
+// on its next load. The character is the exception: it is saved with its own button.
 export function Profile() {
   const locale = useLocale();
   document.title = `${t('profile.title')} — ${t('app.title')}`;
@@ -28,6 +30,17 @@ export function Profile() {
   const [profile, setProfile] = useState(getProfile);
   const [holidays, setHolidays] = useState(loadHolidayToggles);
   const [saved, setSaved] = useState(false);
+  // The character is the one setting that waits for Save: picks change this draft, and leaving drops it.
+  // Until one is saved the picker starts from the default; saving that unchanged is allowed too.
+  const savedAvatar = profile.avatar ?? DEFAULT_AVATAR;
+  const [avatar, setAvatar] = useState(savedAvatar);
+  const unsaved = !sameAvatar(avatar, savedAvatar);
+  useEffect(() => {
+    if (!unsaved) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [unsaved]);
 
   // Each change is written straight away; a small note confirms it.
   const flash = () => {
@@ -76,6 +89,20 @@ export function Profile() {
           </span>
         </div>
         <p className="p-lead">{t('profile.lead')}</p>
+
+        <Section title={t('profile.avatar')}>
+          <p className="p-note">{t('profile.avatarHint')}</p>
+          <AvatarPicker value={avatar} onChange={setAvatar} />
+          <div className={`p-save${unsaved ? ' on' : ''}`}>
+            {unsaved && <span className="p-unsaved">{t('profile.avatarUnsaved')}</span>}
+            <button type="button" disabled={!unsaved} onClick={() => setAvatar(savedAvatar)}>
+              {t('profile.avatarCancel')}
+            </button>
+            <button type="button" className="primary" disabled={!unsaved && profile.avatar !== null} onClick={() => update({ avatar })}>
+              {t('profile.avatarSave')}
+            </button>
+          </div>
+        </Section>
 
         <Section title={t('profile.me')}>
           <Row label={t('profile.nickname')}>

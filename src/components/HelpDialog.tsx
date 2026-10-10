@@ -126,7 +126,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         <>
           <b>匯出</b>、<b>匯入</b>、<b>分享</b> 都在工具列的 <b>⋯</b> 選單裡。<b>匯出</b>：把所有年份的行程存成一個 JSON 檔。建議排到一個段落就匯出一次當備份。
         </>,
-        <>行程改過之後超過一週沒有匯出，頁首會出現備份提醒；按「稍後提醒」三天內不再出現。提醒的間隔可以在<b>設定</b>頁（工具列最右邊的人像圖示）調整。</>,
+        <>行程改過之後超過一週沒有匯出，頁首會出現備份提醒；按「稍後提醒」三天內不再出現。提醒的間隔可以在<b>設定</b>頁（工具列最右邊的人像圖示，存了角色就是角色的臉）調整。</>,
         <>遇到問題或有建議，用 <b>⋯</b> 選單的<b>問題回報</b>寫給開發者，可以附截圖；只會送出你填的內容和瀏覽器資訊，不含行程。</>,
         <>
           <b>匯入</b>：讀回匯出的檔案。檔案裡有的年份會<b>取代</b>該年的行程，取代前會先問你；其他年份不動。
@@ -259,7 +259,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         <>
           <b>Export</b>, <b>Import</b> and <b>Share</b> are in the <b>⋯</b> menu on the toolbar. <b>Export</b> saves every year's plan in one JSON file. Export whenever you reach a good stopping point.
         </>,
-        <>If the plan has changed and gone a week without an export, a reminder appears under the header. “Remind me later” hides it for three days. You can change how long it waits on the <b>Settings</b> page (the person icon at the right of the toolbar).</>,
+        <>If the plan has changed and gone a week without an export, a reminder appears under the header. “Remind me later” hides it for three days. You can change how long it waits on the <b>Settings</b> page (the person icon at the right of the toolbar, or your character’s face once you have saved one).</>,
         <>Found a problem or have an idea? Use <b>Report a problem</b> in the <b>⋯</b> menu to write to the developer, with screenshots if you like. Only what you write and a line about your browser is sent, never your plan.</>,
         <>
           <b>Import</b> loads an exported file. Each year in it <b>replaces</b> that year's plan, after asking; other years are left alone.
@@ -387,7 +387,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         <>
           <b>書き出し</b>、<b>読み込み</b>、<b>共有</b>はツールバーの <b>⋯</b> メニューにあります。<b>書き出し</b>は全年の計画を 1 つの JSON ファイルに保存します。区切りのいいところで書き出しておくのがおすすめです。
         </>,
-        <>計画を変えてから 1 週間書き出していないと、ヘッダーの下にバックアップの案内が出ます。「あとで」を押すと 3 日間は出ません。間隔は<b>設定</b>ページ（ツールバー右端の人のアイコン）で変えられます。</>,
+        <>計画を変えてから 1 週間書き出していないと、ヘッダーの下にバックアップの案内が出ます。「あとで」を押すと 3 日間は出ません。間隔は<b>設定</b>ページ（ツールバー右端の人のアイコン。キャラクターを保存するとその顔になります）で変えられます。</>,
         <>不具合や要望は <b>⋯</b> メニューの<b>問題を報告</b>から開発者に送れます。スクリーンショットも添付できます。送られるのは入力した内容とブラウザの情報だけで、計画は含まれません。</>,
         <>
           <b>読み込み</b>は書き出したファイルを読み戻します。ファイルにある年はその年の計画を<b>置き換え</b>（置き換える前に確認します）、ほかの年はそのままです。

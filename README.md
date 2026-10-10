@@ -1,6 +1,6 @@
 # 今天不在家工作
 
-**A Digital Nomad Planner**
+**A Digital Nomad Planner** — 英文介面叫 **Not WFH**，日文介面叫 **今日は在宅じゃない**，同一個梗的三種說法。
 
 一頁式的年度行程規劃工具：把一整年拆成 53 週，拖一拖就排好「幾月在哪個城市」。資料只存在你的瀏覽器，沒有帳號、沒有後端。
 
@@ -87,16 +87,17 @@
 - 工具列精簡：復原、重做只有圖示；匯出、匯入、分享收在 `⋯` 選單裡，分隔線下方是「如何使用」、「產品介紹」（新分頁開啟首頁）與「問題回報」（填標題、內容，可附最多 3 張截圖與聯絡 Email，直接寄給開發者）
 - 頁面底部的 footer：資料只存在瀏覽器的提醒、授權、首頁與更新日誌連結
 - 更新日誌頁（/changelog/）：每次發布的新功能與改動，依日期由新到舊，跟著介面語言切換中英文（日文介面顯示英文）。內容來自根目錄的 `CHANGELOG.md`，build 時讀入，所以更新那個檔案再推上去就會發布
-- 設定頁（/profile/，從工具列最右邊的人像圖示進入）：
+- 設定頁（/profile/，從工具列最右邊的人像圖示進入；存了角色之後，這顆按鈕會換成角色的臉）：
+  - 我的角色：正面的像素紙娃娃。從 10 個預設角色（工程師、設計師、衝浪客、背包客⋯⋯）挑一個，或自己搭配膚色、頭髮、衣褲鞋，再加上頭上、臉、頸部、背上、左右手、左右身旁各自的配件（帽子、眼鏡、背包、吉他、咖啡、行李箱、衝浪板、貓狗⋯⋯）；也可以隨機。滑鼠指著選項會先預覽；這一項要按「儲存角色」才存，沒存就離開會放棄。存了之後會出現在工具列的設定按鈕和分享圖上
   - 關於我：暱稱（顯示在分享圖上）、家（飛行估算加上從家出發與回家）、護照（歐盟、歐洲經濟區、瑞士護照不顯示申根 90/180）、稅務居住地（183 天改算這個國家，預設台灣，清空就不顯示）
   - 顯示偏好：語言、國定假日開關、溫度單位（°C／°F）
   - 資料：備份提醒的間隔（3／7／14 天或不提醒）
   - 關於：最近更新日期、首頁、更新日誌、GitHub
-  - 改了就自動儲存，只存在這個瀏覽器，不會寫進匯出檔
+  - 除了角色以外，改了就自動儲存；只存在這個瀏覽器，不會寫進匯出檔
 - 復原／重做，最多 100 步
 - JSON 匯出／匯入：一個檔案包含所有年份，檔名帶匯出當天日期（例：`nomad-plan_2026-10-06.json`）。在電腦上把檔案直接拖進頁面也能匯入
 - 傳到其他裝置：`⋯` 選單產生一個帶著所有年份行程的連結與 QR code，在另一台電腦或手機打開就會匯入（會取代那邊已有的年份前先問）；已經開著 App 的分頁貼上連結也行。行程壓縮後放在網址 `#` 後面，不經過伺服器；可以選擇不含訂位代號與票價
-- 分享：預覽行程圖再下載成 PNG，兩種版面——橫式（固定尺寸，含時間軸、國家條與國旗、開著的假日、機票標示、摘要與行程清單）與直式 9:16（適合限動：摘要、12 個月的色條、行程清單，放不下時以「還有 N 段」收尾）；都不含機票細節。電腦預設橫式、手機預設直式，手機上可叫出系統分享選單
+- 分享：預覽行程圖再下載成 PNG，兩種版面——橫式（固定尺寸，含時間軸、國家條與國旗、開著的假日、機票標示、摘要與行程清單）與直式 9:16（適合限動：摘要、12 個月的色條、行程清單，放不下時以「還有 N 段」收尾）；存了角色的話，標題右邊會畫上角色；都不含機票細節。電腦預設橫式、手機預設直式，手機上可叫出系統分享選單
 - 手機唯讀版：螢幕 720px 以下（或橫拿的手機）改成只能瀏覽的版面——頁首縮成一列；最上方是「現在」（日期、進度、還剩幾天）與「下一站」（幾天後出發，有機票就直接列出），跨年份也找得到；底下每段行程一張卡片（含機票資訊與備註全文），已結束的收成一行，可展開；再來是摘要與地圖。打開時會先切到今年。行程卡片上可以複製航班號與訂位代號、把起飛時間加入行事曆（.ics）、用 Google 地圖打開地點。選單與對話框在手機上從底部升起；說明視窗只列手機相關的段落。在電腦排好後用「傳到其他裝置」掃 QR code，或匯出檔案再到手機匯入
 - 可加入主畫面、離線開啟：service worker 會保存載入過的檔案與字體，沒有網路時也打得開（地圖除外）
 - 所有變更自動儲存
@@ -176,7 +177,7 @@ npm run dev
 | --- | --- |
 | `dnp-plan-2026`、`dnp-plan-2027`、`dnp-plan-2028` | 各年份的行程本體 |
 | `dnp-year` | 目前選的年份 |
-| `dnp-profile` | 設定頁的「關於我」與溫度單位、備份提醒間隔 |
+| `dnp-profile` | 設定頁的角色、「關於我」與溫度單位、備份提醒間隔 |
 | `dnp-geocode` | 地名查到的座標快取 |
 | `dnp-zoom` | 時間軸縮放比例 |
 | `dnp-view` | 目前檢視（年／月）與月份 |
@@ -194,7 +195,7 @@ npm run dev
 | [Nominatim](https://nominatim.openstreetmap.org/)（OpenStreetMap） | 你輸入的「城市, 國家」文字 | 查座標，供地圖與飛行估算使用。每個地名只查一次 |
 | [OpenFreeMap](https://openfreemap.org/) | 地圖圖磚請求 | 地圖底圖 |
 | [emfont](https://font.emtech.cc/) | 字型檔請求 | 介面字體 |
-| [Google Fonts](https://fonts.google.com/) | 字型檔請求 | 標題下方英文副標的像素字體 |
+| [Google Fonts](https://fonts.google.com/) | 字型檔請求 | 標題下方副標的像素字體（英文、日文）；繁中的像素字體隨網站出貨，不另外連線 |
 | [Google 地圖](https://www.google.com/maps) | 你在手機卡片上點地圖圖釘時，該段行程的「城市, 國家」 | 在 Google 地圖打開那個地點；只有點了才會連線 |
 | [FormSubmit](https://formsubmit.co/) | 只有你送出「問題回報」時：你填的標題、內容、截圖（縮小成 JPEG）、選填的 Email，以及頁面、語言、年份、視窗大小與瀏覽器版本 | 把回報寄到開發者信箱；**不含任何行程內容** |
 | [Google Analytics](https://analytics.google.com/)（GA4） | 瀏覽頁面、捲動、外連點擊等匿名使用紀錄；點「開始規劃」、新增行程、匯出、匯入、分享等操作事件，只帶介面選擇與分組後的數量（例如「2–5 段行程」）；以及瀏覽器、裝置與大致地區；會設 `_ga` cookie | 統計流量與功能使用情形，事件清單見 [ANALYTICS.md](ANALYTICS.md)。只在線上版載入，`npm run dev` 不送；**不會送出任何行程內容** |
@@ -285,12 +286,14 @@ public/sw.js            離線用的 service worker（保存載入過的檔案�
 public/og.png           分享連結時的預覽圖（1200×630，三語標示）
 public/airlines/        航空公司 logo（<代號>.png），由 scripts/fetch-airline-logos.mjs 一次性下載
 scripts/fetch-airline-logos.mjs  下載 airlines.ts 裡每家航空的 logo；新增航空公司後重跑
+scripts/subset-tagline-font.mjs  從俐方體 11 號切出中文副標用到的字；改了中文副標後重跑
+src/assets/              切好的副標字型檔
 docs/overview.png       README 用的範例圖（由 app 的「分享」下載）
 docs/demo-*.gif         README 的功能示範動畫（英文介面、範例資料）
 src/
   main.tsx              React 掛載點；決定樣式載入順序
   changelog/            更新日誌頁（讀 `lib/changelog.ts` 解析好的 CHANGELOG.md）
-  profile/              設定頁
+  profile/              設定頁（AvatarPicker 是角色選擇器）
   design/               設計系統頁：顏色、字體、間距、版面、圓角、陰影，以及按鈕、開關、分頁、下拉選單、輸入框等元件的各種狀態；直接套用 app 的 CSS，forceStates 把 :hover／:focus／:active 規則複製成 class 好並排呈現
   landing/              產品介紹頁：Landing（版面）、Demos（腳本化的功能示範）、motion（捲動觸發與循環動畫）
   App.tsx               組裝各元件，持有行程與頁面層級的狀態
@@ -319,6 +322,7 @@ src/
     MapView             地圖（延遲載入）
     Flag                國旗
     PixelNomad          頁首的像素小動畫（棕櫚樹下用筆電的人）
+    Avatar              紙娃娃角色（SVG，會眨眼；設定頁的大圖還會上下呼吸、旁邊的貓狗會動）
     Tagline             標題下方的打字機副標
     Dialog.css          編輯與說明視窗共用的外框樣式
   hooks/
@@ -351,7 +355,8 @@ src/
     offline.ts          註冊 service worker（只在線上版）
     links.ts            頁面之間的連結（首頁、規劃、更新日誌、設定）
     report.ts           問題回報：縮小截圖、經 FormSubmit 寄信
-    profile.ts          設定（暱稱、家、護照、稅務居住地、溫度單位、備份提醒）的讀寫，以及護照是否適用申根規則
+    avatar.ts           紙娃娃：各部位的像素圖、配色、預設角色、組合成 32×32 的圖
+    profile.ts          設定（角色、暱稱、家、護照、稅務居住地、溫度單位、備份提醒）的讀寫，以及護照是否適用申根規則
     util.ts             小工具
     i18n.tsx            翻譯字典、目前語言、`t()`
   styles/base.css       設計變數、頁面底、按鈕與面板等共用樣式
@@ -461,7 +466,9 @@ CLAUDE.md               給 Claude Code 的專案須知
 | [Phosphor Icons](https://phosphoricons.com/) | 圖示 | MIT |
 | [flag-icons](https://github.com/lipis/flag-icons) | 國旗 | MIT |
 | [975 朦朧黑體](https://font.emtech.cc/fonts/975HazyGo)（經 emfont） | 介面字體 | 見字體頁面的授權標示 |
-| [Pixelify Sans](https://fonts.google.com/specimen/Pixelify+Sans)（經 Google Fonts） | 副標字體 | OFL-1.1 |
+| [Pixelify Sans](https://fonts.google.com/specimen/Pixelify+Sans)（經 Google Fonts） | 英文副標字體 | OFL-1.1 |
+| [DotGothic16](https://fonts.google.com/specimen/DotGothic16)（經 Google Fonts） | 日文副標字體 | OFL-1.1 |
+| [俐方體 11 號 Cubic 11](https://github.com/ACh-K/Cubic-11) | 繁中副標字體（只含副標用到的字，`src/assets/`） | OFL-1.1 |
 | [uqr](https://github.com/unjs/uqr) | 產生 QR code | MIT |
 
 2026、2027 年國定假日資料為手動整理：台灣依新聞報導的 115、116 年政府行政機關辦公日曆表（2027 的端午、中秋、教師節三個單日依曆法推算）；澳洲只列全國性假日。這些日期未逐一對照官方原始公告，實際放假安排請以官方為準。
