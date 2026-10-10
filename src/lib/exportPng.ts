@@ -99,6 +99,14 @@ function drawAvatar(ctx: CanvasRenderingContext2D, avatar: Avatar, x: number, y:
   );
 }
 
+// The character alone, transparent, at a whole-number scale (8× is 256px): the download on the settings page.
+export function renderAvatarPng(avatar: Avatar, scale = 8): Promise<Blob> {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = AVATAR_SIZE * scale;
+  drawAvatar(canvas.getContext('2d')!, avatar, 0, 0, scale);
+  return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob'))), 'image/png'));
+}
+
 // The line under the title: time planned, places, and the day-count rules when they apply.
 function summaryLine(stays: Stay[]): { text: string; warn: boolean } {
   const planned = stays.reduce((n, s) => n + daysOf(s), 0);

@@ -9,6 +9,8 @@
 
 ## 2026-10-10
 
+- 角色的「取消」「儲存角色」按鈕改成有改動時才出現，沒改就不佔位；存好的角色滑鼠移上去就能下載成透明背景的 PNG
+  EN: The character's Cancel and Save buttons now appear only once something has changed; hover the saved character to download it as a transparent PNG
 - 帽子、背包、圍巾這些配件現在各有自己合適的預設顏色，選了再改也可以，不會全部跟著上一個選的顏色跑
   EN: Hats, bags, scarves and other extras now each start in a colour that suits them; you can still change it, and it no longer follows whatever colour you picked last
 - 角色選項的縮圖只畫那個部位：髮型、帽子、眼鏡襯著頭型剪影，衣服和隨身物則單獨放大，挑的時候一眼就能比較

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from 'react';
 import type { PointerEvent, ReactNode } from 'react';
+import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
 import { Shuffle } from '@phosphor-icons/react/dist/csr/Shuffle';
 import { Avatar } from '../components/Avatar';
 import {
@@ -68,7 +69,9 @@ const OPTIONAL: Group[] = ['head', 'eyes', 'lower', 'neck', 'back', 'handL', 'ha
 // The paper doll on the profile page: the figure large on the left, and on the right one tab per part, some split
 // into smaller groups. Every choice is a small picture of the figure wearing it. Picks go to onChange; saving is up
 // to the page.
-export function AvatarPicker({ value, onChange }: { value: AvatarData; onChange: (next: AvatarData) => void }) {
+// `onDownload`, when given, puts a download button over the large figure (shown on hover); the page passes it only
+// while the character on screen is the saved one.
+export function AvatarPicker({ value, onChange, onDownload }: { value: AvatarData; onChange: (next: AvatarData) => void; onDownload?: () => void }) {
   const [tab, setTab] = useState<Tab>('presets');
   const [groups, setGroups] = useState<Partial<Record<Tab, Group>>>({});
   const [trying, setTrying] = useState<AvatarData | null>(null);
@@ -177,7 +180,14 @@ export function AvatarPicker({ value, onChange }: { value: AvatarData; onChange:
     <Preview.Provider value={setTrying}>
       <div className="ap">
         <div className="ap-stage">
-          <Avatar avatar={shown} animate label={preset ? t(`avatar.preset.${preset}` as Key) : t('profile.avatar')} />
+          <div className="ap-figure">
+            <Avatar avatar={shown} animate label={preset ? t(`avatar.preset.${preset}` as Key) : t('profile.avatar')} />
+            {onDownload && (
+              <button type="button" className="ap-download" aria-label={t('avatar.download')} title={t('avatar.download')} onClick={onDownload}>
+                <DownloadSimple size={16} weight="bold" />
+              </button>
+            )}
+          </div>
           <button type="button" className="ap-random" onClick={() => onChange(randomAvatar())}>
             <Shuffle size={14} weight="bold" /> {t('avatar.random')}
           </button>

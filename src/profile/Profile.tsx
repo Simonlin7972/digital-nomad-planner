@@ -14,6 +14,8 @@ import { APP_URL, CHANGELOG_URL, HOME_URL } from '../lib/links';
 import { loadHolidayToggles, saveHolidayToggles, type HolidayToggles } from '../lib/prefs';
 import { BACKUP_DAYS, getProfile, saveProfile, type Profile as ProfileData } from '../lib/profile';
 import { DEFAULT_AVATAR, sameAvatar } from '../lib/avatar';
+import { renderAvatarPng } from '../lib/exportPng';
+import { download } from '../lib/files';
 import { AvatarPicker } from './AvatarPicker';
 import '../components/Editor.css';
 import './Profile.css';
@@ -89,16 +91,25 @@ export function Profile() {
         </div>
 
         <Section title={t('profile.avatar')}>
-          <AvatarPicker value={avatar} onChange={setAvatar} />
-          <div className={`p-save${unsaved ? ' on' : ''}`}>
-            {unsaved && <span className="p-unsaved">{t('profile.avatarUnsaved')}</span>}
-            <button type="button" disabled={!unsaved} onClick={() => setAvatar(savedAvatar)}>
-              {t('profile.avatarCancel')}
-            </button>
-            <button type="button" className="primary" disabled={!unsaved && profile.avatar !== null} onClick={() => update({ avatar })}>
-              {t('profile.avatarSave')}
-            </button>
-          </div>
+          <AvatarPicker
+            value={avatar}
+            onChange={setAvatar}
+            onDownload={!unsaved && profile.avatar ? () => void renderAvatarPng(avatar).then((b) => download(b, 'png', false, 'nomad-avatar.png')) : undefined}
+          />
+          {/* Save and cancel appear only once something changed; before the first save they stay, so the default can be kept */}
+          {(unsaved || profile.avatar === null) && (
+            <div className="p-save">
+              {unsaved && <span className="p-unsaved">{t('profile.avatarUnsaved')}</span>}
+              {unsaved && (
+                <button type="button" onClick={() => setAvatar(savedAvatar)}>
+                  {t('profile.avatarCancel')}
+                </button>
+              )}
+              <button type="button" className="primary" onClick={() => update({ avatar })}>
+                {t('profile.avatarSave')}
+              </button>
+            </div>
+          )}
         </Section>
 
         <Section title={t('profile.me')}>
