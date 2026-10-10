@@ -56,11 +56,11 @@
   .ap-body { min-height: 0; }
 }
 
-/* Smaller chips inside a tab (top / bottom / shoes…); a dot marks a group with something in it */
+/* Smaller chips inside a tab (top / bottom / shoes…); a dot before the name marks a group with something in it */
 .ap-groups { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -4px; }
-.ap-groups button { position: relative; padding: 5px 12px; font-size: 12px; font-weight: 400; color: var(--muted); }
+.ap-groups button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; font-size: 12px; font-weight: 400; color: var(--muted); }
 .ap-groups button[aria-selected='true'] { border-color: var(--text); color: var(--text); font-weight: 600; }
-.ap-dot { position: absolute; top: 3px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.ap-dot { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
 @media (hover: hover) {
   .ap-groups button:hover { background: var(--subtle); }
 }

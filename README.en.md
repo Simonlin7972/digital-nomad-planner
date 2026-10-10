@@ -86,15 +86,15 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 
 - A built-in "How to use" guide in sections that open and close: gestures, where data lives, backup and transfer
 - Traditional Chinese, English and Japanese interface, chosen on the settings page (the landing and changelog pages can switch it from their headers too); defaults to the browser's language and remembers your choice
-- A compact toolbar: undo and redo are icons; export, import and Share live in the `⋯` menu, with "How to use", "About this app" (opens the landing page in a new tab) and "Report a problem" (a title, a description, up to 3 screenshots and an optional email, sent straight to the developer) below a divider
+- A compact toolbar: undo and redo are icons; export, import and Share live in the `⋯` menu, with "How to use", "About this app" (opens the landing page in a new tab) and "Report a problem or suggest" (a title, a description, up to 3 screenshots and an optional email, sent straight to the developer) below a divider
 - A footer at the bottom of the page: where the data lives, the licence, and links home and to the changelog
 - A changelog page (/changelog/): new features and changes in every release, newest day first, in the interface language (English when the interface is Japanese). It is built from `CHANGELOG.md` at the repository root, so updating that file and pushing publishes it
-- A settings page (/profile/, from the person icon at the right end of the toolbar; once a character is saved, the button shows its face):
-  - My character: a front-facing pixel paper doll. Pick one of 10 ready-made nomads (engineer, designer, surfer, backpacker…) or put one together from skin tone, hair, top, bottom and shoes, plus separate slots for the head, face, neck, back, each hand and each side (hats, glasses, bags, a guitar, coffee, a suitcase, a surfboard, a cat or dog…); or roll a random one. Pointing at a choice previews it; this one is saved with its own Save button, and leaving without saving drops the changes. Once saved, it appears on the toolbar's settings button and on the shared image
+- A Profile & settings page (/profile/, from the person icon at the right end of the toolbar; once a character is saved, the button shows its face):
+  - My character: a front-facing pixel paper doll. Pick one of 10 ready-made nomads (engineer, designer, surfer, backpacker…) or put one together from skin tone, hair, top, bottom and shoes, plus separate slots for the head, eyes, mouth and cheeks, neck, back, each hand and each side (hats, a conical hat, bunny ears, glasses, an eye patch, a beard, a face mask, a scarf, a neck pillow, bags, a guitar, a skateboard, a cape, bubble tea, an umbrella, a suitcase, a surfboard, a tent, a cat, dog or rabbit…); or roll a random one. Pointing at a choice previews it; this one is saved with its own Save button, and leaving without saving drops the changes. Once saved, it appears on the toolbar's settings button and on the shared image
   - About me: a nickname (shown on the shared image), home (the flight estimate adds the trips from and back home), passport (an EU, EEA or Swiss passport hides the Schengen 90/180 count) and tax residence (the country whose 183 days are counted; Taiwan by default, empty to hide)
   - Display: language, public holiday switches, temperature unit (°C / °F)
   - Data: how long before the backup reminder (3 / 7 / 14 days, or off)
-  - About: the last update date and links home, to the changelog and to GitHub
+  - About: the last update date and links home and to the changelog
   - Everything but the character saves at once; it all stays in this browser and is not part of exports
 - Undo and redo, up to 100 steps
 - JSON export and import: one file holds every year; file names carry the export date (e.g. `nomad-plan_2026-10-06.json`). On a computer you can also drop the file onto the page to import it
@@ -200,7 +200,7 @@ The page talks to these outside services:
 | [emfont](https://font.emtech.cc/) | Font file requests | The interface typeface |
 | [Google Fonts](https://fonts.google.com/) | Font file requests | The pixel typefaces of the tagline under the title (English, Japanese); the Chinese one ships with the site, no extra request |
 | [Google Maps](https://www.google.com/maps) | When you tap the map pin on a phone card, that stay's "city, country" | Opens the place in Google Maps; nothing is sent unless you tap |
-| [FormSubmit](https://formsubmit.co/) | Only when you send "Report a problem": the title, description and screenshots you add (scaled down to JPEG), the optional email, and the page, language, year, window size and browser | Delivers the report to the developer's inbox; **nothing from your plan is sent** |
+| [FormSubmit](https://formsubmit.co/) | Only when you send "Report a problem or suggest": the title, description and screenshots you add (scaled down to JPEG), the optional email, and the page, language, year, window size and browser | Delivers the report to the developer's inbox; **nothing from your plan is sent** |
 | [Google Analytics](https://analytics.google.com/) (GA4) | Anonymous usage such as page views, scrolling and outbound clicks; events for actions such as opening the planner, adding a stay, exporting, importing and sharing, carrying only interface choices and bucketed counts (e.g. "2–5 stays"); plus browser, device and rough location; sets a `_ga` cookie | Traffic and feature-use figures; the event list is in [ANALYTICS.md](ANALYTICS.md). Loaded on the live site only, not under `npm run dev`; **nothing from your plan is sent** |
 
 Flight details such as booking references are stored in `localStorage` and are written into exported JSON. Keep that in mind before sharing an export.
@@ -316,7 +316,7 @@ src/
     SeasonStrip         The twelve-month season strip in the editor
     ShareDialog         Share: landscape / portrait PNG preview, download, system share sheet
     TransferDialog      Send to another device: link, QR code, flight-details switch
-    ReportDialog        Report a problem: title, description, screenshots, contact email
+    ReportDialog        Report a problem or suggest: title, description, screenshots, contact email
     QrCode              The QR card: square modules, rounded finder eyes, the pixel mascot on its top edge
     MobileItinerary     The read-only phone itinerary (now / next, stay cards)
     HoverCards          Floating cards for stays, tickets and holidays
@@ -325,7 +325,7 @@ src/
     MapView             Map (lazy-loaded)
     Flag                Country flag
     PixelNomad          The pixel-art animation in the header (someone on a laptop under a palm tree)
-    Avatar              The paper-doll character (SVG, blinks; the large one on the settings page also bobs, with its cat or dog moving)
+    Avatar              The paper-doll character (SVG, blinks; the large one on the settings page also bobs, with its pets moving)
     Tagline             The typewriter tagline under the title
     Dialog.css          Shell shared by the editor and help dialogs
   hooks/

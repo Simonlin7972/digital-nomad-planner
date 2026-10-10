@@ -1,4 +1,6 @@
-.combo { display: flex; flex-direction: column; gap: 6px; }
+.combo { position: relative; display: flex; flex-direction: column; gap: 6px; }
+/* In a country + city pair the list anchors to the pair instead, so it spans both columns */
+.dates.place .combo { position: static; }
 /* Icon at the start of the field (globe, the chosen country's flag, or a pin); the input makes room for it.
    Only the input's box is positioned, so the list below still spans both place columns. */
 .combo-input { position: relative; display: flex; flex-direction: column; }

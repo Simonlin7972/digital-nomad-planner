@@ -7,11 +7,12 @@ import {
   BOTTOMS,
   CLOTH,
   COLOURED,
-  FACES,
+  EYES,
   HAIRS,
   HAIR_COLOURS,
   HANDS,
   HEADS,
+  LOWERS,
   NECKS,
   PRESETS,
   SHOES,
@@ -30,6 +31,9 @@ type Crop = readonly [number, number, number];
 // Close-ups of the 32×32 canvas, [x, y, size], so each choice shows the part it changes.
 const HEAD: Crop = [8, 2, 16];
 const BODY: Crop = [8, 12, 16];
+const CHEST: Crop = [8, 6, 16];
+// Wide enough for both hands and an umbrella held up over the head.
+const HANDS_VIEW: Crop = [6, 1, 24];
 const LEGS: Crop = [8, 17, 16];
 const FULL: Crop = [0, 0, 32];
 // The side close-ups reach 2 pixels past the canvas edge, so the thing there isn't flush with the tile.
@@ -48,17 +52,17 @@ function usePreview(next: AvatarData) {
 }
 
 type Tab = 'presets' | 'skin' | 'hair' | 'clothes' | 'extras' | 'carry';
-type Group = 'top' | 'bottom' | 'shoes' | 'head' | 'face' | 'neck' | 'back' | 'handL' | 'handR' | 'sideL' | 'sideR';
+type Group = 'top' | 'bottom' | 'shoes' | 'head' | 'eyes' | 'lower' | 'neck' | 'back' | 'handL' | 'handR' | 'sideL' | 'sideR';
 const TABS: { id: Tab; label: Key; groups?: Group[] }[] = [
   { id: 'presets', label: 'avatar.presets' },
   { id: 'skin', label: 'avatar.skin' },
   { id: 'hair', label: 'avatar.hair' },
   { id: 'clothes', label: 'avatar.tab.clothes', groups: ['top', 'bottom', 'shoes'] },
-  { id: 'extras', label: 'avatar.tab.extras', groups: ['head', 'face', 'neck'] },
+  { id: 'extras', label: 'avatar.tab.extras', groups: ['head', 'eyes', 'lower', 'neck'] },
   { id: 'carry', label: 'avatar.tab.carry', groups: ['back', 'handL', 'handR', 'sideL', 'sideR'] },
 ];
 // Groups that hold something optional, marked with a dot on their chip once something is in them.
-const OPTIONAL: Group[] = ['head', 'face', 'neck', 'back', 'handL', 'handR', 'sideL', 'sideR'];
+const OPTIONAL: Group[] = ['head', 'eyes', 'lower', 'neck', 'back', 'handL', 'handR', 'sideL', 'sideR'];
 
 // The paper doll on the profile page: the figure large on the left, and on the right one tab per part, some split
 // into smaller groups. Every choice is a small picture of the figure wearing it. Picks go to onChange; saving is up
@@ -95,8 +99,12 @@ export function AvatarPicker({ value, onChange }: { value: AvatarData; onChange:
   const colours = <K extends keyof AvatarData>(key: K, list: readonly string[]) => (
     <Swatches colours={list} value={value[key] as number} apply={(i) => ({ ...value, [key]: i })} onChange={onChange} />
   );
-  const hand = (side: 'handL' | 'handR') =>
-    tiles(HANDS, (a, o) => withHand(a, side, o), (o) => value[side] === o, BODY, (o) => t(`avatar.hand.${o}` as Key));
+  const hand = (side: 'handL' | 'handR') => (
+    <>
+      {tiles(HANDS, (a, o) => withHand(a, side, o), (o) => value[side] === o, HANDS_VIEW, (o) => t(`avatar.hand.${o}` as Key))}
+      {COLOURED.hand.includes(value[side]) && colours(side === 'handL' ? 'handLColour' : 'handRColour', CLOTH)}
+    </>
+  );
   const side = (key: 'sideL' | 'sideR') => (
     <>
       {field(key, SIDES, key === 'sideL' ? LEFT : RIGHT, 'side')}
@@ -129,8 +137,24 @@ export function AvatarPicker({ value, onChange }: { value: AvatarData; onChange:
         {COLOURED.head.includes(value.head) && colours('headColour', CLOTH)}
       </>
     ),
-    face: () => field('face', FACES, HEAD),
-    neck: () => field('neck', NECKS, BODY),
+    eyes: () => (
+      <>
+        {field('eyes', EYES, HEAD)}
+        {COLOURED.eyes.includes(value.eyes) && colours('eyesColour', CLOTH)}
+      </>
+    ),
+    lower: () => (
+      <>
+        {field('lower', LOWERS, HEAD)}
+        {COLOURED.lower.includes(value.lower) && colours('lowerColour', CLOTH)}
+      </>
+    ),
+    neck: () => (
+      <>
+        {field('neck', NECKS, CHEST)}
+        {COLOURED.neck.includes(value.neck) && colours('neckColour', CLOTH)}
+      </>
+    ),
     back: () => (
       <>
         {field('back', BACKS, FULL)}
@@ -185,8 +209,8 @@ export function AvatarPicker({ value, onChange }: { value: AvatarData; onChange:
                       setTrying(null);
                     }}
                   >
-                    {t(`avatar.${g}` as Key)}
                     {OPTIONAL.includes(g) && value[g as keyof AvatarData] !== 'none' && <span className="ap-dot" aria-hidden />}
+                    {t(`avatar.${g}` as Key)}
                   </button>
                 ))}
               </div>

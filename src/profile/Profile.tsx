@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft';
 import { CheckCircle } from '@phosphor-icons/react/dist/csr/CheckCircle';
-import { GithubLogo } from '@phosphor-icons/react/dist/csr/GithubLogo';
 import { House } from '@phosphor-icons/react/dist/csr/House';
 import { Megaphone } from '@phosphor-icons/react/dist/csr/Megaphone';
 import { CityCombobox, CountryCombobox } from '../components/Combobox';
@@ -11,7 +10,7 @@ import { CHANGELOG } from '../lib/changelog';
 import { normalizeCity } from '../lib/cities';
 import { normalizeCountry } from '../lib/flags';
 import { LOCALES, LOCALE_NAMES, langTag, setLocale, t, useLocale } from '../lib/i18n';
-import { APP_URL, CHANGELOG_URL, HOME_URL, REPO_URL } from '../lib/links';
+import { APP_URL, CHANGELOG_URL, HOME_URL } from '../lib/links';
 import { loadHolidayToggles, saveHolidayToggles, type HolidayToggles } from '../lib/prefs';
 import { BACKUP_DAYS, getProfile, saveProfile, type Profile as ProfileData } from '../lib/profile';
 import { DEFAULT_AVATAR, sameAvatar } from '../lib/avatar';
@@ -72,7 +71,7 @@ export function Profile() {
   return (
     <div className="profile">
       <header className="p-nav">
-        <a className="p-brand" href={HOME_URL}>
+        <a className="p-brand" href={APP_URL}>
           <PixelNomad />
           <span>{t('app.title')}</span>
         </a>
@@ -88,10 +87,8 @@ export function Profile() {
             <CheckCircle size={14} weight="bold" /> {t('profile.saved')}
           </span>
         </div>
-        <p className="p-lead">{t('profile.lead')}</p>
 
         <Section title={t('profile.avatar')}>
-          <p className="p-note">{t('profile.avatarHint')}</p>
           <AvatarPicker value={avatar} onChange={setAvatar} />
           <div className={`p-save${unsaved ? ' on' : ''}`}>
             {unsaved && <span className="p-unsaved">{t('profile.avatarUnsaved')}</span>}
@@ -139,7 +136,7 @@ export function Profile() {
               }}
             />
           </Row>
-          <Row label={t('profile.holidays')} hint={t('profile.holidaysHint')}>
+          <Row label={t('profile.holidays')}>
             <div className="p-toggles">
               {(['tw', 'au'] as const).map((key) => (
                 <button key={key} type="button" role="switch" aria-checked={holidays[key]} className="toggle" style={{ '--c': 'var(--text)' } as CSSProperties} onClick={() => toggleHoliday(key)}>
@@ -162,14 +159,13 @@ export function Profile() {
         </Section>
 
         <Section title={t('profile.data')}>
-          <Row label={t('profile.backup')} hint={t('profile.backupHint')}>
+          <Row label={t('profile.backup')}>
             <Options
               value={profile.backupDays}
               options={BACKUP_DAYS.map((d) => ({ value: d, label: d ? t('profile.backupDays', { n: d }) : t('profile.backupOff') }))}
               onChange={(backupDays) => update({ backupDays })}
             />
           </Row>
-          <p className="p-note">{t('footer.local')}</p>
         </Section>
 
         <Section title={t('profile.about')}>
@@ -181,9 +177,6 @@ export function Profile() {
             </a>
             <a href={CHANGELOG_URL}>
               <Megaphone size={16} weight="bold" /> {t('changelog.title')}
-            </a>
-            <a href={REPO_URL} target="_blank" rel="noreferrer">
-              <GithubLogo size={16} weight="bold" /> {t('landing.nav.github')}
             </a>
           </nav>
           <p className="p-note">{t('landing.footer')}</p>
@@ -202,13 +195,12 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-// One setting: its name on the left (with an explanation under it), the control on the right.
-function Row({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+// One setting: its name on the left, the control on the right.
+function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="p-row">
       <div className="p-label">
         <span>{label}</span>
-        {hint && <small>{hint}</small>}
       </div>
       <div className="p-control">{children}</div>
     </div>

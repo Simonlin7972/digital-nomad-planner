@@ -12,7 +12,7 @@ import './ReportDialog.css';
 
 type Shot = { file: File; url: string };
 
-// Report a problem: a title, what happened, up to three screenshots and, if they like, an address to reply to.
+// Report a problem or suggest something: a title, what happened, up to three screenshots and, if they like, an address to reply to.
 // Sent by e-mail (see lib/report.ts); nothing from the plan is included.
 export function ReportDialog({ onClose }: { onClose: () => void }) {
   useLocale();

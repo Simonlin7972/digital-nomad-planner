@@ -55,19 +55,21 @@ export const HAIRS = ['short', 'buzz', 'long', 'bun', 'pony', 'curly', 'bob', 'p
 export const TOPS = ['tee', 'hoodie', 'aloha', 'tank', 'blazer'] as const;
 export const BOTTOMS = ['pants', 'shorts', 'skirt'] as const;
 export const SHOES = ['sneakers', 'sandals', 'boots'] as const;
-export const HEADS = ['none', 'cap', 'beanie'] as const;
-export const FACES = ['none', 'glasses'] as const;
-export const NECKS = ['none', 'headphones', 'camera'] as const;
-export const BACKS = ['none', 'backpack', 'hiking', 'guitar'] as const;
-export const HANDS = ['none', 'coffee', 'phone', 'passport', 'laptop'] as const;
-export const SIDES = ['none', 'suitcase', 'surfboard', 'yogamat', 'plant', 'cat', 'dog'] as const;
+export const HEADS = ['none', 'cap', 'beanie', 'bucket', 'straw', 'conical', 'cowboy', 'bandana', 'headband', 'flowers', 'bunny'] as const;
+export const EYES = ['none', 'glasses', 'eyepatch', 'sunglasses', 'hearts', 'sleepmask'] as const;
+export const LOWERS = ['none', 'moustache', 'beard', 'mask', 'freckles', 'blush'] as const;
+export const NECKS = ['none', 'headphones', 'camera', 'scarf', 'pillow', 'necklace', 'lei', 'tie', 'bowtie', 'badge', 'lanyard'] as const;
+export const BACKS = ['none', 'backpack', 'hiking', 'messenger', 'guitar', 'ukulele', 'skateboard', 'tripod', 'cape', 'wings'] as const;
+export const HANDS = ['none', 'coffee', 'bubbletea', 'coconut', 'icecream', 'phone', 'passport', 'book', 'umbrella', 'laptop'] as const;
+export const SIDES = ['none', 'suitcase', 'surfboard', 'yogamat', 'tent', 'plant', 'cactus', 'cat', 'dog', 'rabbit'] as const;
 
 export type Hair = (typeof HAIRS)[number];
 export type Top = (typeof TOPS)[number];
 export type Bottom = (typeof BOTTOMS)[number];
 export type Shoes = (typeof SHOES)[number];
 export type Head = (typeof HEADS)[number];
-export type Face = (typeof FACES)[number];
+export type Eyes = (typeof EYES)[number];
+export type Lower = (typeof LOWERS)[number];
 export type Neck = (typeof NECKS)[number];
 export type Back = (typeof BACKS)[number];
 export type Hand = (typeof HANDS)[number];
@@ -120,23 +122,55 @@ const HEAD_SHAPES: Record<Head, Layer | null> = {
   none: null,
   cap: at(1, ['.....XXX', '....XXXX', '...XXXXX', '..xxxxxx']),
   beanie: at(0, ['.......X', '....XXXX', '...XXXXX', '...xxxxx']),
+  bucket: at(1, ['.....XXX', '....XXXX', '...XXXXX', '..xxxxxx', '..x.....']),
+  straw: at(1, ['.....ZZZ', '....ZZZZ', '....DDDD', '.zZZZZZZ']),
+  conical: at(-1, ['.......Z', '......ZZ', '.....ZZZ', '....ZZZZ', '...ZZZZZ', '.zzzzzzz']),
+  cowboy: at(0, ['.....XXX', '....XXXX', '.x..xxxx', '.xxxxxxx']),
+  bandana: at(1, ['.....XXX', '....XWXX', '...XXXXX', '...x....']),
+  headband: at(3, ['...XXXXX']),
+  flowers: at(2, ['...FqfqF']),
+  bunny: at(-3, ['....XX..', '....iX..', '....iX..', '....iX..', '....XX..', '...XXXXX']),
 };
+// These sit on the hair instead of covering the top of the head.
+const OVER_HAIR: readonly Head[] = ['headband', 'flowers', 'bunny'];
 // A hat covers the top of the head: hair above this figure row is not drawn under it.
 const HAT_LINE = 4;
 
-const FACE_SHAPES: Record<Face, Layer | null> = {
+const EYES_SHAPES: Record<Eyes, Layer | null> = {
   none: null,
   glasses: at(5, ['....GGG.', '...GgEgG', '....GGG.']),
+  // Lopsided: the patch over the eye on the right of the picture, its strap across the brow to the other ear.
+  eyepatch: at(5, ['....DD...DDD....', '...D.....DDD....', '..........D.....']),
+  sunglasses: at(6, ['...GDDGG', '....DD..']),
+  hearts: at(5, ['....I.I.', '....IIII', '.....I..']),
+  sleepmask: at(4, ['...xXXXX', '....XXX.']),
+};
+const LOWER_SHAPES: Record<Lower, Layer | null> = {
+  none: null,
+  moustache: at(7, ['.....hhh']),
+  beard: at(7, ['...H....', '...HHHH.', '....HHHH', '......HH']),
+  mask: at(7, ['...xXXXX', '....XXXX', '.....XXX']),
+  freckles: at(7, ['...d.d..', '....d...']),
+  blush: at(7, ['....rr..']),
 };
 
 const NECK_SHAPES: Record<Neck, Layer | null> = {
   none: null,
   headphones: at(0, ['.....DDD', '....D...', '...D....', '...D....', '...D....', '..DD....', '..DD....']),
   camera: at(11, ['...D....', '....D...', '.....D..', '.....DDD', '.....DDA', '......DD']),
+  scarf: at(10, ['.....XXX', '...XXXXX', '......xX', '......x.']),
+  pillow: at(9, ['...XX...', '...XXXX.', '....xXXX']),
+  necklace: at(11, ['......Y.', '.......Y']),
+  lei: at(10, ['....FfqF', '.....qFf', '......fF']),
+  tie: at(10, ['.......x', '.......X', '.......X', '.......X', '.......X', '.......x']),
+  bowtie: at(10, ['.....XXx']),
+  badge: at(10, ['.....D..', '.....D..', '......D.', '......DD', '.....WWW', '.....WBB', '.....WWW']),
+  lanyard: at(11, ['....X...........', '.....X..........', '......X.........', '.......X........', '........XDD.....', '.........DB.....', '..........DD....']),
 };
 
-// Bags in two layers: the bag behind the body, and the straps over the clothes.
-const BACK_SHAPES: Record<Back, { behind: Layer; front: Layer } | null> = {
+// Things on the back in two layers: what is behind the body, and the straps (or ties) over the clothes.
+const STRAP = at(11, ['...........D....', '.........DD.....', '........D.......', '......DD........', '.....D..........', '....D...........']);
+const BACK_SHAPES: Record<Back, { behind?: Layer; front?: Layer } | null> = {
   none: null,
   backpack: {
     behind: at(10, ['.XXX....', 'xX......', 'xX......', 'xX......', 'xX......', 'xX......', 'xX......']),
@@ -165,7 +199,87 @@ const BACK_SHAPES: Record<Back, { behind: Layer; front: Layer } | null> = {
       '....................wwwwwv......',
       '.....................wwwv.......',
     ]),
-    front: at(11, ['...........D....', '.........DD.....', '........D.......', '......DD........', '.....D..........', '....D...........']),
+    front: STRAP,
+  },
+  // A bag worn across the body: the strap from the right shoulder, the bag at the left hip.
+  messenger: {
+    front: at(11, ['...........x....', '..........x.....', '.........x......', '........x.......', '.......x........', '..xxxxx.........', '..XXXXX.........', '..XXXXX.........', '..xxxxx.........']),
+  },
+  ukulele: {
+    behind: at(4, [
+      '......................D.........',
+      '......................D.........',
+      '......................n.........',
+      '......................n.........',
+      '......................n.........',
+      '......................n.........',
+      '......................n.........',
+      '......................n.........',
+      '......................n.........',
+      '......................n.........',
+      '.....................ww.........',
+      '....................wwww........',
+      '....................wDww........',
+      '....................wwww........',
+      '.....................ww.........',
+      '....................wwwv........',
+    ]),
+    front: STRAP,
+  },
+  skateboard: {
+    behind: at(-1, [
+      '.....................Xx.........',
+      '....................DXxD........',
+      '....................DXxD........',
+      '.....................Xx.........',
+      '.....................Xx.........',
+      '.....................Xx.........',
+      '.....................Xx.........',
+      '.....................Xx.........',
+      '.....................Xx.........',
+      '.....................Xx.........',
+      '.....................Xx.........',
+      '.....................Xx.........',
+      '.....................Xx.........',
+      '.....................Xx.........',
+      '.....................Xx.........',
+      '.....................Xx.........',
+      '.....................Xx.........',
+      '....................DXxD........',
+      '....................DXxD........',
+      '.....................Xx.........',
+    ]),
+    front: at(11, ['.....D..', '.....D..', '.....D..', '.....D..', '.....D..']),
+  },
+  tripod: {
+    behind: at(-3, [
+      '........DDDD....................',
+      '.........DL.....................',
+      '.........DL.....................',
+      '.........DL.....................',
+      '.........DL.....................',
+      '.........DL.....................',
+      '.........DL.....................',
+      '.........DL.....................',
+      '.........DL.....................',
+      '.........DL.....................',
+      '.........DL.....................',
+      '.........DL.....................',
+      '.........DL.....................',
+      '.........DL.....................',
+      '.........DL.....................',
+      '.........DL.....................',
+      '.........DL.....................',
+      '.........DL.....................',
+    ]),
+    front: at(11, STRAP.rows.map((r) => [...r].reverse().join(''))),
+  },
+  cape: {
+    behind: at(11, ['..XXXXXX', '.XXXXXXX', '.XXXXXXX', 'xXXXXXXX', 'xXXXXXXX', 'xXXXXXXX', 'xXXXXXXX', 'xXXXXXXX', 'xxXXXXXX', '.xxXXXXX']),
+    front: at(10, ['......xx']),
+  },
+  wings: {
+    behind: at(7, ['.y......', 'yWy.....', 'yWWy....', 'yWWWy...', '.yWWW...', '..yWW...', '...yW...', '....y...']),
   },
 };
 
@@ -175,11 +289,38 @@ const HAND_SHAPES: Record<Hand, Layer | null> = {
   coffee: at(14, ['..............A.', '............AAAA', '............UUUU', '............AAAU', '............UUUU']),
   phone: at(15, ['............DD..', '............DB..', '............DD..']),
   passport: at(15, ['............VV..', '............VY..', '............VV..']),
+  bubbletea: at(12, ['.............D..', '.............D..', '............WWWW', '............QQQQ', '............QQQQ', '............EQEQ', '............QEQE']),
+  coconut: at(13, ['.............i..', '............qqi.', '...........qqqqq', '...........qqqqq', '............qqq.']),
+  icecream: at(12, ['.............FF.', '............FFFF', '............FFFF', '.............zz.', '.............zz.', '..............z.']),
+  book: at(14, ['............XXX.', '............XWX.', '............XWX.', '............XXX.']),
+  umbrella: at(-3, [
+    '...........XX...',
+    '.........XXXXXX.',
+    '........XXXXXXXX',
+    '........x.x.x.x.',
+    '.............D..',
+    '.............D..',
+    '.............D..',
+    '.............D..',
+    '.............D..',
+    '.............D..',
+    '.............D..',
+    '.............D..',
+    '.............D..',
+    '.............D..',
+    '.............D..',
+    '.............D..',
+    '.............D..',
+    '.............D..',
+    '.............D..',
+    '.............D..',
+    '............DD..',
+  ]),
   laptop: at(14, ['...LLLLL', '...LLLLW', '..SLLLLL']), // both hands
 };
 
 // Things standing beside the figure, drawn on the left; bottom row on the floor. Animals have a second frame (`b`):
-// the cat flicks its tail, the dog pricks its ears and pants.
+// the cat flicks its tail, the dog pricks its ears and pants, the rabbit twitches its ears.
 type SideShape = { a: string[]; b?: string[] };
 const SIDE_SHAPES: Record<Side, SideShape | null> = {
   none: null,
@@ -195,13 +336,23 @@ const SIDE_SHAPES: Record<Side, SideShape | null> = {
     a: ['bb....bb', 'bbBBBBbb', '.BEBBEB.', '..BBBB..', '..BEEB..', '.BBBBBB.', '.BWWWWB.', '.BBBBBB.', '.BB..BB.'],
     b: ['.b....b.', 'bbBBBBbb', '.BEBBEB.', '..BBBB..', '..BEEB..', '.BBiiBB.', '.BWWWWB.', '.BBBBBB.', '.BB..BB.'],
   },
+  tent: { a: ['...XX...', '..XXXX..', '..XXXX..', '.XXDDXX.', '.XXDDXX.', 'XXXDDXXX', 'XXXDDXXX', 'xxxxxxxx'] },
+  cactus: { a: ['...q....', '.q.q....', '.qqq.q..', '...qqq..', '...q....', '..TTTT..', '..tTTT..', '...TT...'] },
+  rabbit: {
+    a: ['..u..u..', '..ui.iu.', '..uuuu..', '.uEuuEu.', '..uiiu..', '..uuuu..', '.uuuuuuW', '.uu..uu.'],
+    b: ['.u....u.', '..ui.iu.', '..uuuu..', '.uEuuEu.', '..uiiu..', '..uuuu..', '.uuuuuuW', '.uu..uu.'],
+  },
 };
 
 // Which choices take a colour from the cloth palette; the rest have fixed colours.
 export const COLOURED = {
-  head: ['cap', 'beanie'] as readonly Head[],
-  back: ['backpack', 'hiking'] as readonly Back[],
-  side: ['suitcase', 'surfboard', 'yogamat'] as readonly Side[],
+  head: ['cap', 'beanie', 'bucket', 'cowboy', 'bandana', 'headband', 'bunny'] as readonly Head[],
+  eyes: ['sleepmask'] as readonly Eyes[],
+  lower: ['mask'] as readonly Lower[],
+  neck: ['scarf', 'pillow', 'tie', 'bowtie', 'lanyard'] as readonly Neck[],
+  back: ['backpack', 'hiking', 'messenger', 'skateboard', 'cape'] as readonly Back[],
+  hand: ['book', 'umbrella'] as readonly Hand[],
+  side: ['suitcase', 'surfboard', 'yogamat', 'tent'] as readonly Side[],
 };
 
 // [colour, shade] pairs. Six skin tones, then four for fun (green, blue, lavender, zombie grey).
@@ -267,9 +418,20 @@ const FIXED: Record<string, string> = {
   t: '#a85a38', // pot shade
   O: '#f0a050', // cat
   o: '#d4823a', // cat shade
-  i: '#f08aa6', // cat's nose
+  i: '#f08aa6', // cat's nose, ears' insides
+  Z: '#e8c872', // straw
+  z: '#c9a650', // straw shade
+  F: '#ff7aa8', // flowers
+  f: '#ffd166', // flowers
+  q: '#4caf6a', // flowers' leaves
+  I: '#ff5a8a', // heart sunglasses
+  d: '#9a5a36', // freckles
+  r: '#f4a3a3', // blush
   l: '#2f7a4a', // leaf shade
   b: '#6e4a26', // dog's ears
+  Q: '#c99a6a', // milk tea
+  u: '#bba58c', // rabbit
+  y: '#b9bec6', // wing edges
 };
 // Beside the figure, L and B mean leaves and the dog instead of the laptop and the phone screen.
 const LEAF = '#3f9b62';
@@ -287,12 +449,18 @@ export type Avatar = {
   shoesColour: number;
   head: Head;
   headColour: number;
-  face: Face;
+  eyes: Eyes;
+  eyesColour: number;
+  lower: Lower;
+  lowerColour: number;
   neck: Neck;
+  neckColour: number;
   back: Back;
   backColour: number;
   handL: Hand;
+  handLColour: number;
   handR: Hand;
+  handRColour: number;
   sideL: Side;
   sideLColour: number;
   sideR: Side;
@@ -301,19 +469,19 @@ export type Avatar = {
 
 const BASE: Avatar = {
   skin: 1, hair: 'short', hairColour: 0, top: 'tee', topColour: 5, bottom: 'pants', bottomColour: 14,
-  shoes: 'sneakers', shoesColour: 15, head: 'none', headColour: 0, face: 'none', neck: 'none',
-  back: 'none', backColour: 0, handL: 'none', handR: 'none', sideL: 'none', sideLColour: 0, sideR: 'none', sideRColour: 0,
+  shoes: 'sneakers', shoesColour: 15, head: 'none', headColour: 0, eyes: 'none', eyesColour: 0, lower: 'none', lowerColour: 12, neck: 'none', neckColour: 0,
+  back: 'none', backColour: 0, handL: 'none', handLColour: 0, handR: 'none', handRColour: 0, sideL: 'none', sideLColour: 0, sideR: 'none', sideRColour: 0,
 };
 const av = (a: Partial<Avatar>): Avatar => ({ ...BASE, ...a });
 
 // Ready-made nomads; their names are `avatar.preset.<id>` in the dictionaries.
 export const PRESETS = [
-  { id: 'engineer', avatar: av({ hair: 'short', top: 'hoodie', topColour: 3, bottomColour: 7, face: 'glasses', back: 'backpack', backColour: 0, handL: 'laptop', handR: 'laptop' }) },
+  { id: 'engineer', avatar: av({ hair: 'short', top: 'hoodie', topColour: 3, bottomColour: 7, eyes: 'glasses', back: 'backpack', backColour: 0, handL: 'laptop', handR: 'laptop' }) },
   { id: 'designer', avatar: av({ skin: 0, hair: 'bun', hairColour: 3, top: 'blazer', topColour: 15, bottom: 'skirt', bottomColour: 15, shoes: 'boots', handR: 'coffee', sideL: 'plant' }) },
   { id: 'creator', avatar: av({ skin: 2, hair: 'long', hairColour: 1, top: 'tee', topColour: 1, bottom: 'shorts', bottomColour: 6, shoesColour: 5, neck: 'camera' }) },
   { id: 'surfer', avatar: av({ skin: 2, hair: 'curly', hairColour: 2, top: 'aloha', topColour: 2, bottom: 'shorts', bottomColour: 11, shoes: 'sandals', shoesColour: 2, sideR: 'surfboard', sideRColour: 1 }) },
   { id: 'backpacker', avatar: av({ skin: 3, hair: 'pony', top: 'tank', topColour: 4, bottomColour: 10, shoes: 'boots', shoesColour: 14, head: 'cap', headColour: 0, back: 'hiking', backColour: 7, sideL: 'dog' }) },
-  { id: 'silver', avatar: av({ skin: 0, hair: 'short', hairColour: 4, top: 'tee', topColour: 6, bottomColour: 10, shoesColour: 7, face: 'glasses', handL: 'passport', sideR: 'suitcase', sideRColour: 0 }) },
+  { id: 'silver', avatar: av({ skin: 0, hair: 'short', hairColour: 4, top: 'tee', topColour: 6, bottomColour: 10, shoesColour: 7, eyes: 'glasses', handL: 'passport', sideR: 'suitcase', sideRColour: 0 }) },
   { id: 'yogi', avatar: av({ skin: 2, hair: 'bun', top: 'tank', topColour: 8, bottomColour: 9, shoes: 'sandals', shoesColour: 9, sideL: 'plant', sideR: 'yogamat', sideRColour: 2 }) },
   { id: 'manager', avatar: av({ hair: 'short', hairColour: 1, top: 'blazer', topColour: 7, bottomColour: 13, neck: 'headphones', handL: 'laptop', handR: 'laptop' }) },
   { id: 'gapyear', avatar: av({ skin: 0, hair: 'long', hairColour: 2, top: 'hoodie', topColour: 0, bottom: 'shorts', bottomColour: 6, shoesColour: 5, head: 'beanie', headColour: 1, back: 'guitar', sideL: 'cat' }) },
@@ -350,12 +518,18 @@ export function randomAvatar(): Avatar {
     shoesColour: index(CLOTH),
     head: maybe(HEADS),
     headColour: index(CLOTH),
-    face: maybe(FACES),
+    eyes: maybe(EYES),
+    eyesColour: index(CLOTH),
+    lower: maybe(LOWERS),
+    lowerColour: index(CLOTH),
     neck: maybe(NECKS),
+    neckColour: index(CLOTH),
     back: maybe(BACKS),
     backColour: index(CLOTH),
     handL: 'none',
+    handLColour: index(CLOTH),
     handR: 'none',
+    handRColour: index(CLOTH),
     sideL: maybe(SIDES),
     sideLColour: index(CLOTH),
     sideR: maybe(SIDES),
@@ -385,12 +559,18 @@ export function sanitizeAvatar(raw: unknown): Avatar {
     shoesColour: num(CLOTH, 'shoesColour'),
     head: of(HEADS, 'head'),
     headColour: num(CLOTH, 'headColour'),
-    face: of(FACES, 'face'),
+    eyes: of(EYES, 'eyes'),
+    eyesColour: num(CLOTH, 'eyesColour'),
+    lower: of(LOWERS, 'lower'),
+    lowerColour: num(CLOTH, 'lowerColour'),
     neck: of(NECKS, 'neck'),
+    neckColour: num(CLOTH, 'neckColour'),
     back: of(BACKS, 'back'),
     backColour: num(CLOTH, 'backColour'),
     handL: of(HANDS, 'handL'),
+    handLColour: num(CLOTH, 'handLColour'),
     handR: of(HANDS, 'handR'),
+    handRColour: num(CLOTH, 'handRColour'),
     sideL: of(SIDES, 'sideL'),
     sideLColour: num(CLOTH, 'sideLColour'),
     sideR: of(SIDES, 'sideR'),
@@ -477,14 +657,15 @@ export function compose(a: Avatar, { blink = false, dip = false, wag = false, on
     draw(SHOE_SHAPES[a.shoes], { ...base, ...own(a.shoesColour) }, { planted: true });
     draw(TOP_SHAPES[a.top]);
     draw(bag?.front, bagPal);
-    draw(hair.front, base, a.head === 'none' ? {} : { from: HAT_LINE });
+    draw(hair.front, base, a.head === 'none' || OVER_HAIR.includes(a.head) ? {} : { from: HAT_LINE });
+    draw(LOWER_SHAPES[a.lower], { ...base, ...own(a.lowerColour) });
     draw(HEAD_SHAPES[a.head], { ...base, ...own(a.headColour) });
-    draw(FACE_SHAPES[a.face]);
-    draw(NECK_SHAPES[a.neck]);
+    draw(EYES_SHAPES[a.eyes], { ...base, ...own(a.eyesColour) });
+    draw(NECK_SHAPES[a.neck], { ...base, ...own(a.neckColour) }); // headphones go over hats
     if (TWO_HANDED.includes(a.handR)) draw(HAND_SHAPES[a.handR]);
     else {
-      draw(HAND_SHAPES[a.handR]);
-      draw(HAND_SHAPES[a.handL], base, { flip: true });
+      draw(HAND_SHAPES[a.handR], { ...base, ...own(a.handRColour) });
+      draw(HAND_SHAPES[a.handL], { ...base, ...own(a.handLColour) }, { flip: true });
     }
   }
   if (only !== 'figure') {

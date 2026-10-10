@@ -60,8 +60,8 @@ function context(): string {
 
 export async function sendReport(report: Report): Promise<void> {
   const form = new FormData();
-  // The mail's subject: 問題回報：<the title they wrote>
-  form.append('_subject', `問題回報：${report.title}`);
+  // The mail's subject: 問題回報與建議：<the title they wrote>
+  form.append('_subject', `問題回報與建議：${report.title}`);
   form.append('_template', 'table');
   form.append('_captcha', 'false');
   form.append('title', report.title);
