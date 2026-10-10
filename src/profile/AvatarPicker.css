@@ -12,7 +12,11 @@
 @media (hover: none) {
   .ap-download { opacity: 1; }
 }
-.ap-random { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; font-size: 13px; }
+/* Under the figure, as wide as it: turn around (square) and random (the rest of the row) */
+.ap-actions { display: flex; gap: 8px; width: 192px; }
+.ap-turn { flex: none; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; }
+.ap-turn[aria-pressed='true'] { background: var(--text); border-color: var(--text); color: #fff; }
+.ap-random { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; font-size: 13px; }
 
 .ap-panel { min-width: 0; }
 
@@ -63,6 +67,7 @@
   .ap { grid-template-columns: 1fr; }
   .ap-stage .avatar { width: 128px; height: 128px; }
   .ap-figure { align-self: center; }
+  .ap-actions { width: 160px; }
   .ap-tiles { grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); }
   .ap-tiles .avatar { width: 56px; height: 56px; }
   .ap-body { min-height: 0; }

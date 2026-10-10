@@ -250,6 +250,13 @@ export function PixelGuide() {
   '....XX..',
   '...XXXXX',   ← 髮箍
 ])`}</pre>
+          <h3>背面</h3>
+          <p className="pg-muted">同一個角色轉過去：同樣的輪廓，沒有臉；頭髮蓋住後腦勺，背包、吉他、披風換到身體前面，左右身旁物件互換。眼鏡、鬍子、手上的東西從背面看不到。</p>
+          <div className="pg-tiles small">
+            {['engineer', 'backpacker', 'gapyear', 'creator', 'designer'].map((id) => (
+              <Tile key={id} label={`${id} · back`}><Avatar avatar={preset(id)} view="back" /></Tile>
+            ))}
+          </div>
           <h3>預設角色</h3>
           <p className="pg-muted">十種數位遊牧類型，用來示範各種組合，也是行銷素材的固定班底。</p>
           <div className="pg-tiles small">

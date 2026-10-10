@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from 'react';
 import type { PointerEvent, ReactNode } from 'react';
+import { ArrowsClockwise } from '@phosphor-icons/react/dist/csr/ArrowsClockwise';
 import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
 import { Shuffle } from '@phosphor-icons/react/dist/csr/Shuffle';
 import { Avatar } from '../components/Avatar';
@@ -75,6 +76,7 @@ export function AvatarPicker({ value, onChange, onDownload }: { value: AvatarDat
   const [tab, setTab] = useState<Tab>('presets');
   const [groups, setGroups] = useState<Partial<Record<Tab, Group>>>({});
   const [trying, setTrying] = useState<AvatarData | null>(null);
+  const [view, setView] = useState<'front' | 'back'>('front');
   const shown = trying ?? value;
   const preset = presetOf(value);
   const current = TABS.find((x) => x.id === tab)!;
@@ -181,16 +183,21 @@ export function AvatarPicker({ value, onChange, onDownload }: { value: AvatarDat
       <div className="ap">
         <div className="ap-stage">
           <div className="ap-figure">
-            <Avatar avatar={shown} animate label={preset ? t(`avatar.preset.${preset}` as Key) : t('profile.avatar')} />
+            <Avatar avatar={shown} animate view={view} label={preset ? t(`avatar.preset.${preset}` as Key) : t('profile.avatar')} />
             {onDownload && (
               <button type="button" className="ap-download" aria-label={t('avatar.download')} title={t('avatar.download')} onClick={onDownload}>
                 <DownloadSimple size={16} weight="bold" />
               </button>
             )}
           </div>
-          <button type="button" className="ap-random" onClick={() => onChange(randomAvatar())}>
-            <Shuffle size={14} weight="bold" /> {t('avatar.random')}
-          </button>
+          <div className="ap-actions">
+            <button type="button" className="ap-turn" aria-pressed={view === 'back'} aria-label={t('avatar.turn')} title={t('avatar.turn')} onClick={() => setView(view === 'front' ? 'back' : 'front')}>
+              <ArrowsClockwise size={16} weight="bold" />
+            </button>
+            <button type="button" className="ap-random" onClick={() => onChange(randomAvatar())}>
+              <Shuffle size={14} weight="bold" /> {t('avatar.random')}
+            </button>
+          </div>
         </div>
 
         <div className="ap-panel">

@@ -344,6 +344,95 @@ const SIDE_SHAPES: Record<Side, SideShape | null> = {
   },
 };
 
+// ---------------------------------------------------------------------------------------------------------------
+// Seen from behind. The same outline, no face; hair covers the back of the head; what was behind the body is now in
+// front of it. A slot with no back shape (eyes, the lower face, things in the hands) is simply not drawn. Left and
+// right swap: what stands at the figure's left is on the right of the picture.
+const BODY_BACK = at(3, [
+  '....SSSS', '....SSSS', '...SSSSS', '...SSSSS', '...SSSSS', '....SSSS', '.....SSS', '.......s',
+  '...SSSSS', '..SSSSSS', '..SSSSSS', '..SSSSSS', '..SSSSSS', '..SSSSSS', '..SS.SSS', '....SSS.', '....SSS.', '....SSS.', '....SSS.', '....SSS.',
+]);
+const HAIR_BACK: Record<Hair, Layer> = {
+  short: at(1, ['.....HHH', '....HHHH', '...HHHHH', '...HHHHH', '...HHHHH', '...HHhHH', '....hhh.']),
+  buzz: at(2, ['.....hhh', '....hhhh', '...hhhhh', '...hhhhh', '...hhhhh', '....hhh.']),
+  long: at(1, ['.....HHH', '....HHHH', '...HHHHH', '...HHHHH', '..HHHHHH', '..HHHHHH', '..HHHHHH', '..HHHHHH', '..HHHHHH', '..HhHHHH', '..HHHHHH', '..hhHHHH', '..hhhHHH', '...hhhhh']),
+  bun: at(0, ['......hh', '.....hHH', '....HHHH', '...HHHHH', '...HHHHH', '...HHHHH', '...HHhHH', '....hhh.']),
+  pony: at(1, ['.....HHH', '....HHHH', '...HHHHH', '...HHHHH', '...HHHHH', '...HHHHH', '....hHHH', '.....HHH', '.....hHH', '......hH', '......hH', '.......h']),
+  curly: at(0, ['.....H.H', '...HHHHH', '..HHhHHH', '..HHHHHH', '..HhHHhH', '..HHHHHH', '..hHHhHH', '..HhHHHh', '...hhhh.']),
+  bob: at(1, ['.....HHH', '...HHHHH', '..HHHHHH', '..HHHHHH', '..HHHHHH', '..HHHhHH', '..HHHHHH', '..HhHHHH', '..hhhhhh']),
+  pigtails: at(1, ['.....HHH', '....HHHH', '...HHHHH', '...HHHHH', '.hhHHHHH', 'HHHhHHHH', 'HHH.hhhh', '.HH.....', '..h.....']),
+  afro: at(-1, ['....HHHH', '..HHHHHH', '.HHHHhHH', '.HHHHHHH', '.HhHHHHH', '.HHHHHHH', '.HHHHHHH', '.HhHHhHH', '.HHHHHHH', '..HHHHHH', '...hhhhh']),
+  mohawk: at(-2, ['.......H', '.......H', '......HH', '......HH', '.....hHH', '....hhHH', '...hhhhH', '...hhhhh', '...hhhhh', '....hhh.']),
+};
+const TOP_BACK: Record<Top, Layer> = {
+  tee: at(11, ['..cCCCCC', '..cCCCCC', '....CCCC', '....CCCC', '....CCCC', '....cCCC']),
+  hoodie: at(9, ['.....ccc', '....cCCC', '..cCCCCC', '..cCCCCC', '..cCCCCC', '..cCCCCC', '..cCCCCC', '..cCCCCC']), // the hood hangs on the back
+  aloha: at(11, ['..cCCPCC', '..cCPCCC', '....CCPC', '....PCCC', '....CCCP', '....cCCC']),
+  tank: at(11, ['.....C..', '....CC..', '....CCCC', '....CCCC', '....CCCC', '....cCCC']),
+  blazer: at(11, ['..cCCCCC', '..cCCCCC', '..cCCCCC', '..cCCCCC', '..cCCCCC', '..cCCCCc']),
+};
+const SHOE_BACK: Record<Shoes, Layer> = {
+  sneakers: at(22, ['...XXXX.', '...xxxx.']),
+  sandals: at(22, ['...SxSS.', '...xxxx.']),
+  boots: at(20, ['....XXX.', '....XXX.', '...XXXX.', '...xxxx.']),
+};
+const HEAD_BACK: Record<Head, Layer | null> = {
+  none: null,
+  cap: at(1, ['.....XXX', '....XXXX', '...XXXXX', '...xxxxx', '......Xx']), // the strap and its gap at the back
+  beanie: at(0, ['.......X', '....XXXX', '...XXXXX', '...xxxxx']),
+  bucket: at(1, ['.....XXX', '....XXXX', '...XXXXX', '..xxxxxx', '..x.....']),
+  straw: at(1, ['.....ZZZ', '....ZZZZ', '....DDDD', '.zZZZZZZ']),
+  conical: at(-1, ['.......Z', '......ZZ', '.....ZZZ', '....ZZZZ', '...ZZZZZ', '.zzzzzzz']),
+  cowboy: at(0, ['.....XXX', '....XXXX', '.x..xxxx', '.xxxxxxx']),
+  bandana: at(1, ['.....XXX', '....XXXX', '...XXXXX', '...xxxxx', '.....xXx', '......x.']), // the knot at the nape
+  headband: at(3, ['...XXXXX']),
+  flowers: at(2, ['...FqfqF']),
+  bunny: at(-3, ['....XX..', '....XX..', '....XX..', '....XX..', '....XX..', '...XXXXX']), // ears from behind: no pink
+};
+const NECK_BACK: Record<Neck, Layer | null> = {
+  none: null,
+  headphones: at(0, ['.....DDD', '....D...', '...D....', '...D....', '...D....', '..DD....', '..DD....']),
+  camera: at(10, ['....DDDD']), // the strap at the nape
+  scarf: at(10, ['.....XXX', '...XXXXX', '....xx..']),
+  pillow: at(9, ['...XX...', '...XXXX.', '....xXXX']),
+  necklace: at(10, ['......YY']),
+  lei: at(10, ['....FfqF', '.....qF.']),
+  tie: null,
+  bowtie: null,
+  badge: at(10, ['....DDDD', '.....D..']),
+  lanyard: at(11, ['...........X....', '..........X.....', '.........X......', '........X.......', '.......X........', '......X.........']),
+};
+const BACK_BACK: Record<Back, Layer | null> = {
+  none: null,
+  backpack: at(11, ['...x..x.', '...x..x.', '....XXXX', '....XXXX', '....XxXX', '....XXXX', '....XXXX', '....xxxx']),
+  hiking: at(1, ['.....RRR', '.....XXX', '.....XXX', '.....XXX', '.....XXX', '.....XXX', '.....XXX', '.....XXX', '.....XXX', '....XXXX', '...XXXXX', '...XXxXX', '...XXXXX', '...XXXXX', '...XXXXX', '...XxXXX', '...XXXXX', '....xxxx']),
+  messenger: at(11, ['....x...........', '.....x..........', '......x.........', '.......x........', '........x.......', '.........xxxxx..', '.........XXXXX..', '.........XXXXX..', '.........xxxxx..']),
+  guitar: at(-2, [
+    '........DD......', '........DD......', '........D.......', ...Array<string>(13).fill('........n.......'),
+    '.......www......', '......wwwww.....', '......wwDww.....', '......wwwww.....', '.......www......', '......wwwww.....', '.....vwwwww.....', '......vwww......',
+  ]),
+  ukulele: at(4, ['.........DD.....', '.........D......', ...Array<string>(8).fill('.........n......'), '........ww......', '.......wwww.....', '.......wDww.....', '.......wwww.....', '........ww......', '.......vwww.....']),
+  skateboard: at(-1, [...Array<string>(20).fill('........xX......')].map((r, i) => ([0, 1, 16, 17].includes(i) ? '.......DxXD.....' : r))),
+  tripod: at(-3, ['....DDDD', '....DL..', ...Array<string>(16).fill('....DL..')]),
+  cape: at(10, ['......xx', '..XXXXXX', '.XXXXXXX', '.XXXXXXX', 'xXXXXXXX', 'xXXXXXXX', 'xXXXXXXX', 'xXXXXXXX', 'xXXXXXXX', 'xxXXXXXX', '.xxXXXXX']),
+  wings: at(7, ['.y......', 'yWy.....', 'yWWy....', 'yWWWy...', '.yWWW...', '..yWW...', '...yW...', '....y...']),
+};
+// Animals from behind (the rest of the side things look the same from both sides)
+const SIDE_BACK: Partial<Record<Side, SideShape>> = {
+  cat: {
+    a: ['.o....o.', '.Oo..oO.', '.OOOOOO.', '.OOOOOO.', '..OOOO..', '..OOOOo.', '.OOOOOOo', '.OOOOOO.', '.OO..OO.'],
+    b: ['.o....o.', '.Oo..oO.', '.OOOOOO.', '.OOOOOO.', '..OOOO.o', '..OOOOo.', '.OOOOOO.', '.OOOOOO.', '.OO..OO.'],
+  },
+  dog: {
+    a: ['bb....bb', 'bbBBBBbb', '.BBBBBB.', '..BBBB..', '..BBBBb.', '.BBBBBB.', '.BBBBBB.', '.BBBBBB.', '.BB..BB.'],
+    b: ['.b....b.', 'bbBBBBbb', '.BBBBBB.', '..BBBB..', '..BBBB.b', '.BBBBBB.', '.BBBBBB.', '.BBBBBB.', '.BB..BB.'],
+  },
+  rabbit: {
+    a: ['..u..u..', '..u..u..', '..uuuu..', '.uuuuuu.', '..uuuu..', '..uuuu..', '.uuuWuu.', '.uu..uu.'],
+    b: ['.u....u.', '..u..u..', '..uuuu..', '.uuuuuu.', '..uuuu..', '..uuuu..', '.uuuWuu.', '.uu..uu.'],
+  },
+};
+
 // Which choices take a colour from the cloth palette; the rest have fixed colours.
 export const COLOURED = {
   head: ['cap', 'beanie', 'bucket', 'cowboy', 'bandana', 'headband', 'bunny'] as readonly Head[],
@@ -370,12 +459,20 @@ export const SKIN_TONES = [
 ] as const;
 // The fun colours are for picking on purpose; a random nomad gets one of the first six.
 const REAL_SKIN_TONES = 6;
+// Black, brown, blonde, pink and grey came first (saved avatars index them), then auburn, chestnut, platinum,
+// and three dyed shades: blue, mint, lavender.
 export const HAIR_COLOURS = [
   ['#2b2420', '#161210'],
   ['#6b4226', '#4e2f1a'],
   ['#e3b75a', '#c2953c'],
   ['#f28fab', '#d56f8c'],
   ['#c4c4c4', '#9a9a9a'],
+  ['#b5522e', '#8f3d20'],
+  ['#9a6a3e', '#78502c'],
+  ['#f1e6c8', '#d9caa3'],
+  ['#4f7fd1', '#3a63ad'],
+  ['#7fd4b8', '#5fb597'],
+  ['#b89ae6', '#9a7bcb'],
 ] as const;
 // Clothes, hats, bags, shoes and the coloured things beside the figure share one palette; shades are derived.
 export const CLOTH = [
@@ -642,10 +739,11 @@ export type Pose = {
   only?: 'figure' | 'beside'; // draw just the figure (with what it wears and carries) or just what stands beside it
   focus?: Slot; // draw this slot in colour and the rest as one grey silhouette, for the picker's tiles
   bare?: boolean; // with `focus`: leave the rest out altogether, so only that part is drawn
+  view?: 'front' | 'back'; // seen from the front (default) or from behind
 };
 
 // One pose of the avatar as a SIZE×SIZE grid of colours. With no pose: eyes open, standing still, everything drawn.
-export function compose(a: Avatar, { blink = false, dip = false, wag = false, only, focus, bare = false }: Pose = {}): Pixels {
+export function compose(a: Avatar, { blink = false, dip = false, wag = false, only, focus, bare = false, view = 'front' }: Pose = {}): Pixels {
   const grid: Pixels = Array.from({ length: SIZE }, () => Array<string | null>(SIZE).fill(null));
   const top = CLOTH[a.topColour];
   const bottom = CLOTH[a.bottomColour];
@@ -681,7 +779,7 @@ export function compose(a: Avatar, { blink = false, dip = false, wag = false, on
   const ghost = (pal: Record<string, string>) => Object.fromEntries(Object.keys(pal).map((k) => [k, bare ? '' : GHOST]));
   const palFor = (slots: Slot[], pal: Record<string, string> = base) => (focus && !slots.includes(focus) ? ghost(pal) : pal);
   const drawSide = (side: Side, colour: number, right: boolean, slot: Slot) => {
-    const shape = SIDE_SHAPES[side];
+    const shape = (view === 'back' && SIDE_BACK[side]) || SIDE_SHAPES[side];
     if (!shape) return;
     const rows = (wag && shape.b) || shape.a;
     const pal = palFor([slot], { ...base, ...own(colour), L: LEAF, B: DOG });
@@ -691,7 +789,17 @@ export function compose(a: Avatar, { blink = false, dip = false, wag = false, on
     });
   };
 
-  if (only !== 'beside') {
+  if (only !== 'beside' && view === 'back') {
+    const bareHead = focus === 'skin' || focus === 'hair';
+    draw(BODY_BACK, palFor(['skin']));
+    draw(BOTTOM_SHAPES[a.bottom], palFor(['bottom']));
+    draw(SHOE_BACK[a.shoes], palFor(['shoes'], { ...base, ...own(a.shoesColour) }), { planted: true });
+    draw(TOP_BACK[a.top], palFor(['top']));
+    if (focus !== 'skin') draw(HAIR_BACK[a.hair], palFor(['hair']));
+    draw(NECK_BACK[a.neck], palFor(['neck'], { ...base, ...own(a.neckColour) }));
+    if (!bareHead) draw(HEAD_BACK[a.head], palFor(['head'], { ...base, ...own(a.headColour) }));
+    draw(BACK_BACK[a.back], palFor(['back'], { ...base, ...own(a.backColour) }));
+  } else if (only !== 'beside') {
     const hair = HAIR_SHAPES[a.hair];
     const bag = BACK_SHAPES[a.back];
     const bagPal = { ...base, ...own(a.backColour) };
@@ -717,8 +825,9 @@ export function compose(a: Avatar, { blink = false, dip = false, wag = false, on
     }
   }
   if (only !== 'figure') {
-    drawSide(a.sideL, a.sideLColour, false, 'sideL');
-    drawSide(a.sideR, a.sideRColour, true, 'sideR');
+    const flipped = view === 'back';
+    drawSide(a.sideL, a.sideLColour, flipped, 'sideL');
+    drawSide(a.sideR, a.sideRColour, !flipped, 'sideR');
   }
   return grid;
 }

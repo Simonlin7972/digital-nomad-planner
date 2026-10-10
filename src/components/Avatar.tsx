@@ -3,6 +3,7 @@ import { SIZE, compose, runs, type Avatar as AvatarData, type Pose, type Slot } 
 import './Avatar.css';
 
 type Run = ReturnType<typeof runs>[number];
+type View = NonNullable<Pose['view']>;
 
 // One pose as runs of colour, plus the rows that change when the eyes close.
 function frames(avatar: AvatarData, pose: Pose) {
@@ -13,13 +14,13 @@ function frames(avatar: AvatarData, pose: Pose) {
 }
 
 // The layers of a normal (unfocused) avatar: one still, or the four poses of the idle loop.
-function still(avatar: AvatarData, animate: boolean) {
-  if (!animate) return [{ className: undefined as string | undefined, ...frames(avatar, {}) }];
+function still(avatar: AvatarData, animate: boolean, view: View) {
+  if (!animate) return [{ className: undefined as string | undefined, ...frames(avatar, { view }) }];
   return [
-    { className: 'avatar-high', ...frames(avatar, { only: 'figure' }) },
-    { className: 'avatar-low', ...frames(avatar, { only: 'figure', dip: true }) },
-    { className: 'avatar-still', open: runs(compose(avatar, { only: 'beside' })), blink: [] as Run[] },
-    { className: 'avatar-wag', open: runs(compose(avatar, { only: 'beside', wag: true })), blink: [] as Run[] },
+    { className: 'avatar-high', ...frames(avatar, { only: 'figure', view }) },
+    { className: 'avatar-low', ...frames(avatar, { only: 'figure', dip: true, view }) },
+    { className: 'avatar-still', open: runs(compose(avatar, { only: 'beside', view })), blink: [] as Run[] },
+    { className: 'avatar-wag', open: runs(compose(avatar, { only: 'beside', wag: true, view })), blink: [] as Run[] },
   ];
 }
 
@@ -35,6 +36,7 @@ export function Avatar({
   animate = false,
   focus,
   bare = false,
+  view = 'front',
 }: {
   avatar: AvatarData;
   label?: string;
@@ -43,10 +45,11 @@ export function Avatar({
   animate?: boolean;
   focus?: Slot; // one slot in colour, the rest a grey silhouette (never animated)
   bare?: boolean; // with `focus`: nothing else drawn, and the view tightens to the part itself
+  view?: View; // from the front, or turned around
 }) {
   const { layers, box } = useMemo(() => {
     if (focus) {
-      const px = compose(avatar, { focus, bare });
+      const px = compose(avatar, { focus, bare, view });
       const open = runs(px);
       let box: readonly [number, number, number] | undefined;
       if (bare && open.length) {
@@ -59,14 +62,14 @@ export function Avatar({
       }
       return { layers: [{ className: undefined, open, blink: [] }], box };
     }
-    return { layers: still(avatar, animate), box: undefined };
-  }, [avatar, animate, focus, bare]);
-  const view = box ?? crop;
+    return { layers: still(avatar, animate, view), box: undefined };
+  }, [avatar, animate, focus, bare, view]);
+  const vb = box ?? crop;
   const rect = (r: Run) => <rect key={`${r.x}-${r.y}`} x={r.x} y={r.y} width={r.w} height={1} fill={r.fill} />;
   return (
     <svg
       className={`avatar${focus && bare && !layers[0].open.length ? ' empty' : ''}${className ? ` ${className}` : ''}`}
-      viewBox={`${view[0]} ${view[1]} ${view[2]} ${view[2]}`}
+      viewBox={`${vb[0]} ${vb[1]} ${vb[2]} ${vb[2]}`}
       shapeRendering="crispEdges"
       {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true })}
     >

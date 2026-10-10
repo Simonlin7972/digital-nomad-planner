@@ -9,6 +9,10 @@
 
 ## 2026-10-10
 
+- 角色髮色從 5 種增加到 11 種，多了赤褐、栗色、白金，還有藍、薄荷綠、薰衣草紫三種染髮色
+  EN: Hair colours go from 5 to 11: auburn, chestnut and platinum, plus blue, mint and lavender dyes
+- 角色可以轉身了：設定頁大圖右下角的按鈕按一下看背面，背包、吉他、披風從後面看最清楚
+  EN: Your character can turn around: the button at the bottom right of the large figure on the settings page shows its back, where bags, guitars and capes look best
 - 角色的「取消」「儲存角色」按鈕改成有改動時才出現，沒改就不佔位；存好的角色滑鼠移上去就能下載成透明背景的 PNG
   EN: The character's Cancel and Save buttons now appear only once something has changed; hover the saved character to download it as a transparent PNG
 - 帽子、背包、圍巾這些配件現在各有自己合適的預設顏色，選了再改也可以，不會全部跟著上一個選的顏色跑
