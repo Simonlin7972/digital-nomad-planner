@@ -1,11 +1,11 @@
 import { flagCode } from './flags';
 import type { HolidaySet } from './holidays';
 import { daysText, getLocale, t } from './i18n';
-import { colorOf, countryOf, placeFull, placeName, type Stay } from './storage';
+import { colorOf, countryOf, getEdges, placeFull, placeName, type Stay } from './storage';
 import { compose, SIZE as AVATAR_SIZE, type Avatar } from './avatar';
 import { getProfile } from './profile';
 import { checkSchengen, residenceDays } from './stayRules';
-import { MONTHS, SLOTS, TOTAL_DAYS, WEEKS, YEAR, daysOf, monthName, monthRange, rangeLabel, slotsOf, weeksLabel } from './weeks';
+import { MONTHS, SLOTS, TOTAL_DAYS, WEEKS, YEAR, daysOf, daysOnTimeline, monthName, monthRange, rangeLabel, slotsOf, weeksLabel } from './weeks';
 
 const FONT = '"975HazyGo", -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
 const TAGLINE_FONT = '16px "Pixelify Sans", monospace';
@@ -109,7 +109,8 @@ export function renderAvatarPng(avatar: Avatar, scale = 8): Promise<Blob> {
 
 // The line under the title: time planned, places, and the day-count rules when they apply.
 function summaryLine(stays: Stay[]): { text: string; warn: boolean } {
-  const planned = stays.reduce((n, s) => n + daysOf(s), 0);
+  // This year's timeline only: its stays and the parts of the neighbouring years' that reach onto it.
+  const planned = [...stays, ...getEdges().ghosts].reduce((n, s) => n + daysOnTimeline(s), 0);
   const countries = new Set(stays.filter((s) => s.country).map((s) => s.country)).size;
   const cities = new Set(stays.filter((s) => s.city).map((s) => `${s.country}/${s.city}`)).size;
   const profile = getProfile();

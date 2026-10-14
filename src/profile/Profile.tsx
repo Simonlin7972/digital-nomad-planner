@@ -5,6 +5,7 @@ import { CheckCircle } from '@phosphor-icons/react/dist/csr/CheckCircle';
 import { House } from '@phosphor-icons/react/dist/csr/House';
 import { Megaphone } from '@phosphor-icons/react/dist/csr/Megaphone';
 import { CityCombobox, CountryCombobox } from '../components/Combobox';
+import { PillNav } from '../components/PillNav';
 import { PixelNomad } from '../components/PixelNomad';
 import { CHANGELOG } from '../lib/changelog';
 import { normalizeCity } from '../lib/cities';
@@ -72,7 +73,7 @@ export function Profile() {
 
   return (
     <div className="profile">
-      <header className="p-nav">
+      <PillNav className="p-nav">
         <a className="p-brand" href={APP_URL}>
           <PixelNomad />
           <span>{t('app.title')}</span>
@@ -80,7 +81,7 @@ export function Profile() {
         <a className="p-back" href={APP_URL}>
           <ArrowLeft size={14} weight="bold" /> {t('profile.back')}
         </a>
-      </header>
+      </PillNav>
 
       <main className="editor">
         <div className="p-head">

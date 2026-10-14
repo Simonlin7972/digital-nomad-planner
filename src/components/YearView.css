@@ -137,6 +137,10 @@
 .stay:hover { box-shadow: 0 4px 12px rgb(0 0 0 / 0.22); transform: translateY(-1px); }
 .stay.active { opacity: 0.9; box-shadow: 0 8px 20px rgb(0 0 0 / 0.3); transform: translateY(-2px); z-index: 2; }
 .track.dragging .stay { cursor: grabbing; transition: none; }
+/* Locked (flight booked): no handles, and the whole block only clicks. */
+.stay.locked { cursor: pointer; }
+/* No handles, so the label gets the room they took. */
+.stay.locked .label { padding: 0 min(12px, 10%); }
 .track.alt:not(.dragging) .stay { cursor: copy; }
 .track.alt:not(.dragging) .stay .handle { cursor: copy; }
 /* B held: scissors over the track; the dashed line marks where a click would cut */
@@ -177,6 +181,35 @@
 .stay .handle:hover { background: rgb(0 0 0 / 0.25); }
 .stay .handle:hover::after { opacity: 1; height: 58%; }
 .track.dragging .stay:not(.active) .handle::after { opacity: 0; }
+
+/* A neighbouring year's stay reaching onto this timeline: faded and striped, its cut-off side squared, and a
+   click goes to that year rather than starting a drag */
+.stay.ghost {
+  cursor: pointer;
+  opacity: 0.5;
+  background-image: repeating-linear-gradient(135deg, rgb(255 255 255 / 0.22) 0 6px, transparent 6px 12px);
+  box-shadow: none;
+}
+.stay.ghost .label { padding: 0 10px; }
+.stay.ghost small svg { vertical-align: -1px; margin: 0 2px; }
+.stay.ghost.from-prev { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: 0; }
+.stay.ghost.from-next { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: 0; }
+@media (hover: hover) {
+  .stay.ghost:hover { opacity: 0.75; transform: none; }
+}
+/* This year's stay running on into the next: squared at the timeline's end, with the year it goes on into */
+.stay:has(.spill) { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: 0; }
+.stay .spill {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.9;
+  pointer-events: none;
+}
 
 .stay .label {
   flex: 1;

@@ -69,7 +69,19 @@
 .mbar.ends { border-radius: 0 10px 10px 0; border-right: 3px solid transparent; }
 .mbar.starts.ends { border-radius: 10px; }
 .mbar.active { opacity: 0.85; z-index: 2; }
+/* A neighbouring year's stay on this year's days: faded and striped; a click goes to that year */
+.mbar.ghost {
+  cursor: pointer;
+  opacity: 0.5;
+  background-image: repeating-linear-gradient(135deg, rgb(255 255 255 / 0.22) 0 6px, transparent 6px 12px);
+}
+.mbar.ghost small { margin-left: 6px; }
+@media (hover: hover) {
+  .mbar.ghost:hover { opacity: 0.75; }
+}
 .mgrid.dragging .mbar { cursor: grabbing; }
+.mbar.locked { cursor: pointer; }
+.mbar.locked .label { padding: 0 8px; }
 /* B held: scissors over the calendar; the dashed line marks where a click would cut */
 .mgrid.cutting,
 .mgrid.cutting .mbar,

@@ -7,6 +7,30 @@
   people using the planner, not for developers: what they can now do or what changed for them.
 -->
 
+## 2026-10-14
+
+- 所有對話框最高佔畫面的八成，內容多時在視窗裡捲動，不會貼到畫面上下緣
+  EN: Dialogs now take up at most 80% of the screen height and scroll inside when there is more to show
+- 已買機票的行程會鎖定：時間軸和月曆上不能拖、不能拉長縮短、不能切開，隔壁的行程也推不動它（卡片上有小鎖頭）；要改日期請打開編輯視窗
+  EN: Stays with a flight booked are now locked: they can't be dragged, stretched or cut on the timeline or calendar, and neighbours can't push them (they show a small padlock); change their dates in the editor
+- 機票可以填回程了：回程航班編號與起飛時間；回程起飛日跟行程結束日不同時會提醒，一鍵對齊
+  EN: Tickets can now hold the return leg: its flight number and departure; when the return date and the stay's end differ, the editor points it out and can line them up in one click
+- 行程可以跨年了：在編輯視窗把結束日選到明年，時間軸尾端會標出下一年（例如「2028 →」），下一年的時間軸開頭也會顯示這段，點一下就回到原本那年
+  EN: Stays can now cross into the next year: pick an end date next year in the editor, the timeline marks the year it continues into (such as "2028 →"), and next year's timeline shows the stay at its start, one click away from the year it belongs to
+- 申根 90/180 會把上一年排在申根的日子一起算進去
+  EN: The Schengen 90/180 count now includes the days planned in Schengen at the end of the previous year
+- 每一頁的頁首往下捲時都會收成浮在中間的圓角膠囊，帶一點毛玻璃模糊；規劃頁（電腦版）收起時復原、重做、⋯ 選單和設定都還在裡面；捲回頂端就攤開
+  EN: Every page's header now folds into a floating frosted pill as you scroll down; the planner's (on a computer) keeps undo, redo, the ⋯ menu and settings within reach; they open back up at the top
+- 機票的起飛日跟行程開始日不一樣時，編輯視窗會提醒，按一下就能把行程改成從起飛日開始；滑鼠停在行程上也會看到起飛時間
+  EN: When a flight leaves on a different day from the stay's first day, the editor points it out and can move the stay to start on the departure date in one click; a stay's hover card now shows the departure time too
+
+## 2026-10-11
+
+- 角色的衣服、帽子、背包等顏色可以自訂了：色票列最後的「＋」點開 35 格色盤，或直接打色碼
+  EN: Clothes, hats, bags and the rest can now take a custom colour: the + at the end of the swatches opens a 35-colour palette, or type a hex code
+- 角色的上衣、下身、鞋子各有 10 種了：多了毛衣、襯衫、牛仔外套、長裙、百褶裙、泳褲、夾腳拖、登山鞋、雨鞋等
+  EN: Tops, bottoms and shoes now come in 10 each: sweater, shirt, denim jacket, long and pleated skirts, swim trunks, flip-flops, hiking boots, rain boots and more
+
 ## 2026-10-10
 
 - 角色髮色從 5 種增加到 11 種，多了赤褐、栗色、白金，還有藍、薄荷綠、薰衣草紫三種染髮色

@@ -52,9 +52,9 @@ const BODY_A = at(3, [
 const BODY_B = at(3, BODY_A.rows.map((r, i) => (i === 3 ? '...sSsSS' : r)));
 
 export const HAIRS = ['short', 'buzz', 'long', 'bun', 'pony', 'curly', 'bob', 'pigtails', 'afro', 'mohawk'] as const;
-export const TOPS = ['tee', 'hoodie', 'aloha', 'tank', 'blazer'] as const;
-export const BOTTOMS = ['pants', 'shorts', 'skirt'] as const;
-export const SHOES = ['sneakers', 'sandals', 'boots'] as const;
+export const TOPS = ['tee', 'hoodie', 'aloha', 'tank', 'blazer', 'sweater', 'shirt', 'jacket', 'crop', 'puffer'] as const;
+export const BOTTOMS = ['pants', 'shorts', 'skirt', 'joggers', 'cargo', 'wide', 'longskirt', 'pleated', 'leggings', 'swim'] as const;
+export const SHOES = ['sneakers', 'sandals', 'boots', 'flipflops', 'loafers', 'hightops', 'hikers', 'slippers', 'maryjanes', 'rainboots'] as const;
 export const HEADS = ['none', 'cap', 'beanie', 'bucket', 'straw', 'conical', 'cowboy', 'bandana', 'headband', 'flowers', 'bunny'] as const;
 export const EYES = ['none', 'glasses', 'eyepatch', 'sunglasses', 'hearts', 'sleepmask'] as const;
 export const LOWERS = ['none', 'moustache', 'beard', 'mask', 'freckles', 'blush'] as const;
@@ -104,18 +104,37 @@ const TOP_SHAPES: Record<Top, Layer> = {
   aloha: at(11, ['..cCPCC.', '..cCCCPC', '....PCCC', '....CCPC', '....CPCC', '....cCCC']),
   tank: at(11, ['.....C..', '....CC..', '....CCCC', '....CCCC', '....CCCC', '....cCCC']),
   blazer: at(11, ['..cCCCWW', '..cCCCCW', '..cCCCCW', '..cCCCCW', '..cCCCCW', '..cCCCCC']),
+  sweater: at(11, ['..cCCCCC', '..cCCCCC', '..cCCCCC', '..cCCCCC', '..cCCCCC', '..ccCccc']), // sleeves to the wrist, ribbed hem
+  shirt: at(11, ['..cCCCCW', '..cCCCCC', '....CCCc', '....CCCc', '....CCCc', '....cCCC']), // collar, a row of buttons
+  jacket: at(11, ['..cCCCWW', '..cCccWW', '..cCCCWW', '..cCCCWW', '..cCccWW', '..cCCCWW']), // open over a white tee
+  crop: at(11, ['..cCCCCC', '..cCCCCC', '....CCCC', '....cCCC']), // the midriff shows below
+  puffer: at(11, ['....CCCC', '....cccc', '....CCCC', '....cccc', '....CCCC', '....cccc']), // quilted vest, bare arms
 };
 
 const BOTTOM_SHAPES: Record<Bottom, Layer> = {
   pants: at(17, ['....KKKK', '....KKK.', '....KKK.', '....KKK.', '....kKK.']),
   shorts: at(17, ['....KKKK', '....KKK.', '....kKK.']),
   skirt: at(17, ['....KKKK', '...KKKKK', '...kKKKK']),
+  joggers: at(17, ['....KKKK', '....KKK.', '....KKK.', '.....KK.', '.....kk.']), // tapered, cuffed
+  cargo: at(17, ['....KKKK', '....KKK.', '....kKK.', '....KkK.']), // longer, a pocket
+  wide: at(17, ['...KKKKK', '...KKKK.', '...KKKK.', '...KKKK.', '...kKKK.']),
+  longskirt: at(17, ['....KKKK', '...KKKKK', '..KKKKKK', '..KKKKKK', '..kkKKKK']),
+  pleated: at(17, ['....KKKK', '...KkKkK', '...KkKkK', '...kKkKk']),
+  leggings: at(17, ['....kkkk', '....KKK.', '....KKK.', '....KKK.', '....KKK.']), // waistband, no cuff
+  swim: at(17, ['....KKWK', '....KKWK', '....kkWk']), // a white stripe down the side
 };
 
 const SHOE_SHAPES: Record<Shoes, Layer> = {
   sneakers: at(22, ['...XXXX.', '...WWWW.']),
   sandals: at(22, ['...SXSS.', '...xxxx.']),
   boots: at(20, ['....XXX.', '....XXX.', '...XXXX.', '...xxxx.']),
+  flipflops: at(22, ['....SxS.', '...XXXX.']),
+  loafers: at(22, ['...XxXX.', '...xxxx.']),
+  hightops: at(21, ['....XXX.', '...XWXX.', '...WWWW.']),
+  hikers: at(21, ['....xXX.', '...XXXX.', '...bbbb.']), // a brown sole
+  slippers: at(22, ['...XXXX.', '...XXXX.']),
+  maryjanes: at(22, ['...XSSX.', '...XXXX.']), // a strap over the foot
+  rainboots: at(19, ['....XXX.', '....XXX.', '....XXX.', '...XXXX.', '...xxxx.']),
 };
 
 const HEAD_SHAPES: Record<Head, Layer | null> = {
@@ -370,11 +389,23 @@ const TOP_BACK: Record<Top, Layer> = {
   aloha: at(11, ['..cCCPCC', '..cCPCCC', '....CCPC', '....PCCC', '....CCCP', '....cCCC']),
   tank: at(11, ['.....C..', '....CC..', '....CCCC', '....CCCC', '....CCCC', '....cCCC']),
   blazer: at(11, ['..cCCCCC', '..cCCCCC', '..cCCCCC', '..cCCCCC', '..cCCCCC', '..cCCCCc']),
+  sweater: at(11, ['..cCCCCC', '..cCCCCC', '..cCCCCC', '..cCCCCC', '..cCCCCC', '..ccCccc']),
+  shirt: at(11, ['..cCCCCC', '..cCcccc', '....CCCC', '....CCCC', '....CCCC', '....cCCC']), // the yoke
+  jacket: at(11, ['..cCCCCC', '..cCcccc', '..cCCCCC', '..cCCCCC', '..cCCCCC', '..cCcccc']),
+  crop: at(11, ['..cCCCCC', '..cCCCCC', '....CCCC', '....cCCC']),
+  puffer: at(11, ['....CCCC', '....cccc', '....CCCC', '....cccc', '....CCCC', '....cccc']),
 };
 const SHOE_BACK: Record<Shoes, Layer> = {
   sneakers: at(22, ['...XXXX.', '...xxxx.']),
   sandals: at(22, ['...SxSS.', '...xxxx.']),
   boots: at(20, ['....XXX.', '....XXX.', '...XXXX.', '...xxxx.']),
+  flipflops: at(22, ['....SxS.', '...xxxx.']),
+  loafers: at(22, ['...XXXX.', '...xxxx.']),
+  hightops: at(21, ['....XXX.', '....XXX.', '...xxxx.']),
+  hikers: at(21, ['....XXX.', '...XXXX.', '...bbbb.']),
+  slippers: at(22, ['...XXXX.', '...xxxx.']),
+  maryjanes: at(22, ['...XXXX.', '...xxxx.']),
+  rainboots: at(19, ['....XXX.', '....XXX.', '....XXX.', '...XXXX.', '...xxxx.']),
 };
 const HEAD_BACK: Record<Head, Layer | null> = {
   none: null,
@@ -432,6 +463,17 @@ const SIDE_BACK: Partial<Record<Side, SideShape>> = {
     b: ['.u....u.', '..u..u..', '..uuuu..', '.uuuuuu.', '..uuuu..', '..uuuu..', '.uuuWuu.', '.uu..uu.'],
   },
 };
+
+// The custom palette behind the "+" swatch: seven hues in five tones, mixed from one base per hue so they sit with
+// CLOTH. Picking one stores its hex.
+const mix = (hex: string, to: string, t: number) => {
+  const a = parseInt(hex.slice(1), 16), b = parseInt(to.slice(1), 16);
+  const ch = (sh: number) => Math.round(((a >> sh) & 255) * (1 - t) + ((b >> sh) & 255) * t).toString(16).padStart(2, '0');
+  return `#${ch(16)}${ch(8)}${ch(0)}`;
+};
+const HUES = ['#ff5a5f', '#f5b83d', '#6fbf6a', '#3fb3d1', '#5a7fb0', '#9b7fd1', '#ff5a8a'];
+export const CUSTOM_TONES = [0.62, 0.3, 0, 0.25, 0.52] as const; // lighter (towards white), base, darker (towards black)
+export const CUSTOM_PALETTE: string[][] = CUSTOM_TONES.map((t, i) => HUES.map((h) => (i < 2 ? mix(h, '#ffffff', t) : i === 2 ? h : mix(h, '#000000', t))));
 
 // Which choices take a colour from the cloth palette; the rest have fixed colours.
 export const COLOURED = {
@@ -534,34 +576,40 @@ const FIXED: Record<string, string> = {
 const LEAF = '#3f9b62';
 const DOG = '#a8743f';
 
+// A cloth colour: an index into CLOTH, or a hex string picked from the custom palette.
+export type Colour = number | string;
+export const isHex = (v: unknown): v is string => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v);
+// The hex a cloth colour stands for.
+export const clothHex = (c: Colour): string => (typeof c === 'number' ? CLOTH[c] ?? CLOTH[0] : c.toLowerCase());
+
 export type Avatar = {
   skin: number;
   hair: Hair;
   hairColour: number;
   top: Top;
-  topColour: number;
+  topColour: Colour;
   bottom: Bottom;
-  bottomColour: number;
+  bottomColour: Colour;
   shoes: Shoes;
-  shoesColour: number;
+  shoesColour: Colour;
   head: Head;
-  headColour: number;
+  headColour: Colour;
   eyes: Eyes;
-  eyesColour: number;
+  eyesColour: Colour;
   lower: Lower;
-  lowerColour: number;
+  lowerColour: Colour;
   neck: Neck;
-  neckColour: number;
+  neckColour: Colour;
   back: Back;
-  backColour: number;
+  backColour: Colour;
   handL: Hand;
-  handLColour: number;
+  handLColour: Colour;
   handR: Hand;
-  handRColour: number;
+  handRColour: Colour;
   sideL: Side;
-  sideLColour: number;
+  sideLColour: Colour;
   sideR: Side;
-  sideRColour: number;
+  sideRColour: Colour;
 };
 
 const BASE: Avatar = {
@@ -680,34 +728,35 @@ export function sanitizeAvatar(raw: unknown): Avatar {
     const v = r[k];
     return Number.isInteger(v) && (v as number) >= 0 && (v as number) < list.length ? (v as number) : (d[k] as number);
   };
+  const cloth = (k: keyof Avatar): Colour => (isHex(r[k]) ? (r[k] as string).toLowerCase() : num(CLOTH, k));
   const a: Avatar = {
     skin: num(SKIN_TONES, 'skin'),
     hair: of(HAIRS, 'hair'),
     hairColour: num(HAIR_COLOURS, 'hairColour'),
     top: of(TOPS, 'top'),
-    topColour: num(CLOTH, 'topColour'),
+    topColour: cloth('topColour'),
     bottom: of(BOTTOMS, 'bottom'),
-    bottomColour: num(CLOTH, 'bottomColour'),
+    bottomColour: cloth('bottomColour'),
     shoes: of(SHOES, 'shoes'),
-    shoesColour: num(CLOTH, 'shoesColour'),
+    shoesColour: cloth('shoesColour'),
     head: of(HEADS, 'head'),
-    headColour: num(CLOTH, 'headColour'),
+    headColour: cloth('headColour'),
     eyes: of(EYES, 'eyes'),
-    eyesColour: num(CLOTH, 'eyesColour'),
+    eyesColour: cloth('eyesColour'),
     lower: of(LOWERS, 'lower'),
-    lowerColour: num(CLOTH, 'lowerColour'),
+    lowerColour: cloth('lowerColour'),
     neck: of(NECKS, 'neck'),
-    neckColour: num(CLOTH, 'neckColour'),
+    neckColour: cloth('neckColour'),
     back: of(BACKS, 'back'),
-    backColour: num(CLOTH, 'backColour'),
+    backColour: cloth('backColour'),
     handL: of(HANDS, 'handL'),
-    handLColour: num(CLOTH, 'handLColour'),
+    handLColour: cloth('handLColour'),
     handR: of(HANDS, 'handR'),
-    handRColour: num(CLOTH, 'handRColour'),
+    handRColour: cloth('handRColour'),
     sideL: of(SIDES, 'sideL'),
-    sideLColour: num(CLOTH, 'sideLColour'),
+    sideLColour: cloth('sideLColour'),
     sideR: of(SIDES, 'sideR'),
-    sideRColour: num(CLOTH, 'sideRColour'),
+    sideRColour: cloth('sideRColour'),
   };
   // A two-handed thing is in both hands or neither.
   const both = TWO_HANDED.find((h) => a.handL === h || a.handR === h);
@@ -721,7 +770,7 @@ function shade(hex: string, by = 0.18) {
   return `#${ch(16)}${ch(8)}${ch(0)}`;
 }
 // The X / x pair for a part coloured from the cloth palette.
-const own = (i: number) => ({ X: CLOTH[i], x: shade(CLOTH[i]) });
+const own = (c: Colour) => ({ X: clothHex(c), x: shade(clothHex(c)) });
 
 export type Pixels = (string | null)[][]; // [row][column] → colour, null where transparent
 
@@ -745,8 +794,8 @@ export type Pose = {
 // One pose of the avatar as a SIZE×SIZE grid of colours. With no pose: eyes open, standing still, everything drawn.
 export function compose(a: Avatar, { blink = false, dip = false, wag = false, only, focus, bare = false, view = 'front' }: Pose = {}): Pixels {
   const grid: Pixels = Array.from({ length: SIZE }, () => Array<string | null>(SIZE).fill(null));
-  const top = CLOTH[a.topColour];
-  const bottom = CLOTH[a.bottomColour];
+  const top = clothHex(a.topColour);
+  const bottom = clothHex(a.bottomColour);
   const base: Record<string, string> = {
     ...FIXED,
     S: SKIN_TONES[a.skin][0],
@@ -778,7 +827,7 @@ export function compose(a: Avatar, { blink = false, dip = false, wag = false, on
   // With a focus, every layer but the focused one is painted in the ghost colour.
   const ghost = (pal: Record<string, string>) => Object.fromEntries(Object.keys(pal).map((k) => [k, bare ? '' : GHOST]));
   const palFor = (slots: Slot[], pal: Record<string, string> = base) => (focus && !slots.includes(focus) ? ghost(pal) : pal);
-  const drawSide = (side: Side, colour: number, right: boolean, slot: Slot) => {
+  const drawSide = (side: Side, colour: Colour, right: boolean, slot: Slot) => {
     const shape = (view === 'back' && SIDE_BACK[side]) || SIDE_SHAPES[side];
     if (!shape) return;
     const rows = (wag && shape.b) || shape.a;

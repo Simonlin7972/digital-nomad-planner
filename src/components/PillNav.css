@@ -1,0 +1,52 @@
+/* The header's place in the page: sticky, as tall as the header at rest (set from a measurement in PillNav.tsx),
+   see-through and click-through except for the bar itself. Under the dialogs (z 10), over the page. */
+.pillnav-slot {
+  position: sticky;
+  top: 0;
+  z-index: 9;
+  pointer-events: none;
+}
+.pillnav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 100%;
+  margin: 0 auto;
+  border: 1px solid transparent;
+  pointer-events: auto;
+  transition:
+    top 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+    max-width 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+    padding 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+    gap 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-radius 0.45s,
+    background 0.2s,
+    border-color 0.3s,
+    box-shadow 0.3s,
+    backdrop-filter 0.2s,
+    -webkit-backdrop-filter 0.2s;
+}
+/* Scrolled: a frosted pill floating a little below the top edge, narrower than the page */
+.pillnav.pill {
+  top: 12px;
+  max-width: 640px;
+  flex-wrap: nowrap;
+  padding: 8px 10px 8px 18px;
+  border-color: rgb(0 0 0 / 0.08);
+  border-radius: 999px;
+  background: rgb(250 249 246 / 0.62);
+  backdrop-filter: blur(18px) saturate(1.5);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), 0 10px 30px rgb(0 0 0 / 0.1);
+}
+/* Off: an ordinary header in the flow of the page */
+.pillnav-slot.off,
+.pillnav-slot.off .pillnav { position: static; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pillnav { transition: none; }
+}

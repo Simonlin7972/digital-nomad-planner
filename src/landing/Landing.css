@@ -6,19 +6,8 @@ html { scroll-behavior: smooth; }
 
 /* ---------- Nav ---------- */
 
-.l-nav {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 0;
-  background: rgb(250 249 246 / 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
+/* A PillNav (components/PillNav.css has the sticking and the pill); only its resting padding is set here */
+.l-nav { gap: 16px; padding: 14px 0; }
 .l-brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-size: 18px; font-weight: 600; }
 .l-brand .pixel-nomad { width: 34px; height: 32px; }
 .l-nav nav { display: flex; align-items: center; gap: 20px; }

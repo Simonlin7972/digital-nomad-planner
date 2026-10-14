@@ -1,7 +1,8 @@
 /* The changelog page: the landing page's header and footer, with a dated list between them */
 .changelog { max-width: 880px; margin: 0 auto; padding: 0 40px; }
 
-.c-nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 24px 0; }
+/* A PillNav (components/PillNav.css has the sticking and the pill); only its resting padding is set here */
+.c-nav { gap: 16px; padding: 24px 0; }
 .c-brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-size: 18px; font-weight: 600; }
 .c-brand .pixel-nomad { width: 34px; height: 32px; }
 .c-nav nav { display: flex; align-items: center; gap: 12px; }

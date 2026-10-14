@@ -66,18 +66,18 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 - Exact start and end dates
 - Color (black plus 8 others; a new place starts black, a place you've used before keeps its color)
 - Who you're travelling with
-- Flight booked: airline, flight number, departure time, booking reference, fare. The airline is picked from a searchable list of about 75 common airlines, each with its logo (by Chinese or English name or two-letter code, or typed freely); the flight number picker offers that airline's code and flight numbers already in the plan
+- Flight booked: airline, flight number, departure time, booking reference, fare, and optionally the **return** leg's airline, flight number and departure (the airline starts as the outbound one and is stored only when changed; booking reference and fare are shared). When the return departure date and the stay's last day differ, the editor says so and can move the stay's end to that date in one click; the hover card shows the return departure. A stay with this switched on is **locked** on the timeline and calendar (it shows a small padlock): it can't be dragged, stretched or cut, and neighbouring stays can't push it; its dates change only in the editor. The airline is picked from a searchable list of about 75 common airlines, each with its logo (by Chinese or English name or two-letter code, or typed freely); the flight number picker offers that airline's code and flight numbers already in the plan. When the departure date and the stay's first day differ, the editor says so and can move the stay's start to the departure date in one click; a stay's hover card shows the departure time
 - A note
 
 ### Overview
 
 - **Summary**: weeks planned and free, countries and cities visited, an estimate of flights and hours in the air, and weeks and days per country and city
-- **Days of stay**: the summary works out the most days spent in the Schengen area within any 180 days (the limit is 90; when exceeded it says from which date), and the days planned in your tax-residence country that year (Taiwan unless changed in settings; 183 days is the usual tax-residency line). Only days on the timeline are counted
+- **Days of stay**: the summary works out the most days spent in the Schengen area within any 180 days (the limit is 90; when exceeded it says from which date), and the days planned in your tax-residence country that year (Taiwan unless changed in settings; 183 days is the usual tax-residency line). The Schengen count looks back into the previous year's plan; unplanned days don't count
 - **Itinerary**: one line per stay — dates, flag and country, city, weeks (days), companions, note; filter by Q1–Q4; stays with a flight show a ticket icon; stays that overrun the Schengen limit show a warning icon
 - **Seasons**: about 71 popular nomad bases (Chiang Mai, Bali, Lisbon, Mexico City…) carry a best / fine / avoid rating for each month, with reasons. The editor has a "When to go" button that opens the twelve months and reasons (it flags a poor season even when closed); stays that land in months to avoid (Chiang Mai's burning season in March–April, Dubai's summer) get a warning on the block, in the itinerary and on the hover card
 - **Free stretches**: unplanned days between stays are listed in the itinerary too; press `+` to add a stay in that gap
 - **Map**: every place in visit order, joined into a route
-- **Year**: the drop-down beside the view tabs switches between 2025, 2026, 2027 and 2028; each year keeps its own plan. Dragging the month row past December (or January) and letting go moves to the next (or previous) year
+- **Year**: the drop-down beside the view tabs switches between 2025, 2026, 2027 and 2028; each year keeps its own plan. Dragging the month row past December (or January) and letting go moves to the next (or previous) year. A stay can cross into the next year: it is kept in the year it starts in and its end date can fall in the next year (chosen in the editor), shown with "2028 →" at the end of the timeline; the next year's timeline opens with a faded, striped copy marked "From 2027", which takes you back to that year when clicked, and the two years' stays never overlap
 - **Public holidays**: toggle Taiwan's and Australia's 2026 and 2027 holidays, drawn over the timeline and calendar (no holiday data for 2028 yet)
 
 ![Summary, itinerary and the route on the map](docs/demo-map.gif)
@@ -90,7 +90,7 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 - A footer at the bottom of the page: where the data lives, the licence, and links home and to the changelog
 - A changelog page (/changelog/): new features and changes in every release, newest day first, in the interface language (English when the interface is Japanese). It is built from `CHANGELOG.md` at the repository root, so updating that file and pushing publishes it
 - A Profile & settings page (/profile/, from the person icon at the right end of the toolbar; once a character is saved, the button shows its face):
-  - My character: a front-facing pixel paper doll. Pick one of 10 ready-made nomads (engineer, designer, surfer, backpacker…) or put one together from skin tone, hair, top, bottom and shoes, plus separate slots for the head, eyes, mouth and cheeks, neck, back, each hand and each side (hats, a conical hat, bunny ears, glasses, an eye patch, a beard, a face mask, a scarf, a neck pillow, bags, a guitar, a skateboard, a cape, bubble tea, an umbrella, a suitcase, a surfboard, a tent, a cat, dog or rabbit…); or roll a random one. Pointing at a choice previews it; this one is saved with its own Save button, and leaving without saving drops the changes. Once saved, it appears on the toolbar's settings button and on the shared image, the large figure can turn around to show its back, and hovering it offers it as a 256×256 transparent PNG
+  - My character: a front-facing pixel paper doll. Pick one of 10 ready-made nomads (engineer, designer, surfer, backpacker…) or put one together from skin tone, hair, top, bottom and shoes, plus separate slots for the head, eyes, mouth and cheeks, neck, back, each hand and each side (hats, a conical hat, bunny ears, glasses, an eye patch, a beard, a face mask, a scarf, a neck pillow, bags, a guitar, a skateboard, a cape, bubble tea, an umbrella, a suitcase, a surfboard, a tent, a cat, dog or rabbit…); or roll a random one; clothes and extras take a custom colour from a 35-colour palette or a hex code as well as the built-in swatches. Pointing at a choice previews it; this one is saved with its own Save button, and leaving without saving drops the changes. Once saved, it appears on the toolbar's settings button and on the shared image, the large figure can turn around to show its back, and hovering it offers it as a 256×256 transparent PNG
   - About me: a nickname (shown on the shared image), home (the flight estimate adds the trips from and back home), passport (an EU, EEA or Swiss passport hides the Schengen 90/180 count) and tax residence (the country whose 183 days are counted; Taiwan by default, empty to hide)
   - Display: language, public holiday switches, temperature unit (°C / °F)
   - Data: how long before the backup reminder (3 / 7 / 14 days, or off)
@@ -104,7 +104,8 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 - Installable and usable offline: a service worker keeps the files and fonts the page has loaded, so it opens without a connection (the map aside)
 - Every change is saved automatically
 - Backup reminder: when the plan has changed and gone 7 days without an export, a reminder appears under the header, with buttons to export or to put it off for 3 days
-- Landing page (the site root; the app is at `/app/`): introduces the features, each with a short animation that plays when scrolled into view (drag-select, cut, month view, map route, Schengen and Taiwan day counts, seasons, share image, and a tablet frame showing the desktop app switch from year to month view, then shrinking into the phone layout). The demos are simplified HTML/CSS redraws and never read your plan
+- Every page's header sticks to the top: scroll down and it folds in place into a floating frosted pill, and opens back up at the top. The planner's shrinks its title and folds the tagline away, keeping the toolbar; on a phone the planner's one-row header neither sticks nor folds
+- Landing page (the site root; the app is at `/app/`): introduces the features, each with a short animation that plays when scrolled into view (drag-select, cut, month view, map route, Schengen and Taiwan day counts, seasons, share image, and a tablet frame showing the desktop app switch from year to month view, then shrinking into the phone layout). The demos are simplified HTML/CSS redraws and never read your plan. The nav bar sticks to the top: flat and transparent at the top of the page, it folds into a floating, frosted pill once you scroll down
 
 ---
 
@@ -236,7 +237,7 @@ Each year:
       "country": "th",            // see below; may be empty, but not together with city
       "city": "Chiang Mai",
       "start": "2027-02-10",      // ISO date
-      "end": "2027-03-07",        // inclusive; must be >= start
+      "end": "2027-03-07",        // inclusive; must be >= start; may fall in the next year (a stay that crosses years is kept in the year it starts)
       "color": "teal",            // optional: black red orange yellow green teal blue purple pink
       "companions": "Amy",        // optional
       "ticket": {                 // optional; its presence means "flight booked", every field optional
@@ -244,7 +245,10 @@ Each year:
         "flightNo": "BR211",
         "departure": "2027-02-10T08:30",
         "bookingRef": "ABC123",
-        "price": "NT$ 8,500"
+        "price": "NT$ 8,500",
+        "returnFlightNo": "BR212",         // optional: the return leg of a round trip
+        "returnDeparture": "2027-03-07T12:30",
+        "returnAirline": "Thai Airways"    // optional: only when the return airline differs
       },
       "note": "Yi Peng festival"  // optional
     }
@@ -269,7 +273,7 @@ Import rules: each year in the file **replaces** that year's current stays, and 
 
 Older formats still load: week-based `startWeek`/`endWeek`, a single `location` field (treated as the city), and countries and cities stored by name rather than code.
 
-A "Send to another device" link is `…/app/#plan=<code>`. The code's first character is `z` (followed by JSON compressed with deflate-raw, in base64url) or `j` (uncompressed JSON in base64url, for browsers without CompressionStream). The JSON is packed tighter than an export file so a whole plan fits in one QR code: `{ "v": 3, "y": { "<year>": [stays…] } }`, each stay an array `[days since the previous stay ended, length in days, country, city, color, companions, note, ticket]` (dates counted from 1 January of that year, the ticket as `[airline, flightNo, departure, bookingRef, price]`, empty trailing values dropped), with no ids (an import makes new ones). A year of 20 stays with notes and flights comes to about 700 characters; four years, 100 stays, about 2,400. It holds the same as an export file (minus `bookingRef` and `price` when flight details are left out) and imports by the same rules, except that it doesn't count as a backup, so the backup reminder isn't reset.
+A "Send to another device" link is `…/app/#plan=<code>`. The code's first character is `z` (followed by JSON compressed with deflate-raw, in base64url) or `j` (uncompressed JSON in base64url, for browsers without CompressionStream). The JSON is packed tighter than an export file so a whole plan fits in one QR code: `{ "v": 3, "y": { "<year>": [stays…] } }`, each stay an array `[days since the previous stay ended, length in days, country, city, color, companions, note, ticket]` (dates counted from 1 January of that year, the ticket as `[airline, flightNo, departure, bookingRef, price, returnFlightNo, returnDeparture, returnAirline]`, empty trailing values dropped), with no ids (an import makes new ones). A year of 20 stays with notes and flights comes to about 700 characters; four years, 100 stays, about 2,400. It holds the same as an export file (minus `bookingRef` and `price` when flight details are left out) and imports by the same rules, except that it doesn't count as a backup, so the backup reminder isn't reset.
 
 ---
 
@@ -326,6 +330,7 @@ src/
     DatePicker          Custom date picker (instead of the browser's)
     MapView             Map (lazy-loaded)
     Flag                Country flag
+    PillNav             The header shell every page shares: sticks to the top and folds into a frosted pill on scroll
     PixelNomad          The pixel-art animation in the header (someone on a laptop under a palm tree)
     Avatar              The paper-doll character (SVG, blinks; the large one on the settings page also bobs, with its pets moving)
     Tagline             The typewriter tagline under the title
@@ -338,6 +343,7 @@ src/
     useScrollLock       Stops the page scrolling behind a dialog
     useNarrow           Whether to use the read-only phone layout (720px or narrower, or a touch screen 500px or less tall)
     useNearView         Whether an element has been scrolled near the viewport (loads the map late)
+    useScrolled         Whether the page is scrolled past a given height (for PillNav)
     useBackupReminder   Tracks time since the last export and decides whether to remind
   lib/                  Logic and data that isn't UI
     weeks.ts            Date model: weeks, day indexes, half-week slots, month ranges, labels
@@ -399,7 +405,7 @@ Knowing these before reading the code will save time.
 
 **Flight time is an estimate.** It takes the straight-line distance between consecutive stays, at 850 km/h plus half an hour per flight; hops under 300 km count as ground travel. Layovers are ignored, as are the trips from and back to home.
 
-**Day-count rules are pure calculation over what is on the timeline.** `lib/stayRules.ts` identifies Schengen countries by ISO code (the 29 full members as of 2025; not open-border microstates such as Monaco, nor regions such as "Europe") and, for each day spent in Schengen, counts back 180 days. The timeline starts on 2026-12-28; earlier days are treated as outside Schengen. For Taiwan only stays planned there between 1 January and 31 December count; unplanned days don't, even if you would be at home. The results are a prompt to check, and the official rules of each country are what apply.
+**Day-count rules are pure calculation over what is on the timeline.** `lib/stayRules.ts` identifies Schengen countries by ISO code (the 29 full members as of 2025; not open-border microstates such as Monaco, nor regions such as "Europe") and, for each day spent in Schengen, counts back 180 days. The 180 days look back into the previous year's plan, and count the next year's stays where they reach onto the end of this timeline; days no year has planned are treated as outside Schengen. For Taiwan only stays planned there between 1 January and 31 December count; unplanned days don't, even if you would be at home. The results are a prompt to check, and the official rules of each country are what apply.
 
 **The backup reminder isn't part of the plan.** `dnp-backup` remembers a fingerprint of the plan at the last export or import (an FNV-1a hash of the export format, independent of stay order). The clock starts when the plan differs from that fingerprint and the reminder shows after 7 days; undoing back to the exported state stops it. It isn't in the undo history and isn't written to exports.
 

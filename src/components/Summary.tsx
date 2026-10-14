@@ -7,24 +7,27 @@ import { flightStats, type Coords } from '../hooks/useCoords';
 import { cityLabel } from '../lib/cities';
 import { countryLabel } from '../lib/flags';
 import { daysText, t, tr, useLocale } from '../lib/i18n';
-import type { Stay } from '../lib/storage';
+import { getEdges, type Stay } from '../lib/storage';
 import { getProfile } from '../lib/profile';
 import { checkSchengen, residenceDays } from '../lib/stayRules';
-import { TOTAL_DAYS, YEAR, dateOfDay, daysOf, fullDate, weeksLabel } from '../lib/weeks';
+import { TOTAL_DAYS, YEAR, dateOfDay, daysOnTimeline, fullDate, weeksLabel } from '../lib/weeks';
 import { Flag } from './Flag';
 import './Summary.css';
 
 // Totals for the whole year: time planned, places visited, a flight estimate, and days per country and city.
 export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
   useLocale();
+  // Totals cover this year's timeline: its own stays and the parts of the neighbouring years' that reach onto it.
+  const counted = [...stays, ...getEdges().ghosts];
   // Days per country, each with its cities; stays without a country sit in a '' group.
   const totals = useMemo(() => {
     const groups = new Map<string, { days: number; cities: Map<string, number> }>();
-    for (const s of [...stays].sort((a, b) => a.startDay - b.startDay)) {
+    for (const s of [...counted].sort((a, b) => a.startDay - b.startDay)) {
       const g = groups.get(s.country) ?? { days: 0, cities: new Map() };
       groups.set(s.country, g);
-      g.days += daysOf(s);
-      g.cities.set(s.city, (g.cities.get(s.city) ?? 0) + daysOf(s));
+      // Only the days on this year's timeline, so a stay that crosses into another year is shared between them.
+      g.days += daysOnTimeline(s);
+      g.cities.set(s.city, (g.cities.get(s.city) ?? 0) + daysOnTimeline(s));
     }
     return [...groups.entries()]
       .map(([country, g]) => ({
@@ -40,7 +43,7 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
   const profile = getProfile();
   const home = profile.homeCountry || profile.homeCity ? { country: profile.homeCountry, city: profile.homeCity } : null;
   const flights = useMemo(() => flightStats(stays, coords, home), [stays, coords, home?.country, home?.city]);
-  const plannedDays = stays.reduce((n, s) => n + daysOf(s), 0);
+  const plannedDays = counted.reduce((n, s) => n + daysOnTimeline(s), 0);
   const schengen = useMemo(() => checkSchengen(stays), [stays]);
   const residence = profile.taxResidence;
   const twDays = residenceDays(stays, residence);

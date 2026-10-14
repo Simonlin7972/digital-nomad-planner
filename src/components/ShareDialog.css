@@ -1,5 +1,5 @@
 /* Share dialog: the editor's shell, wide enough for the image, capped like the help dialog */
-.editor.share { width: min(960px, 100%); max-height: 85vh; max-height: 85dvh; overflow: hidden; }
+.editor.share { width: min(960px, 100%); overflow: hidden; }
 .editor.share h2 { position: relative; }
 .editor.share .close { position: absolute; top: 50%; right: 16px; transform: translateY(-50%); width: 32px; height: 32px; padding: 0; border: 0; display: grid; place-items: center; }
 .editor.share .close:active:not(:disabled) { transform: translateY(-50%) scale(0.94); }

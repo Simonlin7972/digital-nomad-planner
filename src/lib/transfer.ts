@@ -35,7 +35,7 @@ type ExportStay = {
 };
 type ExportFile = { version: number; years: Record<string, { year: number; stays: ExportStay[] }> };
 
-const TICKET_KEYS = ['airline', 'flightNo', 'departure', 'bookingRef', 'price'] as const;
+const TICKET_KEYS = ['airline', 'flightNo', 'departure', 'bookingRef', 'price', 'returnFlightNo', 'returnDeparture', 'returnAirline'] as const;
 const DAY_MS = 86_400_000;
 const dayOf = (iso: string, year: number) => Math.round((Date.parse(iso) - Date.UTC(year, 0, 1)) / DAY_MS);
 const isoOf = (day: number, year: number) => new Date(Date.UTC(year, 0, 1) + day * DAY_MS).toISOString().slice(0, 10);

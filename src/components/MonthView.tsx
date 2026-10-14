@@ -1,3 +1,4 @@
+import { LockSimple } from '@phosphor-icons/react/dist/csr/LockSimple';
 import { useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import { CaretLeft } from '@phosphor-icons/react/dist/csr/CaretLeft';
@@ -6,8 +7,8 @@ import { useKeyHeld } from '../hooks/useKeyHeld';
 import { Flag } from './Flag';
 import type { HolidaySet } from '../lib/holidays';
 import { daysText, t, tr, useLocale } from '../lib/i18n';
-import { colorOf, placeName, pushStays, type Stay } from '../lib/storage';
-import { TOTAL_DAYS, YEAR, dateOfDay, daysOf, monthRange, monthTitle, todayIndex, weekdayHeaders, type DayRange } from '../lib/weeks';
+import { type Ghost, type Stay, colorOf, getEdges, isLocked, placeName, pushStays } from '../lib/storage';
+import { YEAR, dateOfDay, daysOf, monthRange, monthTitle, todayIndex, weekdayHeaders, type DayRange } from '../lib/weeks';
 import './MonthView.css';
 
 type Drag =
@@ -17,6 +18,8 @@ type Drag =
 
 type Props = {
   stays: Stay[];
+  ghosts: Ghost[]; // neighbouring years' stays that reach onto this year's days, drawn but not editable here
+  onOpenYear: (year: number) => void; // a neighbouring year's stay was clicked: go to that year
   month: number;
   onMonth: (month: number) => void;
   holidaySets: HolidaySet[]; // only the ones switched on
@@ -32,7 +35,7 @@ type Props = {
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
 export default function MonthView(props: Props) {
-  const { stays, month, onMonth, holidaySets, pending, onCreate, onEdit, onResize, onHover, stacked, onSplit } = props;
+  const { stays, ghosts, onOpenYear, month, onMonth, holidaySets, pending, onCreate, onEdit, onResize, onHover, stacked, onSplit } = props;
   useLocale();
   const [drag, setDrag] = useState<Drag | null>(null);
   const weekEls = useRef<(HTMLDivElement | null)[]>([]);
@@ -44,14 +47,17 @@ export default function MonthView(props: Props) {
   const today = todayIndex();
 
   const shown = drag?.kind === 'resize' ? (pushStays(stays, drag.id, drag) ?? stays) : stays;
-  const inMonth = shown.filter((s) => s.startDay <= range.endDay && s.endDay >= range.startDay);
+  const inMonth = [...shown, ...ghosts].filter((s) => s.startDay <= range.endDay && s.endDay >= range.startDay);
   const plannedDays = inMonth.reduce(
     (n, s) => n + Math.min(s.endDay, range.endDay) - Math.max(s.startDay, range.startDay) + 1,
     0,
   );
   const selection: DayRange | null = drag?.kind === 'select' ? { startDay: drag.lo, endDay: drag.hi } : pending;
 
-  const isFree = (day: number) => day >= 0 && day < TOTAL_DAYS && !stays.some((s) => day >= s.startDay && day <= s.endDay);
+  // The days this year's stays may use (see getEdges): a new one starts on this year's timeline and may run on
+  // into the next year's days at the end of December.
+  const edges = getEdges();
+  const isFree = (day: number) => day >= edges.lo && day <= edges.hi && !stays.some((s) => day >= s.startDay && day <= s.endDay);
 
   function dayAt(e: ReactPointerEvent) {
     const rows = weekEls.current.slice(0, weekCount);
@@ -72,7 +78,7 @@ export default function MonthView(props: Props) {
     const rect = rows[week]!.getBoundingClientRect();
     const col = clamp(Math.round(((e.clientX - rect.left) / rect.width) * 7), 0, 7);
     const day = gridStart + week * 7 + col;
-    const stay = stays.find((s) => s.startDay < day && day <= s.endDay);
+    const stay = stays.find((s) => s.startDay < day && day <= s.endDay && !isLocked(s));
     return stay ? { id: stay.id, day, week, col } : null;
   }
 
@@ -92,7 +98,8 @@ export default function MonthView(props: Props) {
     if (bar) {
       const stay = stays.find((s) => s.id === bar.dataset.stay);
       if (!stay) return;
-      const edge = target.dataset.edge as 'l' | 'r' | undefined;
+      // A locked stay has no handles; a press on it can only end in a click that opens the editor.
+      const edge = isLocked(stay) ? undefined : (target.dataset.edge as 'l' | 'r' | undefined);
       setDrag(
         edge
           ? { kind: 'resize', id: stay.id, edge, startDay: stay.startDay, endDay: stay.endDay, moved: false }
@@ -100,7 +107,7 @@ export default function MonthView(props: Props) {
       );
     } else {
       const day = dayAt(e);
-      if (!isFree(day)) return;
+      if (!isFree(day) || day > edges.lastStart) return;
       setDrag({ kind: 'select', anchor: day, lo: day, hi: day });
     }
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -216,15 +223,42 @@ export default function MonthView(props: Props) {
                   </div>
                 );
               })}
+              {ghosts.map((g) => {
+                const seg = segment(g, weekStart);
+                if (!seg) return null;
+                return (
+                  <div
+                    key={g.id}
+                    className={`mbar ghost${seg.starts ? ' starts' : ''}${seg.ends ? ' ends' : ''}`}
+                    style={{ ...seg.style, background: colorOf(g) }}
+                    // Not part of this year's plan: no dragging, and a click goes to the year it belongs to.
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => onOpenYear(g.year)}
+                    onMouseEnter={(e) => {
+                      if (drag) return;
+                      const r = e.currentTarget.getBoundingClientRect();
+                      onHover({ id: g.id, x: r.left + r.width / 2, y: r.bottom });
+                    }}
+                    onMouseLeave={() => onHover(null)}
+                  >
+                    <span className="label">
+                      {g.country && <Flag country={g.country} />}
+                      <strong>{placeName(g)}</strong>
+                      <small>{t('year.ghost', { year: g.year })}</small>
+                    </span>
+                  </div>
+                );
+              })}
               {shown.map((s) => {
                 const seg = segment(s, weekStart);
                 if (!seg) return null;
                 const active = drag?.kind === 'resize' && drag.id === s.id;
+                const locked = isLocked(s);
                 return (
                   <div
                     key={s.id}
                     data-stay={s.id}
-                    className={`mbar${seg.starts ? ' starts' : ''}${seg.ends ? ' ends' : ''}${active ? ' active' : ''}`}
+                    className={`mbar${seg.starts ? ' starts' : ''}${seg.ends ? ' ends' : ''}${active ? ' active' : ''}${locked ? ' locked' : ''}`}
                     style={{ ...seg.style, background: colorOf(s) }}
                     onMouseEnter={(e) => {
                       if (drag) return;
@@ -233,13 +267,14 @@ export default function MonthView(props: Props) {
                     }}
                     onMouseLeave={() => onHover(null)}
                   >
-                    {seg.starts && <span className="handle" data-edge="l" />}
+                    {seg.starts && !locked && <span className="handle" data-edge="l" />}
                     <span className="label">
+                      {locked && seg.starts && <LockSimple size={12} weight="bold" aria-label={t('stay.locked')} />}
                       {s.country && <Flag country={s.country} />}
                       <strong>{placeName(s)}</strong>
                       {s.note && <small>{s.note.replace(/\s+/g, ' ')}</small>}
                     </span>
-                    {seg.ends && <span className="handle" data-edge="r" />}
+                    {seg.ends && !locked && <span className="handle" data-edge="r" />}
                   </div>
                 );
               })}

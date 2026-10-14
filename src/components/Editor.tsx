@@ -4,8 +4,8 @@ import { useScrollLock } from '../hooks/useScrollLock';
 import { normalizeCity } from '../lib/cities';
 import { normalizeCountry } from '../lib/flags';
 import { daysText, t, useLocale } from '../lib/i18n';
-import { PALETTE, cleanTicket, colorKeyOf, defaultColor, overlaps, placeName, type ColorKey, type Stay, type Ticket } from '../lib/storage';
-import { TOTAL_DAYS, dayOfIso, daysOf, isoOfDay, rangeLabel, weeksLabel, type DayRange } from '../lib/weeks';
+import { PALETTE, cleanTicket, colorKeyOf, defaultColor, getEdges, overlaps, placeName, type ColorKey, type Stay, type Ticket } from '../lib/storage';
+import { dayLabel, dayOfIso, dayOfIsoAny, daysOf, isoOfDay, rangeLabel, weeksLabel, type DayRange } from '../lib/weeks';
 import { CityCombobox, CountryCombobox, AirlineCombobox, FlightNoCombobox } from './Combobox';
 import { DatePicker } from './DatePicker';
 import { SeasonStrip } from './SeasonStrip';
@@ -63,16 +63,31 @@ export function Editor(props: {
     if (day < startDay) setStartDay(day);
   };
 
-  // The stay's dates are limited to the days the plan covers.
-  const planDates = { min: isoOfDay(0), max: isoOfDay(TOTAL_DAYS - 1) };
+  // A stay starts on this year's timeline and may end in the next year, within what the neighbouring years'
+  // plans leave free (see getEdges).
+  const edges = getEdges();
+  const startDates = { min: isoOfDay(edges.lo), max: isoOfDay(edges.lastStart) };
+  const endDates = { min: isoOfDay(edges.lo), max: isoOfDay(edges.hi) };
   const pickDay = (iso: string, pick: (day: number) => void) => {
-    const day = dayOfIso(iso);
+    const day = dayOfIsoAny(iso);
     if (day !== null) pick(day);
   };
   // The flight's departure is stored as one "YYYY-MM-DDTHH:MM" string and edited as a date plus a time.
   const [depDate = '', depTime = ''] = (ticket.departure ?? '').split('T');
   const setDeparture = (date: string, time: string) =>
     setTicket((t) => ({ ...t, departure: date ? (time ? `${date}T${time}` : date) : '' }));
+  // The departure and the stay's first day are separate fields; point it out when they disagree.
+  const depDay = depDate ? dayOfIso(depDate) : null;
+  const depMismatch = hasTicket && depDay !== null && depDay !== startDay;
+  // The return leg, the same way, held against the stay's last day (which may lie in the next year).
+  const [retDate = '', retTime = ''] = (ticket.returnDeparture ?? '').split('T');
+  const setReturn = (date: string, time: string) =>
+    setTicket((t) => ({ ...t, returnDeparture: date ? (time ? `${date}T${time}` : date) : '' }));
+  const retDay = retDate ? dayOfIsoAny(retDate) : null;
+  const retMismatch = hasTicket && retDay !== null && retDay !== endDay;
+  // The return leg's airline starts as the outbound one and is only stored when it differs.
+  const retAirline = ticket.returnAirline ?? ticket.airline ?? '';
+  const setRetAirline = (v: string) => setTicket((tk) => ({ ...tk, returnAirline: v === (tk.airline ?? '') ? undefined : v }));
 
   useScrollLock();
 
@@ -138,11 +153,11 @@ export function Editor(props: {
         <div className="dates">
           <div className="field">
             {t('editor.start')}
-            <DatePicker {...planDates} value={isoOfDay(startDay)} onChange={(iso) => pickDay(iso, pickStart)} rangeWith={isoOfDay(endDay)} label={t('editor.start')} />
+            <DatePicker {...startDates} value={isoOfDay(startDay)} onChange={(iso) => pickDay(iso, pickStart)} rangeWith={isoOfDay(endDay)} label={t('editor.start')} />
           </div>
           <div className="field">
             {t('editor.end')}
-            <DatePicker {...planDates} value={isoOfDay(endDay)} onChange={(iso) => pickDay(iso, pickEnd)} rangeWith={isoOfDay(startDay)} align="right" label={t('editor.end')} />
+            <DatePicker {...endDates} value={isoOfDay(endDay)} onChange={(iso) => pickDay(iso, pickEnd)} rangeWith={isoOfDay(startDay)} align="right" label={t('editor.end')} />
           </div>
         </div>
         {error ? (
@@ -215,6 +230,52 @@ export function Editor(props: {
                     onChange={(e) => setDeparture(depDate, e.target.value)}
                   />
                 </div>
+                {depMismatch && (
+                  <p className="dep-mismatch">
+                    <span>{t('editor.depMismatch', { dep: dayLabel(depDay), start: dayLabel(startDay) })}</span>
+                    <button type="button" onClick={() => pickStart(depDay)}>
+                      {t('editor.depMatch', { dep: dayLabel(depDay) })}
+                    </button>
+                  </p>
+                )}
+              </div>
+              {/* The return leg, laid out exactly like the outbound one above */}
+              <p className="wide leg-title">{t('editor.return')}</p>
+              <div className="dates place wide">
+                <label>
+                  {t('editor.returnAirline')}
+                  <AirlineCombobox value={retAirline} onChange={setRetAirline} recent={usedAirlines} />
+                </label>
+                <label>
+                  {t('editor.returnFlightNo')}
+                  <FlightNoCombobox
+                    value={ticket.returnFlightNo ?? ''}
+                    airline={retAirline}
+                    onChange={(v) => setTicket((tk) => ({ ...tk, returnFlightNo: v }))}
+                    recent={usedFlights}
+                  />
+                </label>
+              </div>
+              <div className="field wide">
+                {t('editor.returnDeparture')}
+                <div className="date-time">
+                  <DatePicker value={retDate} onChange={(date) => setReturn(date, retTime)} openAt={isoOfDay(endDay)} label={t('editor.retDate')} />
+                  <input
+                    type="time"
+                    aria-label={t('editor.retTime')}
+                    value={retTime}
+                    disabled={!retDate}
+                    onChange={(e) => setReturn(retDate, e.target.value)}
+                  />
+                </div>
+                {retMismatch && (
+                  <p className="dep-mismatch">
+                    <span>{t('editor.retMismatch', { dep: dayLabel(retDay), end: dayLabel(endDay) })}</span>
+                    <button type="button" onClick={() => pickEnd(retDay)}>
+                      {t('editor.retMatch', { dep: dayLabel(retDay) })}
+                    </button>
+                  </p>
+                )}
               </div>
               <label>
                 {t('editor.bookingRef')}

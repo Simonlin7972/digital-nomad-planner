@@ -9,7 +9,7 @@ import type { MouseEvent } from 'react';
 import { daysText, t, useLocale } from '../lib/i18n';
 import { download } from '../lib/files';
 import { flightIcs } from '../lib/ics';
-import { cityOf, colorOf, countryOf, loadYearPlan, placeName, type Stay } from '../lib/storage';
+import { cityOf, colorOf, countryOf, getEdges, loadYearPlan, placeName, type Stay } from '../lib/storage';
 import { noteText, seasonWarning } from '../lib/seasons';
 import { checkSchengen, gapsOf } from '../lib/stayRules';
 import { TOTAL_DAYS, YEAR, YEARS, dateOfDay, daysOf, inYear, longRangeLabel, setYear, todayIndex, weeksLabel } from '../lib/weeks';
@@ -53,7 +53,8 @@ export function MobileItinerary({ stays }: { stays: Stay[] }) {
   const past = today === null ? [] : sorted.filter((s) => s.endDay < today);
   const shown = showPast ? sorted : sorted.filter((s) => !past.includes(s));
   const from = shown[0]?.startDay ?? TOTAL_DAYS;
-  const gaps = gapsOf(stays).filter((g) => g.startDay > 0 && g.endDay < TOTAL_DAYS - 1 && g.startDay > from);
+  const edges = getEdges();
+  const gaps = gapsOf(stays).filter((g) => g.startDay > edges.lo && g.endDay < Math.min(TOTAL_DAYS - 1, edges.hi) && g.startDay > from);
   const rows = [
     ...shown.map((stay) => ({ startDay: stay.startDay, stay })),
     ...gaps.map((gap) => ({ startDay: gap.startDay, gap })),

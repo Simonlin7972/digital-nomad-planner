@@ -54,16 +54,21 @@ body::before {
   padding: 0 40px 56px;
 }
 
+/* The planner's header (a PillNav: components/PillNav.css has the sticking and the pill) */
+.topbar-slot { margin-bottom: 28px; }
 .topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   gap: 16px 24px;
   flex-wrap: wrap;
   padding: 28px 0 24px;
-  margin-bottom: 28px;
-  border-bottom: 1px solid var(--line);
+  border-bottom-color: var(--line);
 }
+/* Folded: the title small and the tagline folded away; the toolbar as it was */
+.topbar.pill { gap: 24px; }
+.topbar .brand { min-width: 0; }
+.topbar.pill h1 { gap: 10px; font-size: 18px; white-space: nowrap; }
+.topbar.pill .pixel-nomad { width: 34px; height: 32px; }
+.topbar.pill .brand .tagline { min-height: 0; max-height: 0; margin-top: 0; opacity: 0; }
+.topbar .actions { flex: none; }
 
 h1 {
   margin: 0;
@@ -72,7 +77,9 @@ h1 {
   line-height: 1.15;
   letter-spacing: 0.01em;
 }
-.brand h1 { display: flex; align-items: center; gap: 12px; }
+.brand h1 { display: flex; align-items: center; gap: 12px; transition: font-size 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), gap 0.45s; }
+.brand .tagline { max-height: 40px; overflow: hidden; transition: min-height 0.35s, max-height 0.35s, margin-top 0.35s, opacity 0.2s; }
+.brand .pixel-nomad { transition: width 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
 h2 { margin: 0 0 16px; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
 
 button {
@@ -171,7 +178,9 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
   .app {
     padding: 0 max(16px, env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   }
-  .topbar { flex-wrap: nowrap; gap: 12px; padding: calc(12px + env(safe-area-inset-top)) 0 12px; margin-bottom: 16px; }
+  /* No pill on a phone (PillNav is off): the header is one row and scrolls away with the page */
+  .topbar-slot { margin-bottom: 16px; }
+  .topbar { flex-wrap: nowrap; gap: 12px; padding: calc(12px + env(safe-area-inset-top)) 0 12px; }
   .brand { min-width: 0; }
   .brand h1 { gap: 8px; font-size: clamp(18px, 5.6vw, 24px); white-space: nowrap; }
   .brand .tagline { display: none; }

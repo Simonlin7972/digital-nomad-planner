@@ -39,6 +39,11 @@
 .ticket-fields .field { min-width: 0; }
 .ticket-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 6px; padding: 14px; border-radius: var(--radius); background: var(--subtle); }
 .ticket-fields .wide { grid-column: 1 / -1; }
+/* The return leg's heading: a rule above it separates the two legs */
+.leg-title { margin: 4px 0 -4px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13px; font-weight: 600; color: var(--muted); }
+/* The flight leaves on a different day from the stay's first day */
+.dep-mismatch { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 2px 0 0; font-size: 13px; font-weight: 400; color: var(--danger); }
+.dep-mismatch button { padding: 4px 12px; font-size: 12px; }
 .editor .dates { display: flex; gap: 12px; }
 .editor .dates label,
 .editor .dates > .field { flex: 1; min-width: 0; }

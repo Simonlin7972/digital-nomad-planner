@@ -21,6 +21,7 @@ import {
   ShareDemo,
   TaiwanMeter,
 } from './Demos';
+import { PillNav } from '../components/PillNav';
 import { useInView } from './motion';
 import './Landing.css';
 
@@ -55,7 +56,7 @@ export function Landing() {
 
   return (
     <div className="landing">
-      <header className="l-nav">
+      <PillNav className="l-nav">
         <a className="l-brand" href="#top" aria-label={t('app.title')}>
           <PixelNomad />
           <span>{t('app.title')}</span>
@@ -75,7 +76,7 @@ export function Landing() {
             {t('landing.cta.open')}
           </a>
         </nav>
-      </header>
+      </PillNav>
 
       <section id="top" className="l-hero">
         <h1>{t('app.title')}</h1>

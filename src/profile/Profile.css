@@ -1,7 +1,8 @@
 /* The profile page: the changelog page's frame, with settings in titled sections */
 .profile { max-width: 760px; margin: 0 auto; padding: 0 40px 64px; }
 
-.p-nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 24px 0; }
+/* A PillNav (components/PillNav.css has the sticking and the pill); only its resting padding is set here */
+.p-nav { gap: 16px; padding: 24px 0; }
 .p-brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-size: 18px; font-weight: 600; }
 .p-brand .pixel-nomad { width: 34px; height: 32px; }
 .p-back {

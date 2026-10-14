@@ -2,13 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft';
 import { ArrowRight } from '@phosphor-icons/react/dist/csr/ArrowRight';
+import { LockSimple } from '@phosphor-icons/react/dist/csr/LockSimple';
 import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
 import { useKeyHeld } from '../hooks/useKeyHeld';
 import { usePinchZoom } from '../hooks/usePinchZoom';
 import type { Zoom } from '../hooks/useZoom';
 import type { Holiday, HolidaySet } from '../lib/holidays';
 import { daysText, t, useLocale } from '../lib/i18n';
-import { colorOf, countryOf, insertStay, placeName, pushStays, reorderStays, type Stay } from '../lib/storage';
+import { type Ghost, type Stay, colorOf, countryOf, getEdges, insertStay, isLocked, placeName, pushStays, reorderStays } from '../lib/storage';
 import { seasonWarning } from '../lib/seasons';
 import { clamp } from '../lib/util';
 import {
@@ -16,6 +17,7 @@ import {
   SLOTS,
   TOTAL_DAYS,
   WEEKS,
+  YEAR,
   currentWeekIndex,
   dayOfBoundary,
   daysOf,
@@ -42,21 +44,33 @@ type Grid = {
 };
 
 function gridOf(unit: Unit): Grid {
-  return unit === 'day'
-    ? { unit, n: TOTAL_DAYS, perWeek: 7, cols: (r) => ({ s: r.startDay, e: r.endDay + 1 }), boundary: (k) => k }
-    : { unit, n: SLOTS, perWeek: 2, cols: slotsOf, boundary: dayOfBoundary };
+  const grid: Grid =
+    unit === 'day'
+      ? { unit, n: TOTAL_DAYS, perWeek: 7, cols: (r) => ({ s: r.startDay, e: r.endDay + 1 }), boundary: (k) => k }
+      : { unit, n: SLOTS, perWeek: 2, cols: slotsOf, boundary: dayOfBoundary };
+  // A stay can run past either end of the timeline (into a neighbouring year); draw only the part on it.
+  const cols = grid.cols;
+  grid.cols = (r) => {
+    const { s, e } = cols(r);
+    const from = clamp(s, 0, grid.n - 1);
+    return { s: from, e: clamp(e, from + 1, grid.n) };
+  };
+  return grid;
 }
 
 // Positions are in columns of the grid the drag started on (see Grid), so a zoom mid-drag can't shift them.
 type Drag = { unit: Unit } & (
   | { kind: 'select'; anchor: number; lo: number; hi: number } // columns, inclusive
   // copy: alt-drag. The original stays put and a duplicate is dropped where the pointer goes.
-  | (DayRange & { kind: 'move'; id: string; grabSlot: number; orig: DayRange; moved: boolean; copy: boolean })
+  // `locked`: a stay with a flight booked; the press can only end in a click that opens the editor.
+  | (DayRange & { kind: 'move'; id: string; grabSlot: number; orig: DayRange; moved: boolean; copy: boolean; locked?: boolean })
   | (DayRange & { kind: 'resize'; id: string; edge: 'l' | 'r'; grabSlot: number; moved: boolean })
 );
 
 type Props = {
   stays: Stay[];
+  ghosts: Ghost[]; // neighbouring years' stays that reach onto this timeline, drawn but not editable here
+  onOpenYear: (year: number) => void; // a neighbouring year's stay was clicked: go to that year
   zoom: Zoom;
   holidaySets: HolidaySet[]; // only the ones switched on
   pending: DayRange | null; // range of the stay being created in the editor
@@ -91,7 +105,7 @@ const slotCol = (s: number, e: number): CSSProperties => ({ gridColumn: `${s + 1
 // when zoomed to DAY_UNIT_ZOOM or beyond. Stays keep their exact dates either way; only drawing and dragging snap.
 export default function YearView(props: Props) {
   const { stays, zoom, holidaySets, pending, onCreate, onEdit, onChange, onOpenMonth, onHoverStay, onHoverHoliday, onDragging } = props;
-  const { prevYear, nextYear, onYearEdge, startAtEnd, onSplit } = props;
+  const { prevYear, nextYear, onYearEdge, startAtEnd, onSplit, ghosts, onOpenYear } = props;
   useLocale();
   const [drag, setDrag] = useState<Drag | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -169,7 +183,7 @@ export default function YearView(props: Props) {
     const rect = trackRef.current!.getBoundingClientRect();
     const col = clamp(Math.round(((clientX - rect.left) / rect.width) * grid.n), 1, grid.n - 1);
     const day = grid.boundary(col);
-    const stay = stays.find((s) => s.startDay < day && day <= s.endDay);
+    const stay = stays.find((s) => s.startDay < day && day <= s.endDay && !isLocked(s));
     return stay ? { id: stay.id, col, day } : null;
   };
 
@@ -192,17 +206,22 @@ export default function YearView(props: Props) {
     const rect = trackRef.current!.getBoundingClientRect();
     return clamp(Math.floor(((clientX - rect.left) / rect.width) * grid.n), 0, grid.n - 1);
   };
+  // The days this year's stays may use (see getEdges); the neighbouring years' stays fill the rest.
+  const edges = getEdges();
   const slotFree = (slot: number) =>
     slot >= 0 &&
     slot < grid.n &&
-    !stays.some((st) => {
+    grid.boundary(slot + 1) - 1 >= edges.lo &&
+    grid.boundary(slot) <= edges.lastStart &&
+    ![...stays, ...ghosts].some((st) => {
       const { s, e } = grid.cols(st);
       return slot >= s && slot < e;
     });
-  // Trims a day range so it doesn't run into neighbouring stays; null if nothing is left.
+  // Trims a day range so it doesn't run into neighbouring stays (or years); null if nothing is left.
   const fit = (range: DayRange): DayRange | null => {
-    let { startDay, endDay } = range;
-    for (const o of [...stays].sort((a, b) => a.startDay - b.startDay)) {
+    let startDay = Math.max(range.startDay, edges.lo);
+    let endDay = Math.min(range.endDay, edges.lastStart);
+    for (const o of [...stays, ...ghosts].sort((a, b) => a.startDay - b.startDay)) {
       if (o.endDay < startDay || o.startDay > endDay) continue;
       if (o.startDay <= startDay) startDay = o.endDay + 1;
       else endDay = Math.min(endDay, o.startDay - 1);
@@ -227,11 +246,13 @@ export default function YearView(props: Props) {
     if (stayEl) {
       const stay = stays.find((s) => s.id === stayEl.dataset.stay);
       if (!stay) return;
-      // With alt held the whole block copies, wherever it is grabbed.
-      const edge = e.altKey ? undefined : (target.dataset.edge as 'l' | 'r' | undefined);
+      // With alt held the whole block copies, wherever it is grabbed. A locked stay has no handles and doesn't
+      // move, but copying it (the copy has no ticket) and clicking it to edit still work.
+      const locked = isLocked(stay) && !e.altKey;
+      const edge = e.altKey || locked ? undefined : (target.dataset.edge as 'l' | 'r' | undefined);
       const range = { startDay: stay.startDay, endDay: stay.endDay };
       const base = { unit, id: stay.id, grabSlot: slot, moved: false, ...range };
-      setDrag(edge ? { kind: 'resize', edge, ...base } : { kind: 'move', orig: range, copy: e.altKey, ...base });
+      setDrag(edge ? { kind: 'resize', edge, ...base } : { kind: 'move', orig: range, copy: e.altKey, locked, ...base });
     } else {
       if (!slotFree(slot)) return;
       setDrag({ unit, kind: 'select', anchor: slot, lo: slot, hi: slot });
@@ -255,6 +276,7 @@ export default function YearView(props: Props) {
       return;
     }
     if (drag.kind === 'move') {
+      if (drag.locked) return;
       const len = daysOf(drag.orig);
       const rangeAt = (delta: number): DayRange => {
         // By day: the stay moves that many days. By half-week: whole-week moves keep the exact dates, half-week
@@ -265,7 +287,7 @@ export default function YearView(props: Props) {
             : delta % 2 === 0
               ? drag.orig.startDay + (delta / 2) * 7
               : dayOfBoundary(clamp(slotsOf(drag.orig).s + delta, 0, SLOTS - 1));
-        const startDay = clamp(raw, 0, TOTAL_DAYS - len);
+        const startDay = clamp(raw, edges.lo, Math.min(edges.lastStart, edges.hi - len + 1));
         return { startDay, endDay: startDay + len - 1 };
       };
       // The drag only records where the pointer wants the stay; reorderStays / insertStay decide where it lands.
@@ -413,13 +435,41 @@ export default function YearView(props: Props) {
                 <span>{w.start.getDate()}</span>
               </div>
             ))}
+            {ghosts.map((g) => (
+              <div
+                key={g.id}
+                className={`stay ghost ${g.year < YEAR ? 'from-prev' : 'from-next'}`}
+                style={{ ...stayCol(g), background: colorOf(g) }}
+                // Not part of this year's plan: no dragging, and a click goes to the year it belongs to.
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={() => onOpenYear(g.year)}
+                onMouseEnter={(e) => {
+                  if (drag) return;
+                  const r = e.currentTarget.getBoundingClientRect();
+                  onHoverStay({ id: g.id, x: (Math.max(r.left, 0) + Math.min(r.right, window.innerWidth)) / 2, y: r.bottom });
+                }}
+                onMouseLeave={() => onHoverStay(null)}
+              >
+                <span className="label">
+                  <strong>{placeName(g)}</strong>
+                  <small>
+                    {g.year < YEAR && <ArrowLeft size={10} weight="bold" />}
+                    {t('year.ghost', { year: g.year })}
+                    {g.year > YEAR && <ArrowRight size={10} weight="bold" />}
+                  </small>
+                </span>
+              </div>
+            ))}
             {visible.map((s) => {
               const weeks = weeksLabel(daysOf(s));
+              // Runs on into next year: the end is off this timeline, so it has no handle to drag here.
+              const spills = s.endDay >= TOTAL_DAYS;
+              const locked = isLocked(s);
               return (
                 <div
                   key={s.id}
                   data-stay={s.id}
-                  className={`stay${s.id === activeId ? ' active' : ''}${s.id === COPY_ID && copyBlocked ? ' blocked' : ''}`}
+                  className={`stay${s.id === activeId ? ' active' : ''}${s.id === COPY_ID && copyBlocked ? ' blocked' : ''}${locked ? ' locked' : ''}`}
                   style={{ ...stayCol(s), background: colorOf(s) }}
                   onMouseEnter={(e) => {
                     // No card mid-drag; it would only get in the way.
@@ -431,9 +481,10 @@ export default function YearView(props: Props) {
                   }}
                   onMouseLeave={() => onHoverStay(null)}
                 >
-                  <span className="handle" data-edge="l" />
+                  {!locked && <span className="handle" data-edge="l" />}
                   <span className="label">
                     <strong>
+                      {locked && <LockSimple size={12} weight="bold" aria-label={t('stay.locked')} />}
                       {seasonWarning(s) && <Warning size={12} weight="bold" aria-label={t('season.warnShort')} />}
                       {placeName(s)}
                     </strong>
@@ -441,7 +492,14 @@ export default function YearView(props: Props) {
                       {s.id === activeId ? rangeLabel(s) : `${weeks}${s.note ? `${t('sep')}${s.note.replace(/\s+/g, ' ')}` : ''}`}
                     </small>
                   </span>
-                  <span className="handle" data-edge="r" />
+                  {spills ? (
+                    <span className="spill" title={t('year.spill', { year: YEAR + 1 })}>
+                      {YEAR + 1}
+                      <ArrowRight size={10} weight="bold" />
+                    </span>
+                  ) : (
+                    !locked && <span className="handle" data-edge="r" />
+                  )}
                 </div>
               );
             })}

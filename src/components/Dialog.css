@@ -25,6 +25,8 @@
   gap: 16px;
   animation: rise 0.2s ease-out;
 }
+/* As a dialog (not the profile page, which borrows .editor) it stops at 80% of the window and scrolls inside */
+.backdrop .editor { max-height: 80vh; max-height: 80dvh; }
 .editor h2 {
   margin: 0 -24px;
   padding: 20px 24px;

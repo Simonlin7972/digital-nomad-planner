@@ -63,6 +63,23 @@
 .ap-swatches button { width: 24px; height: 24px; padding: 0; border: 1px solid rgb(0 0 0 / 0.12); border-radius: 50%; }
 .ap-swatches button[aria-checked='true'] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text); }
 
+/* The "+" swatch and the palette it opens */
+.ap-custom { position: relative; }
+.ap-plus { display: grid; place-items: center; color: var(--muted); border-style: dashed !important; border-color: var(--line-strong) !important; background: var(--surface) !important; }
+.ap-plus.has { border: 0 !important; background: conic-gradient(#ff5a5f, #f5b83d, #6fbf6a, #3fb3d1, #5a7fb0, #9b7fd1, #ff5a8a, #ff5a5f) !important; }
+.ap-plus.has::after { content: ''; width: 16px; height: 16px; border-radius: 50%; background: var(--c); }
+.ap-palette { position: absolute; z-index: 5; top: 32px; left: 0; width: 232px; padding: 10px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-pop); }
+.ap-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.ap-swatches .ap-grid button.square { width: auto; height: auto; aspect-ratio: 1; border-radius: 4px; }
+.ap-swatches .ap-grid button.square[aria-checked='true'] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--text); }
+.ap-hex { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.ap-pair { display: flex; }
+.ap-pair i { display: block; width: 22px; height: 22px; }
+.ap-pair i:first-child { border-radius: 5px 0 0 5px; }
+.ap-pair i:last-child { border-radius: 0 5px 5px 0; }
+.ap-hexfield { width: 90px; padding: 5px 8px; font: 12px ui-monospace, Menlo, monospace; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); color: var(--text); }
+.ap-hexfield:focus-visible { outline: 2px solid var(--text); outline-offset: -1px; }
+
 @media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
   .ap { grid-template-columns: 1fr; }
   .ap-stage .avatar { width: 128px; height: 128px; }

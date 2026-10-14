@@ -1,4 +1,5 @@
 import { ArrowRight } from '@phosphor-icons/react/dist/csr/ArrowRight';
+import { PillNav } from '../components/PillNav';
 import { PixelNomad } from '../components/PixelNomad';
 import { CHANGELOG } from '../lib/changelog';
 import { langTag, nextLocale, setLocale, t, useLocale } from '../lib/i18n';
@@ -19,7 +20,7 @@ export function Changelog() {
 
   return (
     <div className="changelog">
-      <header className="c-nav">
+      <PillNav className="c-nav">
         <a className="c-brand" href={HOME_URL}>
           <PixelNomad />
           <span>{t('app.title')}</span>
@@ -33,7 +34,7 @@ export function Changelog() {
             {t('landing.cta.open')} <ArrowRight size={14} weight="bold" />
           </a>
         </nav>
-      </header>
+      </PillNav>
 
       <main>
         <h1>{t('changelog.title')}</h1>

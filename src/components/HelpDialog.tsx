@@ -71,6 +71,9 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           按住 <kbd>B</kbd> 再點行程，會從切線那裡<b>切成兩段</b>（年、月檢視都可以）。
         </>,
         <>
+          開了<b>已買機票</b>的行程會<b>鎖定</b>：不能拖、不能拉兩端、不能切，隔壁也推不動它；要改日期請打開編輯視窗。
+        </>,
+        <>
           <b>點一下</b>行程可以編輯：日期、顏色、跟誰去、機票、備註，或刪除。
         </>,
         <>
@@ -98,6 +101,9 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         </>,
         <>
           分頁左邊可以切換<b>年份</b>（2025／2026／2027／2028），每年各存一份行程。按住月份列拖過 12 月再繼續拉，放開就到下一年（往 1 月拉則回上一年）。
+        </>,
+        <>
+          行程可以<b>跨年</b>：在編輯視窗把結束日選到明年，時間軸尾端會標出下一年（例如「2028 →」），下一年的開頭會顯示這段的淡色版，點一下回到原本那年。兩年的行程不會重疊。
         </>,
         <>
           年檢視可以放大：用上方滑桿、觸控板兩指開合，或按住 <kbd>{alt}</kbd> 滾動滾輪。放大後按住月份列可以左右拖。
@@ -198,6 +204,9 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           Hold <kbd>B</kbd> and click a stay to <b>cut it in two</b> at the line (in both the year and month views).
         </>,
         <>
+          A stay with <b>Flight booked</b> on is <b>locked</b>: it can't be dragged, stretched or cut, and its neighbours can't push it. Change its dates in the editor instead.
+        </>,
+        <>
           <b>Click</b> a stay to edit its dates, color, companions, flight and note, or to delete it.
         </>,
         <>
@@ -228,6 +237,9 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         <>
           The drop-down beside the tabs switches the <b>year</b> (2025 / 2026 / 2027 / 2028); each year keeps its own plan. Drag the month row past
           December and keep pulling, then let go, to move to the next year (or past January for the previous one).
+        </>,
+        <>
+          A stay can <b>cross into the next year</b>: pick an end date next year in the editor. The timeline marks it with the next year at its end, and next year's timeline shows a faded copy at its start that takes you back with one click. Stays in the two years never overlap.
         </>,
         <>
           Zoom the year view with the slider, a trackpad pinch, or by holding <kbd>{alt}</kbd> and scrolling. When zoomed in, drag the
@@ -332,6 +344,9 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           <kbd>B</kbd> を押しながら滞在をクリックすると、その線で<b>2 つに分割</b>されます（年・月どちらの表示でも）。
         </>,
         <>
+          <b>航空券購入済み</b>の滞在は<b>固定</b>されます：ドラッグ・伸縮・分割はできず、隣の滞在に押されることもありません。日付は編集画面で変えてください。
+        </>,
+        <>
           滞在を<b>クリック</b>すると編集できます：日付、色、同行者、航空券、メモ、または削除。
         </>,
         <>
@@ -359,6 +374,9 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         </>,
         <>
           タブの左で<b>年</b>を切り替えられます（2025／2026／2027／2028）。年ごとに別の計画が保存されます。月の列を 12 月より先までドラッグして離すと翌年へ（1 月より手前へ引くと前年へ）。
+        </>,
+        <>
+          予定は<b>年をまたげます</b>：編集画面で終了日を翌年にすると、タイムラインの端に翌年（例：「2028 →」）が表示され、翌年のタイムラインの先頭には薄い表示が出て、クリックすると元の年に戻ります。2 年の予定が重なることはありません。
         </>,
         <>
           年表示は拡大できます：上のスライダー、トラックパッドのピンチ、または <kbd>{alt}</kbd> を押しながらスクロール。拡大後は月の列をドラッグして左右に動かせます。

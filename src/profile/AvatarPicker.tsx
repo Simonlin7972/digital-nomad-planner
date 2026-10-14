@@ -1,6 +1,7 @@
-import { createContext, useContext, useState } from 'react';
-import type { PointerEvent, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode } from 'react';
 import { ArrowsClockwise } from '@phosphor-icons/react/dist/csr/ArrowsClockwise';
+import { Plus } from '@phosphor-icons/react/dist/csr/Plus';
 import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
 import { Shuffle } from '@phosphor-icons/react/dist/csr/Shuffle';
 import { Avatar } from '../components/Avatar';
@@ -9,6 +10,9 @@ import {
   BOTTOMS,
   CLOTH,
   COLOURED,
+  CUSTOM_PALETTE,
+  clothHex,
+  isHex,
   EYES,
   HAIRS,
   HAIR_COLOURS,
@@ -25,6 +29,7 @@ import {
   randomAvatar,
   withOption,
   type Avatar as AvatarData,
+  type Colour,
   type Slot,
 } from '../lib/avatar';
 import { t, type Key } from '../lib/i18n';
@@ -49,7 +54,7 @@ const Preview = createContext<(next: AvatarData | null) => void>(() => {});
 function usePreview(next: AvatarData) {
   const preview = useContext(Preview);
   return {
-    onPointerEnter: (e: PointerEvent) => e.pointerType === 'mouse' && preview(next),
+    onPointerEnter: (e: ReactPointerEvent) => e.pointerType === 'mouse' && preview(next),
     onPointerLeave: () => preview(null),
   };
 }
@@ -107,8 +112,9 @@ export function AvatarPicker({ value, onChange, onDownload }: { value: AvatarDat
   // colour (withOption); clothes keep the colour already chosen.
   const field = <K extends keyof AvatarData & Slot>(key: K, options: readonly AvatarData[K][], crop: Crop, prefix: string = key) =>
     tiles(key, options, (a, o) => withOption(a, key, o), (o) => value[key] === o, crop, (o) => t(`avatar.${prefix}.${o}` as Key));
-  const colours = <K extends keyof AvatarData>(key: K, list: readonly string[]) => (
-    <Swatches colours={list} value={value[key] as number} apply={(i) => ({ ...value, [key]: i })} onChange={onChange} />
+  // Cloth colours also take a custom hex (the "+" swatch); hair colours are the fixed list only.
+  const colours = <K extends keyof AvatarData>(key: K, list: readonly string[], custom = list === CLOTH) => (
+    <Swatches colours={list} custom={custom} value={value[key] as Colour} apply={(c) => ({ ...value, [key]: c })} onChange={onChange} />
   );
   const hand = (side: 'handL' | 'handR') => (
     <>
@@ -296,31 +302,108 @@ function Tile({
 
 function Swatches({
   colours,
+  custom = false,
   value,
   apply,
   onChange,
 }: {
   colours: readonly string[];
-  value: number;
-  apply: (i: number) => AvatarData;
+  custom?: boolean;
+  value: Colour;
+  apply: (c: Colour) => AvatarData;
   onChange: (next: AvatarData) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  // The palette closes on a click outside it or on Escape
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => !box.current?.contains(e.target as Node) && setOpen(false);
+    const key = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('pointerdown', away);
+    document.addEventListener('keydown', key);
+    return () => {
+      document.removeEventListener('pointerdown', away);
+      document.removeEventListener('keydown', key);
+    };
+  }, [open]);
+  const hex = isHex(value) ? value : undefined;
   return (
     <div className="ap-swatches" role="radiogroup" aria-label={t('avatar.colours')}>
       {colours.map((c, i) => (
-        <Swatch key={c} colour={c} n={i + 1} checked={i === value} next={apply(i)} onClick={() => onChange(apply(i))} />
+        <Swatch key={c} colour={c} label={t('avatar.colour', { n: i + 1 })} checked={i === value} next={apply(i)} onClick={() => onChange(apply(i))} />
       ))}
+      {custom && (
+        <div className="ap-custom" ref={box}>
+          {/* The "+" swatch: a rainbow ring, filled with the custom colour once one is chosen */}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={!!hex}
+            aria-expanded={open}
+            aria-label={t('avatar.custom')}
+            title={t('avatar.custom')}
+            className={`ap-plus${hex ? ' has' : ''}`}
+            style={hex ? ({ '--c': hex } as CSSProperties) : undefined}
+            onClick={() => setOpen(!open)}
+          >
+            {!hex && <Plus size={12} weight="bold" />}
+          </button>
+          {open && (
+            <div className="ap-palette" role="dialog" aria-label={t('avatar.custom')}>
+              <div className="ap-grid" role="radiogroup">
+                {CUSTOM_PALETTE.flatMap((rowOf, r) =>
+                  rowOf.map((c, i) => (
+                    <Swatch key={c} colour={c} label={t('avatar.colour', { n: r * rowOf.length + i + 1 })} checked={hex === c} next={apply(c)} onClick={() => onChange(apply(c))} square />
+                  )),
+                )}
+              </div>
+              <div className="ap-hex">
+                <span className="ap-pair" aria-hidden><i style={{ background: clothHex(value) }} /><i style={{ background: shadeOf(clothHex(value)) }} /></span>
+                <HexInput value={clothHex(value)} onChange={(c) => onChange(apply(c))} />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-function Swatch({ colour, n, checked, next, onClick }: { colour: string; n: number; checked: boolean; next: AvatarData; onClick: () => void }) {
+const shadeOf = (hex: string, by = 0.18) => {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = (s: number) => Math.round(((n >> s) & 255) * (1 - by)).toString(16).padStart(2, '0');
+  return `#${ch(16)}${ch(8)}${ch(0)}`;
+};
+
+// A hex field that applies as soon as it holds six valid digits, and shows the current colour otherwise.
+function HexInput({ value, onChange }: { value: string; onChange: (hex: string) => void }) {
+  const [text, setText] = useState(value);
+  useEffect(() => setText(value), [value]);
+  return (
+    <input
+      className="ap-hexfield"
+      value={text}
+      maxLength={7}
+      spellCheck={false}
+      aria-label={t('avatar.hex')}
+      onChange={(e) => {
+        const v = e.target.value.startsWith('#') ? e.target.value : `#${e.target.value}`;
+        setText(v);
+        if (isHex(v)) onChange(v.toLowerCase());
+      }}
+    />
+  );
+}
+
+function Swatch({ colour, label, checked, next, onClick, square }: { colour: string; label: string; checked: boolean; next: AvatarData; onClick: () => void; square?: boolean }) {
   return (
     <button
       type="button"
       role="radio"
       aria-checked={checked}
-      aria-label={t('avatar.colour', { n })}
+      aria-label={label}
+      className={square ? 'square' : undefined}
       style={{ background: colour }}
       onClick={onClick}
       {...usePreview(next)}

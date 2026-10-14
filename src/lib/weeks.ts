@@ -146,29 +146,49 @@ export function isoOfDay(day: number): string {
 }
 
 export function dayOfIso(iso: unknown): number | null {
+  const day = dayOfIsoAny(iso);
+  return day !== null && day >= 0 && day < TOTAL_DAYS ? day : null;
+}
+
+// Like dayOfIso, for any date: days before the timeline are negative, days after it run past TOTAL_DAYS.
+export function dayOfIsoAny(iso: unknown): number | null {
   const m = typeof iso === 'string' ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso) : null;
   if (!m) return null;
   // UTC arithmetic so DST shifts can't move a date by a day.
   const t0 = Date.UTC(DAY0.getFullYear(), DAY0.getMonth(), DAY0.getDate());
-  const day = Math.round((Date.UTC(+m[1], +m[2] - 1, +m[3]) - t0) / 86_400_000);
-  return day >= 0 && day < TOTAL_DAYS ? day : null;
+  return Math.round((Date.UTC(+m[1], +m[2] - 1, +m[3]) - t0) / 86_400_000);
 }
+
+// The last day a stay of this year may run to. A stay starts on this year's timeline but may carry on into the
+// next year (if that year can be planned), up to the day before the year after it begins its own timeline, so a
+// stay never reaches further than the neighbouring year.
+export function spillLimit(): number {
+  if (!(YEARS as readonly number[]).includes(YEAR + 1)) return TOTAL_DAYS - 1;
+  return dayOfDate(buildWeeks(YEAR + 2)[0].start) - 1;
+}
+
+// Days of a range that fall on this year's timeline, for totals that shouldn't count a neighbouring year.
+export const daysOnTimeline = (r: DayRange) => Math.max(0, Math.min(r.endDay, TOTAL_DAYS - 1) - Math.max(r.startDay, 0) + 1);
 
 // Slot boundary k sits at Monday (even k) or Friday (odd k) of its week.
 export function dayOfBoundary(k: number): number {
   return Math.floor(k / 2) * 7 + (k % 2 ? 4 : 0);
 }
 
-// Display span [s, e) in slots: each end snaps to the nearest half-week boundary, at least one slot wide.
+// Display span [s, e) in slots: each end snaps to the nearest half-week boundary, at least one slot wide. A range
+// running past either end of the timeline (into a neighbouring year) is cut off there.
 export function slotsOf(r: DayRange): { s: number; e: number } {
-  let s = Math.round(r.startDay / 3.5);
-  let e = Math.round((r.endDay + 1) / 3.5);
+  let s = Math.max(0, Math.round(r.startDay / 3.5));
+  let e = Math.min(SLOTS, Math.round((r.endDay + 1) / 3.5));
   if (e <= s) {
     s = Math.min(s, SLOTS - 1);
     e = s + 1;
   }
   return { s, e };
 }
+
+// "11/21" / "Nov 21": one day of the timeline, short.
+export const dayLabel = (day: number) => fmt(addDays(DAY0, day));
 
 export function rangeLabel(r: DayRange): string {
   return `${fmt(addDays(DAY0, r.startDay))} – ${fmt(addDays(DAY0, r.endDay))}`;
@@ -183,7 +203,7 @@ export function longRangeLabel(r: DayRange): string {
 
 export const dateOfDay = (day: number) => addDays(DAY0, day);
 
-const dayOfDate = (d: Date) =>
+export const dayOfDate = (d: Date) =>
   Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(DAY0.getFullYear(), DAY0.getMonth(), DAY0.getDate())) / 86_400_000);
 
 // First and last day of a calendar month (0–11) of YEAR.

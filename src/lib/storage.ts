@@ -1,11 +1,21 @@
 import { cityLabel, normalizeCity } from './cities';
 import { countryLabel, normalizeCountry } from './flags';
 import { t } from './i18n';
-import { TOTAL_DAYS, WEEK_COUNT, YEAR, YEARS, dayOfIso, inYear, isoOfDay, type DayRange } from './weeks';
+import { DAY0, TOTAL_DAYS, WEEK_COUNT, YEAR, YEARS, dayLabel, dayOfDate, dayOfIso, dayOfIsoAny, inYear, isoOfDay, spillLimit, type DayRange } from './weeks';
 
-// Flight booked for getting to a stay. Every field is optional free text; the object existing means "booked".
-export type Ticket = { airline?: string; flightNo?: string; departure?: string; bookingRef?: string; price?: string };
-export const TICKET_FIELDS = ['airline', 'flightNo', 'departure', 'bookingRef', 'price'] as const;
+// Flight booked for getting to a stay, with an optional return leg (the flight out again, on a round-trip ticket:
+// same airline, booking and fare). Every field is optional free text; the object existing means "booked".
+export type Ticket = {
+  airline?: string;
+  flightNo?: string;
+  departure?: string;
+  bookingRef?: string;
+  price?: string;
+  returnFlightNo?: string;
+  returnDeparture?: string;
+  returnAirline?: string; // only when it differs from the outbound airline
+};
+export const TICKET_FIELDS = ['airline', 'flightNo', 'departure', 'bookingRef', 'price', 'returnFlightNo', 'returnDeparture', 'returnAirline'] as const;
 
 export function cleanTicket(raw: unknown): Ticket | undefined {
   if (!raw || typeof raw !== 'object') return undefined;
@@ -17,11 +27,25 @@ export function cleanTicket(raw: unknown): Ticket | undefined {
   return ticket;
 }
 
+// A departure, short: "11/21 22:10" when it falls on the timeline, the full date otherwise.
+export function departureLabel(ticket: Ticket, leg: 'departure' | 'returnDeparture' = 'departure'): string {
+  const value = ticket[leg];
+  if (!value) return '';
+  const [date, time] = value.split('T');
+  const day = dayOfIso(date);
+  return [day === null ? date.replace(/-/g, '/') : dayLabel(day), time].filter(Boolean).join(' ');
+}
+
 // Human-readable lines for a ticket, for the info card.
 export function ticketLines(ticket: Ticket): string[] {
   const lines = [
     [ticket.airline, ticket.flightNo].filter(Boolean).join(' '),
     ticket.departure && t('ticket.departs', { time: ticket.departure.replace('T', ' ').replace(/-/g, '/') }),
+    (ticket.returnFlightNo || ticket.returnDeparture) &&
+      t('ticket.return', {
+        flight: [ticket.returnAirline, ticket.returnFlightNo].filter(Boolean).join(' '),
+        time: ticket.returnDeparture ? ticket.returnDeparture.replace('T', ' ').replace(/-/g, '/') : '',
+      }).trim(),
     ticket.bookingRef && t('ticket.ref', { ref: ticket.bookingRef }),
     ticket.price && t('ticket.fare', { fare: ticket.price }),
   ].filter((l): l is string => Boolean(l));
@@ -41,6 +65,10 @@ export type Stay = DayRange & {
   note?: string;
 };
 
+// A stay with a flight booked is settled: it can't be moved, resized or cut on the timeline, and nothing else can
+// push it out of the way. Its dates can still be changed deliberately in the editor.
+export const isLocked = (s: Stay) => Boolean(s.ticket);
+
 // Each year has its own plan; the key follows the year being planned.
 const planKey = () => `dnp-plan-${YEAR}`;
 
@@ -48,19 +76,69 @@ export function overlaps(a: DayRange, b: DayRange) {
   return a.startDay <= b.endDay && b.startDay <= a.endDay;
 }
 
+// A stay of a neighbouring year, with its dates counted in this year's days (negative before the timeline).
+export type Ghost = Stay & { year: number };
+
+// What the neighbouring years leave for this one. A stay is kept in the year it starts in and may run on into the
+// next, so the years either side can reach onto this timeline: the end of last year's plan, or the start of next
+// year's in the days the two timelines share. This year's stays start on or after `lo`, on or before `lastStart`
+// (the timeline's last day, or earlier), and end on or before `hi`, which may be past the timeline.
+export type Edges = {
+  year: number;
+  lo: number;
+  hi: number;
+  lastStart: number;
+  ghosts: Ghost[]; // neighbouring years' stays that show on this timeline
+  before: Ghost[]; // all of last year's stays, for rules that look back (the Schengen window)
+};
+
+let edges: Edges | null = null;
+
+// The neighbouring years' plans as they are in storage. App works this out when the year is shown and keeps it
+// with setEdges; the position logic below reads it with getEdges.
+export function computeEdges(): Edges {
+  const shifted = (year: number): Ghost[] => {
+    if (!(YEARS as readonly number[]).includes(year)) return [];
+    const offset = dayOfDate(inYear(year, () => DAY0));
+    return loadYearPlan(year).map((s) => ({ ...s, id: `${year}:${s.id}`, year, startDay: s.startDay + offset, endDay: s.endDay + offset }));
+  };
+  const before = shifted(YEAR - 1);
+  const after = shifted(YEAR + 1);
+  const lo = Math.max(0, ...before.map((s) => s.endDay + 1));
+  const hi = Math.min(spillLimit(), ...after.map((s) => s.startDay - 1));
+  const shown = (s: Ghost) => s.endDay >= 0 && s.startDay < TOTAL_DAYS;
+  return { year: YEAR, lo, hi, lastStart: Math.min(TOTAL_DAYS - 1, hi), ghosts: [...before, ...after].filter(shown), before };
+}
+
+export const setEdges = (next: Edges) => void (edges = next);
+
+// The current year's edges; with none worked out yet (or for another year), the plain ones: the whole timeline,
+// and as far into the next year as a stay may go.
+export function getEdges(): Edges {
+  if (edges?.year === YEAR) return edges;
+  return { year: YEAR, lo: 0, hi: spillLimit(), lastStart: TOTAL_DAYS - 1, ghosts: [], before: [] };
+}
+
 // Resizes one stay to `range`, shoving whatever is in the way: neighbours slide in the direction of the move,
-// each pushing the next, and gaps soak up the push. Order never changes. Null if a stay would leave the year.
+// each pushing the next, and gaps soak up the push. Order never changes. Null if a stay would leave the year, or
+// if a locked stay would have to move.
 export function pushStays(stays: Stay[], id: string, range: DayRange): Stay[] | null {
   const moved = stays.find((s) => s.id === id);
-  if (!moved) return null;
+  if (!moved || isLocked(moved)) return null;
+  const B = getEdges();
+  // Only the end that moves is held to the edges, so a stay that already sits past one can still be changed.
+  if (range.startDay < moved.startDay && range.startDay < B.lo) return null;
+  if (range.startDay > moved.startDay && range.startDay > B.lastStart) return null;
+  if (range.endDay > moved.endDay && range.endDay > B.hi) return null;
   const next = new Map<string, DayRange>([[id, range]]);
   const others = stays.filter((s) => s.id !== id).sort((a, b) => a.startDay - b.startDay);
 
   let edge = range.endDay + 1; // first free day to the right
   for (const s of others.filter((o) => o.startDay > moved.startDay)) {
     if (s.startDay >= edge) break;
+    if (isLocked(s)) return null;
     const endDay = edge + (s.endDay - s.startDay);
-    if (endDay >= TOTAL_DAYS) return null;
+    if (endDay > B.hi || edge > B.lastStart) return null;
     next.set(s.id, { startDay: edge, endDay });
     edge = endDay + 1;
   }
@@ -68,8 +146,9 @@ export function pushStays(stays: Stay[], id: string, range: DayRange): Stay[] | 
   edge = range.startDay - 1; // last free day to the left
   for (const s of others.filter((o) => o.startDay < moved.startDay).reverse()) {
     if (s.endDay <= edge) break;
+    if (isLocked(s)) return null;
     const startDay = edge - (s.endDay - s.startDay);
-    if (startDay < 0) return null;
+    if (startDay < B.lo) return null;
     next.set(s.id, { startDay, endDay: edge });
     edge = startDay - 1;
   }
@@ -90,10 +169,11 @@ function swapNeighbours(stays: Stay[], first: Stay, second: Stay): Stay[] {
 }
 
 // Drags one stay toward `desired`, list-reorder style: once its leading edge passes the middle of a neighbour
-// the two trade places, then the next neighbour, and so on. Between neighbours it slides freely.
+// the two trade places, then the next neighbour, and so on. Between neighbours it slides freely. A locked stay
+// doesn't move, and a locked neighbour is never passed.
 export function reorderStays(stays: Stay[], id: string, desired: DayRange): Stay[] {
   const orig = stays.find((s) => s.id === id);
-  if (!orig || desired.startDay === orig.startDay) return stays;
+  if (!orig || isLocked(orig) || desired.startDay === orig.startDay) return stays;
   const dir = desired.startDay > orig.startDay ? 1 : -1;
   let cur = stays;
   const neighbours = () => {
@@ -104,24 +184,27 @@ export function reorderStays(stays: Stay[], id: string, desired: DayRange): Stay
   for (;;) {
     const { me, prev, next } = neighbours();
     const other = dir > 0 ? next : prev;
-    if (!other) break;
+    if (!other || isLocked(other)) break;
     const middle = (other.startDay + other.endDay) / 2;
     if (dir > 0 ? desired.endDay < middle : desired.startDay > middle) break;
     cur = dir > 0 ? swapNeighbours(cur, me, other) : swapNeighbours(cur, other, me);
   }
   const { me, prev, next } = neighbours();
-  const lo = prev ? prev.endDay + 1 : 0;
-  const hi = (next ? next.startDay : TOTAL_DAYS) - len(me);
+  const B = getEdges();
+  const lo = prev ? prev.endDay + 1 : B.lo;
+  const hi = Math.min(B.lastStart, (next ? next.startDay - 1 : B.hi) - len(me) + 1);
+  if (hi < lo) return cur;
   const startDay = Math.min(hi, Math.max(lo, desired.startDay));
   return cur.map((s) => (s.id === id ? { ...s, startDay, endDay: startDay + len(me) - 1 } : s));
 }
 
 // Cuts one stay in two at `day`, which becomes the first day of the second part. The first part keeps the id and
 // the flight (that is the trip there); the second gets a new id and everything else, like an alt-drag copy.
-// Null when `day` doesn't fall strictly inside the stay, so each part has at least one day.
+// Null when `day` doesn't fall strictly inside the stay, so each part has at least one day, or when the stay is
+// locked.
 export function splitStay(stays: Stay[], id: string, day: number): Stay[] | null {
   const stay = stays.find((s) => s.id === id);
-  if (!stay || day <= stay.startDay || day > stay.endDay) return null;
+  if (!stay || isLocked(stay) || day <= stay.startDay || day > stay.endDay) return null;
   const second: Stay = { ...stay, id: crypto.randomUUID(), ticket: undefined, startDay: day, endDay: stay.endDay };
   return [...stays.map((s) => (s.id === id ? { ...s, endDay: day - 1 } : s)), second];
 }
@@ -129,23 +212,26 @@ export function splitStay(stays: Stay[], id: string, day: number): Stay[] | null
 // Drops a new stay (an alt-drag copy) and makes room for it, insert-style: nothing before it moves, the original
 // included. If it lands inside a stay that began earlier, it goes in right after that stay; whatever it then
 // covers, and everything up to the next free gap, shifts later. Only when that would run past the end of the year
-// does everything in the way move earlier instead, at the drop point. Null when neither fits.
+// does everything in the way move earlier instead, at the drop point. Null when neither fits, which includes a
+// locked stay standing in the way.
 export function insertStay(stays: Stay[], added: Stay): Stay[] | null {
   const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
   const len = added.endDay - added.startDay + 1;
+  const B = getEdges();
 
   // Later: start after any stay already under the drop point, then shove the rest along.
   const later = (): Stay[] | null => {
     let startDay = added.startDay;
     for (const s of sorted) if (s.startDay < startDay && s.endDay >= startDay) startDay = s.endDay + 1;
     const placed = { ...added, startDay, endDay: startDay + len - 1 };
-    if (placed.endDay >= TOTAL_DAYS) return null;
+    if (placed.endDay > B.hi || placed.startDay > B.lastStart) return null;
     const next = new Map<string, DayRange>();
     let edge = placed.endDay + 1;
     for (const s of sorted.filter((o) => o.startDay >= startDay)) {
       if (s.startDay >= edge) break;
+      if (isLocked(s)) return null;
       const endDay = edge + (s.endDay - s.startDay);
-      if (endDay >= TOTAL_DAYS) return null;
+      if (endDay > B.hi || edge > B.lastStart) return null;
       next.set(s.id, { startDay: edge, endDay });
       edge = endDay + 1;
     }
@@ -154,12 +240,14 @@ export function insertStay(stays: Stay[], added: Stay): Stay[] | null {
 
   // Earlier, as a fallback near the end of the year: everything the copy covers moves back to make room.
   const earlier = (): Stay[] | null => {
+    if (added.startDay < B.lo || added.endDay > B.hi) return null;
     const next = new Map<string, DayRange>();
     let edge = added.startDay - 1;
     for (const s of sorted.filter((o) => o.startDay <= added.endDay).reverse()) {
       if (s.endDay <= edge) break;
+      if (isLocked(s)) return null;
       const startDay = edge - (s.endDay - s.startDay);
-      if (startDay < 0) return null;
+      if (startDay < B.lo) return null;
       next.set(s.id, { startDay, endDay: edge });
       edge = startDay - 1;
     }
@@ -188,8 +276,9 @@ export function serialize(stays: Stay[]) {
 }
 
 function rangeOf(s: Record<string, unknown>): DayRange | null {
+  // A stay starts on the timeline; its end may carry on into the next year (see spillLimit).
   const startDay = dayOfIso(s.start);
-  const endDay = dayOfIso(s.end);
+  const endDay = dayOfIsoAny(s.end);
   if (startDay !== null && endDay !== null) return { startDay, endDay };
   // Files from the week-based version stored whole-week indexes.
   const { startWeek, endWeek } = s;
@@ -213,7 +302,7 @@ export function sanitize(data: unknown): Stay[] {
     // Files from before the country/city split had a single `location`.
     const city = normalizeCity(country, typeof s.city === 'string' ? s.city : typeof s.location === 'string' ? s.location : '');
     const range = rangeOf(s);
-    if ((!country && !city) || !range || range.startDay > range.endDay || range.endDay >= TOTAL_DAYS) continue;
+    if ((!country && !city) || !range || range.startDay > range.endDay || range.endDay > spillLimit()) continue;
     const stay: Stay = {
       id: typeof s.id === 'string' && s.id ? s.id : crypto.randomUUID(),
       country,

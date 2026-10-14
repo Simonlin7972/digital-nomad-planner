@@ -4,7 +4,7 @@ import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
 import { noteText, seasonWarning } from '../lib/seasons';
 import type { Holiday, HolidaySet } from '../lib/holidays';
 import { daysText, t } from '../lib/i18n';
-import { placeFull, ticketLines, type Stay } from '../lib/storage';
+import { departureLabel, placeFull, ticketLines, type Stay } from '../lib/storage';
 import { clamp } from '../lib/util';
 import { daysOf, longRangeLabel, weeksLabel } from '../lib/weeks';
 import { Flag } from './Flag';
@@ -39,6 +39,9 @@ export function StayCard({ stay, ...anchor }: Anchor & { stay: Stay }) {
         <span className="with-icon">
           <TicketIcon size={14} weight="bold" />
           {t('ticket.booked')}
+          {/* The flight's own date, which can differ from the stay's first day */}
+          {stay.ticket.departure && `${t('sep')}${t('ticket.departs', { time: departureLabel(stay.ticket) })}`}
+          {stay.ticket.returnDeparture && `${t('sep')}${t('ticket.returns', { time: departureLabel(stay.ticket, 'returnDeparture') })}`}
         </span>
       )}
       {stay.note && <span className="note">{stay.note}</span>}

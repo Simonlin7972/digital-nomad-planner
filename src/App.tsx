@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { BackupReminder } from './components/BackupReminder';
 import { AllMonths, MONTH_INDEXES } from './components/AllMonths';
 import { MobileItinerary } from './components/MobileItinerary';
@@ -12,6 +12,7 @@ import { HolidayCard, StayCard, TicketCard, type Anchor } from './components/Hov
 import MonthView from './components/MonthView';
 import { StayList } from './components/StayList';
 import { Summary } from './components/Summary';
+import { PillNav } from './components/PillNav';
 import { PixelNomad } from './components/PixelNomad';
 import { Tagline } from './components/Tagline';
 import { Toolbar } from './components/Toolbar';
@@ -30,7 +31,7 @@ import { download } from './lib/files';
 import { holidaySets as allHolidaySets, type Holiday, type HolidaySet } from './lib/holidays';
 import { langTag, t, useLocale } from './lib/i18n';
 import { loadHolidayToggles, loadView, saveHolidayToggles, saveView } from './lib/prefs';
-import { load, pushStays, save, type ColorKey, type Stay, loadYearPlan, saveYearPlan, sanitizeAll, serializeAll, splitStay } from './lib/storage';
+import { computeEdges, load, pushStays, save, setEdges, type ColorKey, type Stay, loadYearPlan, saveYearPlan, sanitizeAll, serializeAll, splitStay } from './lib/storage';
 import { decodePlan, onTransferLink, pendingTransfer } from './lib/transfer';
 import { MOD, clamp } from './lib/util';
 import { YEAR, YEARS, getYear, setYear, subscribeYear, todayIndex, yearDirection, type DayRange } from './lib/weeks';
@@ -85,6 +86,15 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
     return p.homeCountry || p.homeCity ? [{ country: p.homeCountry, city: p.homeCity } as Stay] : [];
   })();
   const { coords, failed: coordsFailed } = useCoords([...stays, ...homePlace]);
+  // What the neighbouring years' plans take up at this timeline's ends. They aren't edited while this year is on
+  // screen, except by an import, which also changes this year's stays or switches year; so reading them again
+  // whenever the stays change keeps this current. Kept where the position logic reads it, before the views run.
+  const edges = useMemo(() => {
+    const next = computeEdges();
+    setEdges(next);
+    return next;
+  }, [stays]);
+  const ghosts = edges.ghosts;
   const backup = useBackupReminder(stays);
   // The map library loads when the page is scrolled near the map, not with the page.
   const [mapRef, mapNear] = useNearView();
@@ -248,13 +258,14 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
   const holidaySets = allHolidaySets().filter((set) => holidayOn[set.key]);
   const pending = editing && !editing.id ? editing : null;
   // No card mid-drag or behind the editor; it would only get in the way.
-  const hoveredStay = stayCard && !dragging && !editing ? stays.find((s) => s.id === stayCard.id) : undefined;
+  const hoveredStay = stayCard && !dragging && !editing ? [...stays, ...ghosts].find((s) => s.id === stayCard.id) : undefined;
   const ticketStay = ticketCard && !editing ? stays.find((s) => s.id === ticketCard.id) : undefined;
   const editingStay = editing?.id ? stays.find((s) => s.id === editing.id) : undefined;
 
   return (
     <div className="app">
-      <header className="topbar">
+      {/* Folds into a pill on scroll on a computer; a phone's one-row header just scrolls away */}
+      <PillNav className="topbar" off={narrow}>
         <div className="brand">
           <h1>
             <PixelNomad />
@@ -280,7 +291,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
           onReport={() => setReportOpen(true)}
           onImport={(file) => void importJson(file)}
         />
-      </header>
+      </PillNav>
 
       {backup.remind && <BackupReminder daysSince={backup.daysSince} onExport={() => exportJson('reminder')} onSnooze={backup.snooze} />}
 
@@ -318,6 +329,8 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
                     key={month}
                     stacked
                     stays={stays}
+                    ghosts={ghosts}
+                    onOpenYear={setYear}
                     month={month}
                     onMonth={() => {}}
                     holidaySets={holidaySets}
@@ -333,6 +346,8 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
             ) : shownMode === 'month' ? (
               <MonthView
                 stays={stays}
+                ghosts={ghosts}
+                onOpenYear={setYear}
                 month={view.month}
                 onMonth={(month) => setView((v) => ({ ...v, mode: 'month', month: clamp(month, 0, 11) }))}
                 holidaySets={holidaySets}
@@ -346,6 +361,8 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
             ) : (
               <YearView
                 stays={stays}
+                ghosts={ghosts}
+                onOpenYear={setYear}
                 zoom={zoom}
                 holidaySets={holidaySets}
                 pending={pending}
@@ -420,7 +437,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
           key={editing.id ?? `new-${editing.startDay}-${editing.endDay}`}
           editing={editing}
           stay={editingStay}
-          others={stays.filter((s) => s.id !== editing.id)}
+          others={[...stays.filter((s) => s.id !== editing.id), ...ghosts]}
           onSave={saveEditing}
           onDelete={deleteEditing}
           onClose={() => setEditing(null)}

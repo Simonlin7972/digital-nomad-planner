@@ -57,3 +57,4 @@ export function useCountUp(target: number, active: boolean, ms = 1400) {
   }, [target, active, ms, still]);
   return value;
 }
+
