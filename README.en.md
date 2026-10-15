@@ -85,10 +85,11 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 ### Also
 
 - A built-in "How to use" guide in sections that open and close: gestures, where data lives, backup and transfer
-- Traditional Chinese, English and Japanese interface, chosen on the settings page (the landing and changelog pages can switch it from their headers too); defaults to the browser's language and remembers your choice
+- Traditional Chinese, English and Japanese interface, chosen on the settings page (the landing, cities and changelog pages can switch it from their headers too); defaults to the browser's language and remembers your choice
 - A compact toolbar: undo and redo are icons; export, import and Share live in the `⋯` menu, with "How to use", "About this app" (opens the landing page in a new tab) and "Report a problem or suggest" (a title, a description, up to 3 screenshots and an optional email, sent straight to the developer) below a divider
-- A footer at the bottom of the page: where the data lives, the licence, and links home and to the changelog
+- A footer at the bottom of the page: where the data lives, the licence, and links home, to the cities page and to the changelog
 - A changelog page (/changelog/): new features and changes in every release, newest day first, in the interface language (English when the interface is Japanese). It is built from `CHANGELOG.md` at the repository root, so updating that file and pushing publishes it
+- A "Ten cities for digital nomads" page (/cities/, linked from the landing page's nav and footer and the planner's footer): Chiang Mai, Lisbon, Bangkok, Canggu, Da Nang, Kuala Lumpur, Taipei, Tokyo, Tbilisi and Mexico City. Ten cards on top (a one-line take, one-bedroom rent, monthly cost for one, fixed broadband, a twelve-month best-months strip and a visa line), then an article per city below (upsides, downsides, 300–500 characters, the visa line and sources), each card linking to its anchor (such as `/cities/#lisbon`), written separately in all three languages. The data is hand-compiled in `src/lib/nomadCities.ts`, nothing is scraped, and every city lists where its numbers came from; figures are rough (US dollars a month, checked in October 2026) and visa lines assume a Taiwan passport; best months come straight from the season data. The page reads neither the plan nor the settings
 - A Profile & settings page (/profile/, from the person icon at the right end of the toolbar; once a character is saved, the button shows its face):
   - My character: a front-facing pixel paper doll. Pick one of 10 ready-made nomads (engineer, designer, surfer, backpacker…) or put one together from skin tone, hair, top, bottom and shoes, plus separate slots for the head, eyes, mouth and cheeks, neck, back, each hand and each side (hats, a conical hat, bunny ears, glasses, an eye patch, a beard, a face mask, a scarf, a neck pillow, bags, a guitar, a skateboard, a cape, bubble tea, an umbrella, a suitcase, a surfboard, a tent, a cat, dog or rabbit…); or roll a random one; clothes and extras take a custom colour from a 35-colour palette or a hex code as well as the built-in swatches. Pointing at a choice previews it; this one is saved with its own Save button, and leaving without saving drops the changes. Once saved, it appears on the toolbar's settings button and on the shared image, the large figure can turn around to show its back, and hovering it offers it as a 256×256 transparent PNG
   - About me: a nickname (shown on the shared image), home (the flight estimate adds the trips from and back home), passport (an EU, EEA or Swiss passport hides the Schengen 90/180 count) and tax residence (the country whose 183 days are counted; Taiwan by default, empty to hide)
@@ -210,6 +211,8 @@ A "Send to another device" link carries the plan in the part of the address afte
 
 The offline service worker (`sw.js`) keeps only this site's files and those from the two font services above, in the browser's Cache Storage (`dnp-v1`), and sends nothing extra.
 
+The cities page (/cities/) ships with the site, reads neither the plan nor the settings, and contacts no service but the fonts.
+
 ---
 
 ## Data format
@@ -283,6 +286,7 @@ A "Send to another device" link is `…/app/#plan=<code>`. The code's first char
 index.html              Landing page entry (the site root)
 app/index.html          App entry (/app/); loads the font and favicon
 changelog/index.html    Changelog page entry (/changelog/)
+cities/index.html       Ten-cities page entry (/cities/)
 profile/index.html      Settings page entry (/profile/)
 design/index.html       Design system page entry (/design/; served by `npm run dev` only, not built)
 pixel/index.html        Pixel style guide entry (/pixel/; dev only as well)
@@ -301,6 +305,7 @@ docs/demo-*.gif         Feature demos for the README (English interface, sample 
 src/
   main.tsx              React mount point; sets the stylesheet order
   changelog/            The changelog page (renders CHANGELOG.md as parsed by `lib/changelog.ts`)
+  cities/               The ten-cities page: Cities (layout), CityCard (card), CityArticle (article)
   profile/              The settings page (AvatarPicker is the character picker)
   pixel/                Pixel style guide: the rules behind the avatar and the mascot (grid, palette, layers, crops, motion, scaling, brand use), every picture drawn live by lib/avatar.ts; scenes.ts holds the 21:9 city scenes (Sydney, Tokyo, Taipei)
   design/               Design system page: colour, type, spacing, layout, radius and shadow, plus every state of the buttons, toggles, tabs, dropdowns, inputs and other base components; uses the app's own CSS, and forceStates copies :hover / :focus / :active rules to classes so states sit side by side
@@ -308,7 +313,7 @@ src/
   App.tsx               Wires the pieces together; owns the plan and page-level state
   components/           UI components, each with its stylesheet (.css) beside it
     Toolbar             Header actions and the ⋯ menu (export, import, send to another device, share, how to use, about, report a problem)
-    Footer              Page footer: where data lives, licence, links home and to the changelog
+    Footer              Page footer: where data lives, licence, links home, to the cities page and to the changelog
     ViewBar             Year/month switch, holiday toggles, zoom
     YearView            The year timeline, including drag, resize and copy handling
     MonthView           The month calendar
@@ -334,7 +339,7 @@ src/
     PixelNomad          The pixel-art animation in the header (someone on a laptop under a palm tree)
     Avatar              The paper-doll character (SVG, blinks; the large one on the settings page also bobs, with its pets moving)
     Tagline             The typewriter tagline under the title
-    Dialog.css          Shell shared by the editor and help dialogs
+    Dialog.css          Shell shared by every dialog: blurred backdrop, fixed title and button row, scrolling content between
   hooks/
     useHistory          Undo/redo stack
     useZoom             Timeline zoom and its anchor point
@@ -351,6 +356,7 @@ src/
     prefs.ts            View, holiday toggles and zoom preferences
     stayRules.ts        Free stretches, Schengen 90/180 and the tax-residence 183 days
     seasons.ts          Season data for popular cities (monthly ratings and reasons) and the warning rule
+    nomadCities.ts      The cities page's ten cities: figures, visa, upsides, downsides, trilingual articles, sources (hand-compiled)
     backup.ts           Backup reminder state and rules
     analytics.ts        Google Analytics: loading and track() events (live site only)
     changelog.ts        Parses CHANGELOG.md into dated, bilingual entries
@@ -364,7 +370,7 @@ src/
     transfer.ts         Transfer links: compress and encode, decode, take from the address
     ics.ts              Calendar file (.ics) for a flight
     offline.ts          Registers the service worker (live site only)
-    links.ts            Links between the pages (home, planner, changelog, settings)
+    links.ts            Links between the pages (home, planner, cities, changelog, settings)
     report.ts           Problem reports: shrink screenshots, send by e-mail through FormSubmit
     avatar.ts           The paper doll: each part's pixel art, colours, ready-made characters, composing a 32×32 image
     profile.ts          Settings (character, nickname, home, passport, tax residence, temperature unit, backup reminder) and whether the Schengen rule applies
@@ -434,6 +440,7 @@ Knowing these before reading the code will save time.
 - **One flight per stay**
 - **The shared image doesn't include the map**
 - **Season data covers about 71 cities** and is general guidance; a given year's weather can differ. Season warnings aren't in the shared image
+- **The cities page's figures are rough**: rent, monthly cost, broadband and visa lines were checked in October 2026 and will drift; visa lines assume a Taiwan passport, so check official sources before you travel. There are ten cities, and the page doesn't change with your plan or settings
 - **Place names on the map are in the local script and English**, as the base map provides
 - **The built-in city list is limited** (about 330); smaller places have to be typed, and the Chinese names are hand-picked and may differ from the spelling you're used to
 - **Place lookup depends on Nominatim.** Places it can't find don't appear on the map and are left out of the flight estimate
@@ -484,6 +491,8 @@ The full product spec and decision history are in [MVP.md](MVP.md) (Chinese).
 | [uqr](https://github.com/unjs/uqr) | QR code generation | MIT |
 
 The 2026 and 2027 holiday data was compiled by hand. Taiwan's holidays follow press reports of the government's 2026 and 2027 office calendars (for 2027, the Dragon Boat Festival, Mid-Autumn Festival and Teachers' Day are single days worked out from the calendar). Australia lists national holidays only. None of the dates were checked one by one against the original official notices, so treat the official sources as authoritative.
+
+The cities page's figures were compiled by hand from the pages listed at the end of each city (cost-of-living aggregators, reproductions of the Ookla Speedtest Global Index, embassies and Taiwan's Bureau of Consular Affairs on visas); only the numbers were taken, the text is original, and nothing is fetched from those sites at runtime.
 
 If you deploy this publicly with real traffic, note that Nominatim's public server allows one request per second and isn't meant for heavy use; switch to a self-hosted or paid geocoder.
 

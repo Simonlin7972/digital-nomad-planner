@@ -1,5 +1,4 @@
 /* Problem report: the editor's shell and fields, with a row of screenshot thumbnails */
-.editor.report h2 { position: relative; }
 .editor.report .close { position: absolute; top: 50%; right: 16px; transform: translateY(-50%); width: 32px; height: 32px; padding: 0; border: 0; display: grid; place-items: center; }
 .editor.report .close:active:not(:disabled) { transform: translateY(-50%) scale(0.94); }
 
@@ -41,7 +40,6 @@
 }
 .report-note { margin: -4px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
 
-.report-sent { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px 0 0; text-align: center; }
+.report-sent { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px 0; text-align: center; }
 .report-sent > svg { color: #4a9d5b; }
 .report-sent p { margin: 0; font-size: 15px; line-height: 1.6; }
-.report-sent .buttons { align-self: stretch; }

@@ -4,6 +4,7 @@ import { UserCircleMinus } from '@phosphor-icons/react/dist/csr/UserCircleMinus'
 import { CloudSlash } from '@phosphor-icons/react/dist/csr/CloudSlash';
 import { Code } from '@phosphor-icons/react/dist/csr/Code';
 import { LockSimple } from '@phosphor-icons/react/dist/csr/LockSimple';
+import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin';
 import { PixelNomad } from '../components/PixelNomad';
 import { trackLink } from '../lib/analytics';
 import { Tagline } from '../components/Tagline';
@@ -26,6 +27,7 @@ import { useInView } from './motion';
 import './Landing.css';
 
 const APP_URL = './app/';
+const CITIES_URL = './cities/';
 
 // Fades a block up the first time it scrolls into view.
 function Reveal({ children, className = '' }: { children: ReactNode; className?: string }) {
@@ -64,6 +66,7 @@ export function Landing() {
         <nav>
           <a href="#features">{t('landing.nav.features')}</a>
           <a href="#privacy">{t('landing.nav.privacy')}</a>
+          <a href={CITIES_URL}>{t('cities.title')}</a>
           {/* Labelled in the language it switches to, as in the app's toolbar. */}
           <button
             onClick={() => setLocale(nextLocale(locale))}
@@ -179,6 +182,10 @@ export function Landing() {
 
       <footer className="l-footer">
         <span>{t('landing.footer')}</span>
+        <a href={CITIES_URL}>
+          <MapPin size={14} weight="bold" />
+          {t('cities.title')}
+        </a>
       </footer>
     </div>
   );

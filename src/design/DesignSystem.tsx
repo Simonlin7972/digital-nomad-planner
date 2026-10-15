@@ -448,13 +448,15 @@ export function DesignSystem() {
           />
         </Section>
 
-        <Section id="dialog" title="Dialog 對話框" note="停留編輯器與說明共用的外殼（.editor）。手機上變成從底部升起的 sheet。">
+        <Section id="dialog" title="Dialog 對話框" note="所有對話框共用的外殼（.editor）：標題（h2）與按鈕列（.buttons）固定，只有中間的 .dialog-body 捲動；最高為畫面的 80%。背景模糊 8px。手機上變成從底部升起的 sheet。">
           <div className="editor ds-dialog" role="dialog" aria-label="範例對話框">
             <h2>編輯停留</h2>
-            <label>城市<input placeholder="清邁" /></label>
-            <div className="field">
-              顯示假日
-              <Toggle state={DEFAULT} on label="台灣假日" />
+            <div className="dialog-body">
+              <label>城市<input placeholder="清邁" /></label>
+              <div className="field">
+                顯示假日
+                <Toggle state={DEFAULT} on label="台灣假日" />
+              </div>
             </div>
             <div className="buttons">
               <button type="button" className="danger">刪除</button>

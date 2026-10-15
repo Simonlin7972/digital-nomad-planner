@@ -7,7 +7,11 @@ export default defineConfig({
   plugins: [react()],
   server: { port: 5173, strictPort: true },
   worker: { format: 'es' },
-  // Four pages: the landing page at the root, the planner itself under /app/, the changelog under /changelog/ and
-  // the profile settings under /profile/.
-  build: { rollupOptions: { input: { main: 'index.html', app: 'app/index.html', changelog: 'changelog/index.html', profile: 'profile/index.html' } } },
+  // Five pages: the landing page at the root, the planner itself under /app/, the changelog under /changelog/, the
+  // profile settings under /profile/ and the cities page under /cities/.
+  build: {
+    rollupOptions: {
+      input: { main: 'index.html', app: 'app/index.html', changelog: 'changelog/index.html', profile: 'profile/index.html', cities: 'cities/index.html' },
+    },
+  },
 });

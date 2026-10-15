@@ -2,4 +2,5 @@
 export const HOME_URL = '../';
 export const CHANGELOG_URL = '../changelog/';
 export const PROFILE_URL = '../profile/';
+export const CITIES_URL = '../cities/';
 export const APP_URL = '../app/'; // from a sibling page (/changelog/, /profile/)

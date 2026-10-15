@@ -115,7 +115,7 @@
 .ds-combo-demo { width: 320px; }
 .ds-combo-demo .combo-list { margin-top: 4px; }
 
-.ds-dialog { animation: none; }
+.editor.ds-dialog { animation: none; padding: 0; gap: 0; } /* the shell as inside .backdrop */
 
 /* A stretch of timeline track for one stay or selection; the real track sets the row height and top margin */
 .ds-track { display: grid; grid-template-rows: 56px; width: 148px; }

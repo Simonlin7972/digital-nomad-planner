@@ -1,0 +1,41 @@
+/* The cities page: the landing page's header and footer, with the cards and articles between them */
+.cities { max-width: 960px; margin: 0 auto; padding: 0 40px; }
+
+/* A PillNav (components/PillNav.css has the sticking and the pill); only its resting padding is set here */
+.cities-nav { gap: 16px; padding: 24px 0; }
+.cities-brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-size: 18px; font-weight: 600; }
+.cities-brand .pixel-nomad { width: 34px; height: 32px; }
+.cities-nav nav { display: flex; align-items: center; gap: 12px; }
+.cities-nav nav button { padding: 6px 12px; font-size: 13px; }
+.cities-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--text);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+@media (hover: hover) {
+  .cities-open:hover { background: #000; }
+}
+
+.cities main { padding: 32px 0 24px; }
+.cities h1 { margin: 0 0 12px; font-size: 40px; font-weight: 600; }
+.cities-lead { margin: 0 0 8px; font-size: 17px; line-height: 1.6; }
+.cities-note { margin: 0 0 32px; font-size: 13px; line-height: 1.6; color: var(--muted); }
+
+/* Ten cards, two across; one across on a phone */
+.city-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 0 0 56px; padding: 0; list-style: none; }
+
+.city-articles { display: flex; flex-direction: column; }
+
+@media (max-width: 720px) {
+  .cities { padding: 0 16px; }
+  .cities h1 { font-size: 32px; }
+  .cities-brand span { display: none; }
+  .city-grid { grid-template-columns: 1fr; }
+}

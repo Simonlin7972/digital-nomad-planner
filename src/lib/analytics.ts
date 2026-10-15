@@ -17,7 +17,7 @@ declare global {
 export type CountBucket = '1' | '2-5' | '6-15' | '16+';
 
 type Events = {
-  cta_click: { location: 'nav' | 'hero' | 'final' | 'changelog' };
+  cta_click: { location: 'nav' | 'hero' | 'final' | 'changelog' | 'cities' };
   stay_create: { view: 'year' | 'month'; stay_count: CountBucket };
   plan_activated: Record<string, never>;
   export_json: { years: number; source: 'menu' | 'reminder' };

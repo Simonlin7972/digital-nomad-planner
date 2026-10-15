@@ -475,28 +475,30 @@ export function HelpDialog({ mod, onClose }: { mod: string; onClose: () => void 
             <X size={16} weight="bold" />
           </button>
         </h2>
-        <div className="help-sections">
-          {sections.map((section, s) => (
-            <section key={section.title} className={open.has(s) ? 'open' : undefined}>
-              <h3>
-                <button type="button" aria-expanded={open.has(s)} aria-controls={`${idBase}-${s}`} onClick={() => toggle(s)}>
-                  {section.icon}
-                  {section.title}
-                  <CaretDown size={16} weight="bold" className="caret" />
-                </button>
-              </h3>
-              {open.has(s) && (
-                <ul id={`${idBase}-${s}`}>
-                  {section.items.map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          ))}
+        <div className="dialog-body">
+          <div className="help-sections">
+            {sections.map((section, s) => (
+              <section key={section.title} className={open.has(s) ? 'open' : undefined}>
+                <h3>
+                  <button type="button" aria-expanded={open.has(s)} aria-controls={`${idBase}-${s}`} onClick={() => toggle(s)}>
+                    {section.icon}
+                    {section.title}
+                    <CaretDown size={16} weight="bold" className="caret" />
+                  </button>
+                </h3>
+                {open.has(s) && (
+                  <ul id={`${idBase}-${s}`}>
+                    {section.items.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            ))}
+          </div>
+          {/* Same line in every language. */}
+          <p className="credit">Designed by Simon Lin with 🧡</p>
         </div>
-        {/* Same line in every language. */}
-        <p className="credit">Designed by Simon Lin with 🧡</p>
       </div>
     </div>
   );

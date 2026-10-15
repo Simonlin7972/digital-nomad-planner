@@ -74,69 +74,75 @@ export function ReportDialog({ onClose }: { onClose: () => void }) {
         </h2>
 
         {state === 'sent' ? (
-          <div className="report-sent" role="status">
-            <CheckCircle size={40} weight="bold" />
-            <p>{t('report.thanks')}</p>
+          <>
+            <div className="dialog-body">
+              <div className="report-sent" role="status">
+                <CheckCircle size={40} weight="bold" />
+                <p>{t('report.thanks')}</p>
+              </div>
+            </div>
             <div className="buttons">
               <span className="spacer" />
               <button type="button" className="primary" onClick={onClose} autoFocus>
                 {t('help.close')}
               </button>
             </div>
-          </div>
+          </>
         ) : (
           <>
-            <label>
-              {t('report.subject')}
-              <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} placeholder={t('report.subjectPh')} required autoFocus />
-            </label>
-            <label>
-              {t('report.body')}
-              <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={5} maxLength={4000} placeholder={t('report.bodyPh')} required />
-            </label>
-            <div className="field">
-              {t('report.images', { n: MAX_IMAGES })}
-              <div className="report-shots">
-                {shots.map((s, i) => (
-                  <div key={s.url} className="report-shot">
-                    <img src={s.url} alt={s.file.name} />
-                    <button
-                      type="button"
-                      aria-label={t('report.remove')}
-                      onClick={() => {
-                        URL.revokeObjectURL(s.url);
-                        setShots((prev) => prev.filter((_, j) => j !== i));
-                      }}
-                    >
-                      <X size={12} weight="bold" />
+            <div className="dialog-body">
+              <label>
+                {t('report.subject')}
+                <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} placeholder={t('report.subjectPh')} required autoFocus />
+              </label>
+              <label>
+                {t('report.body')}
+                <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={5} maxLength={4000} placeholder={t('report.bodyPh')} required />
+              </label>
+              <div className="field">
+                {t('report.images', { n: MAX_IMAGES })}
+                <div className="report-shots">
+                  {shots.map((s, i) => (
+                    <div key={s.url} className="report-shot">
+                      <img src={s.url} alt={s.file.name} />
+                      <button
+                        type="button"
+                        aria-label={t('report.remove')}
+                        onClick={() => {
+                          URL.revokeObjectURL(s.url);
+                          setShots((prev) => prev.filter((_, j) => j !== i));
+                        }}
+                      >
+                        <X size={12} weight="bold" />
+                      </button>
+                    </div>
+                  ))}
+                  {shots.length < MAX_IMAGES && (
+                    <button type="button" className="report-add" onClick={() => fileRef.current?.click()}>
+                      <ImageSquare size={20} weight="bold" />
+                      {t('report.add')}
                     </button>
-                  </div>
-                ))}
-                {shots.length < MAX_IMAGES && (
-                  <button type="button" className="report-add" onClick={() => fileRef.current?.click()}>
-                    <ImageSquare size={20} weight="bold" />
-                    {t('report.add')}
-                  </button>
-                )}
+                  )}
+                </div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  hidden
+                  onChange={(e) => {
+                    addFiles(e.target.files);
+                    e.target.value = '';
+                  }}
+                />
               </div>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                multiple
-                hidden
-                onChange={(e) => {
-                  addFiles(e.target.files);
-                  e.target.value = '';
-                }}
-              />
+              <label>
+                {t('report.email')}
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={120} placeholder={t('report.emailPh')} />
+              </label>
+              {problem && <p className="error">{problem}</p>}
+              <p className="report-note">{t('report.note')}</p>
             </div>
-            <label>
-              {t('report.email')}
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={120} placeholder={t('report.emailPh')} />
-            </label>
-            {problem && <p className="error">{problem}</p>}
-            <p className="report-note">{t('report.note')}</p>
             <div className="buttons">
               <span className="spacer" />
               <button type="button" onClick={onClose} disabled={state === 'sending'}>

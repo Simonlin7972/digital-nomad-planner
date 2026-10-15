@@ -35,7 +35,7 @@ README 寫著「不會送出任何行程內容」。事件參數只能是：
 
 | 事件 | 參數 | 觸發 | 位置 |
 | --- | --- | --- | --- |
-| `cta_click` | `location`: `nav`／`hero`／`final`／`changelog` | 點「開始規劃」連到 app | `landing/Landing.tsx`、`changelog/Changelog.tsx` |
+| `cta_click` | `location`: `nav`／`hero`／`final`／`changelog`／`cities` | 點「開始規劃」連到 app | `landing/Landing.tsx`、`changelog/Changelog.tsx`、`cities/Cities.tsx` |
 | `stay_create` | `view`: `year`／`month`；`stay_count`: 分組（含這段） | 編輯視窗儲存一段新行程 | `App.tsx` `saveEditing` |
 | `plan_activated` | — | 這個瀏覽器第一次建立行程，只送一次（`dnp-ga-activated`） | `analytics.ts` `trackActivation` |
 | `export_json` | `years`: 檔案含幾個年份；`source`: `menu`／`reminder` | 匯出 JSON | `App.tsx` `exportJson` |
@@ -108,7 +108,7 @@ README 寫著「不會送出任何行程內容」。事件參數只能是：
 - [x] `?ga_debug=1` DebugView、`?internal=1` 內部流量標記
 
 ### 第 1 階段：轉換漏斗
-- [x] `cta_click`（landing nav／hero／final、changelog）
+- [x] `cta_click`（landing nav／hero／final、changelog、cities）
 - [x] `stay_create`
 - [x] `plan_activated`
 - [x] `export_json`

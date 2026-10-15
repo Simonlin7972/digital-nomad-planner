@@ -81,30 +81,32 @@ export function TransferDialog({ stays, onClose }: { stays: Stay[]; onClose: () 
             <X size={16} weight="bold" />
           </button>
         </h2>
-        <p className="transfer-text">{t('transfer.body')}</p>
-        <div className="transfer-qr">
-          {!qr ? (
-            <p>{t('transfer.preparing')}</p>
-          ) : qr.code ? (
-            <QrCode layout={qr.code} label={t('transfer.qrAlt')} caption={t('transfer.scanMe')} />
-          ) : (
-            <p>{t('transfer.tooLong')}</p>
-          )}
-          {qr?.noNotes && <p className="transfer-qr-note">{t('transfer.qrNoNotes')}</p>}
+        <div className="dialog-body">
+          <p className="transfer-text">{t('transfer.body')}</p>
+          <div className="transfer-qr">
+            {!qr ? (
+              <p>{t('transfer.preparing')}</p>
+            ) : qr.code ? (
+              <QrCode layout={qr.code} label={t('transfer.qrAlt')} caption={t('transfer.scanMe')} />
+            ) : (
+              <p>{t('transfer.tooLong')}</p>
+            )}
+            {qr?.noNotes && <p className="transfer-qr-note">{t('transfer.qrNoNotes')}</p>}
+          </div>
+          <button
+            type="button"
+            className="toggle"
+            role="switch"
+            aria-checked={details}
+            style={{ '--c': 'var(--text)' } as CSSProperties}
+            onClick={() => setDetails((v) => !v)}
+          >
+            <span className="knob" />
+            {t('transfer.details')}
+          </button>
+          <input className="transfer-link" readOnly value={url ?? ''} aria-label={t('toolbar.transfer')} onFocus={(e) => e.target.select()} />
+          <p className="transfer-note">{t('transfer.privacy')}</p>
         </div>
-        <button
-          type="button"
-          className="toggle"
-          role="switch"
-          aria-checked={details}
-          style={{ '--c': 'var(--text)' } as CSSProperties}
-          onClick={() => setDetails((v) => !v)}
-        >
-          <span className="knob" />
-          {t('transfer.details')}
-        </button>
-        <input className="transfer-link" readOnly value={url ?? ''} aria-label={t('toolbar.transfer')} onFocus={(e) => e.target.select()} />
-        <p className="transfer-note">{t('transfer.privacy')}</p>
         <div className="buttons">
           <span className="spacer" />
           {typeof navigator.share === 'function' && (

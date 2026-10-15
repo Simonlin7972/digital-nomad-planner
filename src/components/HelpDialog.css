@@ -1,9 +1,8 @@
 /* Help dialog: the editor's shell, wider, with prose instead of fields */
-.editor.help { width: min(600px, 100%); gap: 20px; padding-bottom: 28px; }
-.editor.help h2 { position: sticky; top: 0; z-index: 1; background: var(--surface); }
+.editor.help { width: min(600px, 100%); }
+.help .dialog-body { gap: 12px; padding-bottom: 28px; }
 .editor.help .close { position: absolute; top: 50%; right: 16px; transform: translateY(-50%); width: 32px; height: 32px; padding: 0; border: 0; display: grid; place-items: center; }
 .editor.help .close:active:not(:disabled) { transform: translateY(-50%) scale(0.94); }
-.editor.help { gap: 12px; }
 /* Accordion: one row per section, the heading is a full-width button with a caret that turns when open */
 .help-sections { display: flex; flex-direction: column; }
 .help-sections section + section { border-top: 1px solid var(--line); }

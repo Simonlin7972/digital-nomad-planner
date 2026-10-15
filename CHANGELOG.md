@@ -7,6 +7,13 @@
   people using the planner, not for developers: what they can now do or what changed for them.
 -->
 
+## 2026-10-15
+
+- 新增「十大數位遊牧城市」頁：清邁、里斯本、曼谷、倉古、峴港、吉隆坡、台北、東京、提比里斯、墨西哥城，每城有月租、月花費、網速、適合月份、簽證（台灣護照）、亮點與缺點，和一篇介紹；從首頁和規劃頁底部連過去
+  EN: New "Ten cities for digital nomads" page: Chiang Mai, Lisbon, Bangkok, Canggu, Da Nang, Kuala Lumpur, Taipei, Tokyo, Tbilisi and Mexico City, each with rent, monthly cost, broadband, best months, the visa (Taiwan passport), upsides and downsides, and an article; linked from the landing page and the planner's footer
+- 對話框的標題和底部按鈕固定不動，內容多時只捲動中間，「儲存」「送出」一直看得到
+  EN: Dialogs keep their title and buttons in place and scroll only the content between, so Save and Send stay in view
+
 ## 2026-10-14
 
 - 所有對話框最高佔畫面的八成，內容多時在視窗裡捲動，不會貼到畫面上下緣

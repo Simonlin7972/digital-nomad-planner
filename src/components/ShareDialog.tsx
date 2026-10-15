@@ -75,22 +75,24 @@ export function ShareDialog({ stays, holidaySets, onClose }: Props) {
             <X size={16} weight="bold" />
           </button>
         </h2>
-        <div className="segmented share-layout" role="tablist" aria-label={t('share.title')} style={{ '--i': layout === 'landscape' ? 0 : 1 } as CSSProperties}>
-          <span className="thumb" aria-hidden />
-          {(['landscape', 'portrait'] as const).map((l) => (
-            <button key={l} role="tab" aria-selected={layout === l} onClick={() => setLayout(l)}>
-              {t(l === 'landscape' ? 'share.landscape' : 'share.portrait')}
-            </button>
-          ))}
+        <div className="dialog-body">
+          <div className="segmented share-layout" role="tablist" aria-label={t('share.title')} style={{ '--i': layout === 'landscape' ? 0 : 1 } as CSSProperties}>
+            <span className="thumb" aria-hidden />
+            {(['landscape', 'portrait'] as const).map((l) => (
+              <button key={l} role="tab" aria-selected={layout === l} onClick={() => setLayout(l)}>
+                {t(l === 'landscape' ? 'share.landscape' : 'share.portrait')}
+              </button>
+            ))}
+          </div>
+          <div className={`share-preview ${layout}`}>
+            {image ? (
+              <img src={image.url} alt={t('share.alt')} />
+            ) : (
+              <p>{failed ? t('alert.pngFailed') : t('share.rendering')}</p>
+            )}
+          </div>
+          <p className="share-note">{t('share.note')}</p>
         </div>
-        <div className={`share-preview ${layout}`}>
-          {image ? (
-            <img src={image.url} alt={t('share.alt')} />
-          ) : (
-            <p>{failed ? t('alert.pngFailed') : t('share.rendering')}</p>
-          )}
-        </div>
-        <p className="share-note">{t('share.note')}</p>
         <div className="buttons">
           <span className="spacer" />
           {canShare && (
