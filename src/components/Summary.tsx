@@ -11,7 +11,7 @@ import { daysText, t, tr, useLocale } from '../lib/i18n';
 import { getEdges, type Stay } from '../lib/storage';
 import { getProfile } from '../lib/profile';
 import { checkSchengen, residenceDays } from '../lib/stayRules';
-import { TOTAL_DAYS, YEAR, dateOfDay, daysOnTimeline, fullDate, weeksLabel } from '../lib/weeks';
+import { TOTAL_DAYS, YEAR, dateOfDay, daysCovered, daysOnTimeline, fullDate, weeksLabel } from '../lib/weeks';
 import { Flag } from './Flag';
 import './Summary.css';
 
@@ -22,18 +22,19 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
   const counted = [...stays, ...getEdges().ghosts];
   // Days per country, each with its cities; stays without a country sit in a '' group.
   const totals = useMemo(() => {
-    const groups = new Map<string, { days: number; cities: Map<string, number> }>();
+    const groups = new Map<string, { stays: Stay[]; cities: Map<string, number> }>();
     for (const s of [...counted].sort((a, b) => a.startDay - b.startDay)) {
-      const g = groups.get(s.country) ?? { days: 0, cities: new Map() };
+      const g = groups.get(s.country) ?? { stays: [] as Stay[], cities: new Map<string, number>() };
       groups.set(s.country, g);
+      g.stays.push(s);
       // Only the days on this year's timeline, so a stay that crosses into another year is shared between them.
-      g.days += daysOnTimeline(s);
       g.cities.set(s.city, (g.cities.get(s.city) ?? 0) + daysOnTimeline(s));
     }
     return [...groups.entries()]
       .map(([country, g]) => ({
         country,
-        days: g.days,
+        // A travel day between two cities of one country is one day in that country.
+        days: daysCovered(g.stays),
         // Stays with no city are keyed '' and listed last, labelled 其他.
         cities: [...g.cities.entries()].sort((a, b) => Number(!a[0]) - Number(!b[0]) || b[1] - a[1]),
       }))
@@ -48,7 +49,7 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
   const residence = profile.taxResidence;
   const residenceName = countryLabel(residence);
   // The figures roll to their new values when the plan changes, so a change reads as a change (hooks/useTween.ts).
-  const plannedDays = Math.round(useTween(counted.reduce((n, s) => n + daysOnTimeline(s), 0)));
+  const plannedDays = Math.round(useTween(daysCovered(counted)));
   const countries = Math.round(useTween(countryCount));
   const cities = Math.round(useTween(cityCount));
   const legs = Math.round(useTween(flights.legs));

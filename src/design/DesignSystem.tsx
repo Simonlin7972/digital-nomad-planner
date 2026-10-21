@@ -135,7 +135,7 @@ const MOTION_RULES: [string, string][] = [
   ['只動 transform／opacity', '位置用 translate、大小用 scale；高度動畫只用 grid-template-rows 0fr→1fr（季節區塊、備份提醒）'],
   ['離場比進場短', '進 120–200ms ease-out，出 150ms ease-in；關閉的元素加 .leaving 多留 --dur-exit 再卸載'],
   ['改動要看得到', '剛改過的行程閃一圈框（.flash，0.7s）；變更用 View Transitions 滑到新位置；摘要數字滾動 0.35s'],
-  ['拖曳中不動畫', '.track.dragging 下沒有 transition，也不播依序淡入；只有放不下的複本會抖一下'],
+  ['拖曳中不動畫', '.track.dragging 下沒有 transition；依序淡入只在時間軸出現時播一次（1 秒後 .track.settled 永久關掉），所以放開時不會整條重播；只有放不下的複本會抖一下'],
   ['減少動態', 'prefers-reduced-motion: reduce 時所有 animation 與 transition 關閉，--dur-exit 為 0，數字直接換'],
 ];
 

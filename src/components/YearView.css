@@ -139,7 +139,7 @@
    copy being dragged must show at once (and the blocked copy's shake is an animation too) */
 .stay { animation: stay-in var(--dur-base) var(--ease-out) both; animation-delay: min(calc(var(--i, 0) * 25ms), 300ms); }
 @keyframes stay-in { from { opacity: 0; translate: 0 6px; } }
-.track.dragging .stay { animation: none; }
+.track.settled .stay { animation: none; }
 .stay:hover { box-shadow: 0 4px 12px rgb(0 0 0 / 0.22); transform: translateY(-1px); }
 .stay.active { opacity: 0.9; box-shadow: 0 8px 20px rgb(0 0 0 / 0.3); transform: translateY(-2px); z-index: 2; }
 .track.dragging .stay { cursor: grabbing; transition: none; }
@@ -193,6 +193,24 @@
 .stay .handle:hover { background: rgb(0 0 0 / 0.25); }
 .stay .handle:hover::after { opacity: 1; height: 58%; }
 .track.dragging .stay:not(.active) .handle::after { opacity: 0; }
+
+/* A travel day: the plane sits on the seam where the stay arriving that day meets the one it left */
+.stay .travel {
+  position: absolute;
+  top: 50%;
+  left: -1px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line-strong);
+  color: var(--text);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
 
 /* A neighbouring year's stay reaching onto this timeline: faded and striped, its cut-off side squared, and a
    click goes to that year rather than starting a drag */

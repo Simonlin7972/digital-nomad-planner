@@ -106,6 +106,9 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           行程可以<b>跨年</b>：在編輯視窗把結束日選到明年，時間軸尾端會標出下一年（例如「2028 →」），下一年的開頭會顯示這段的淡色版，點一下回到原本那年。兩年的行程不會重疊。
         </>,
         <>
+          <b>移動日</b>：離開一地、抵達下一地的那天可以同時算在前後兩段。把後一段的開始日選成前一段的結束日，或把行程一端拉到隔壁行程的第一天（最後一天）。月曆上這天各畫半格、中間有小飛機；兩段最多只能共用這一天，總天數只算一次。
+        </>,
+        <>
           年檢視可以放大：用上方滑桿、觸控板兩指開合，或按住 <kbd>{alt}</kbd> 滾動滾輪。放大後按住月份列可以左右拖。
         </>,
       ],
@@ -240,6 +243,9 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         </>,
         <>
           A stay can <b>cross into the next year</b>: pick an end date next year in the editor. The timeline marks it with the next year at its end, and next year's timeline shows a faded copy at its start that takes you back with one click. Stays in the two years never overlap.
+        </>,
+        <>
+          <b>Travel days</b>: the day you leave one place and arrive in the next can belong to both stays. Start the next stay on the day the last one ends, or drag a stay's end onto its neighbour's first (or last) day. The calendar splits that day in half with a small plane; two stays can share only that one day, and totals count it once.
         </>,
         <>
           Zoom the year view with the slider, a trackpad pinch, or by holding <kbd>{alt}</kbd> and scrolling. When zoomed in, drag the
@@ -377,6 +383,9 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         </>,
         <>
           予定は<b>年をまたげます</b>：編集画面で終了日を翌年にすると、タイムラインの端に翌年（例：「2028 →」）が表示され、翌年のタイムラインの先頭には薄い表示が出て、クリックすると元の年に戻ります。2 年の予定が重なることはありません。
+        </>,
+        <>
+          <b>移動日</b>：ある場所を出て次の場所に着く日は、前後両方の滞在に含められます。次の滞在の開始日を前の滞在の終了日にするか、滞在の端を隣の滞在の初日（最終日）までドラッグします。カレンダーではその日を半分ずつ塗り分け、小さな飛行機を表示します。重ねられるのはこの 1 日だけで、合計日数では 1 日として数えます。
         </>,
         <>
           年表示は拡大できます：上のスライダー、トラックパッドのピンチ、または <kbd>{alt}</kbd> を押しながらスクロール。拡大後は月の列をドラッグして左右に動かせます。

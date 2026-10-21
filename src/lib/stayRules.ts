@@ -2,7 +2,7 @@
 // Both are worked out from the plans: this year's, plus what the neighbouring years add at the edges (see getEdges).
 import { schengenApplies } from './profile';
 import { getEdges, type Stay } from './storage';
-import { TOTAL_DAYS, YEAR, daysOf, monthRange, type DayRange } from './weeks';
+import { TOTAL_DAYS, YEAR, daysCovered, monthRange, type DayRange } from './weeks';
 
 // Full Schengen members as of 2025, by the ISO codes stays are stored under. Microstates with open borders
 // (Monaco, San Marino, the Vatican) and broad regions such as "Europe" are not counted.
@@ -77,15 +77,10 @@ export function checkSchengen(stays: Stay[]): SchengenCheck {
 }
 
 // Days planned in a country (the profile's tax residence, Taiwan by default) within the calendar year, which is
-// the tax year most 183-day lines are counted over.
+// the tax year most 183-day lines are counted over. A travel day counts once, even between two places in that
+// country.
 export function residenceDays(stays: Stay[], country: string): number {
   if (!country) return 0;
   const year = { startDay: monthRange(0).startDay, endDay: monthRange(11).endDay };
-  return stays
-    .filter((s) => s.country === country)
-    .reduce((n, s) => {
-      const startDay = Math.max(s.startDay, year.startDay);
-      const endDay = Math.min(s.endDay, year.endDay);
-      return endDay >= startDay ? n + daysOf({ startDay, endDay }) : n;
-    }, 0);
+  return daysCovered(stays.filter((s) => s.country === country), year);
 }

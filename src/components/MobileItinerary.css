@@ -34,6 +34,7 @@
 .mstays p { margin: 4px 0 0; font-size: 14px; color: var(--muted); line-height: 1.5; }
 .mstays .when { font-variant-numeric: tabular-nums; }
 .mstays .warn { display: flex; align-items: center; gap: 6px; color: var(--danger); font-weight: 600; }
+.mstays .travel { display: flex; align-items: center; gap: 6px; color: var(--muted); }
 .mstays .note { color: var(--text); white-space: pre-wrap; }
 .mticket { display: flex; gap: 8px; margin-top: 8px; padding: 10px 12px; border-radius: 8px; background: var(--subtle); font-size: 14px; line-height: 1.5; }
 .mticket svg { flex: none; margin-top: 3px; }

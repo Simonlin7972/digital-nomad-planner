@@ -76,6 +76,44 @@ export function overlaps(a: DayRange, b: DayRange) {
   return a.startDay <= b.endDay && b.startDay <= a.endDay;
 }
 
+// Two stays may share one day: the travel day, when you leave one place and arrive in the next. That is the
+// first stay's last day and the second's first, and both must be longer than that one day, so no day ever
+// belongs to more than two stays. Any other overlap is a clash.
+export const canShare = (a: DayRange, b: DayRange) => a.endDay > a.startDay && b.endDay > b.startDay;
+
+export function sharesDay(first: DayRange, second: DayRange) {
+  return first.endDay === second.startDay && first.startDay < second.startDay && canShare(first, second);
+}
+
+export function clashes(a: DayRange, b: DayRange) {
+  return overlaps(a, b) && !sharesDay(a, b) && !sharesDay(b, a);
+}
+
+// The travel days among the stays (each a day two of them share), with the ids of the stays that end on one
+// (`leaving`) and start on one (`arriving`), so the views can draw that day split between them.
+export function travelDays(stays: Stay[]) {
+  const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
+  const days: number[] = [];
+  const leaving = new Set<string>();
+  const arriving = new Set<string>();
+  for (let i = 1; i < sorted.length; i++) {
+    if (!sharesDay(sorted[i - 1], sorted[i])) continue;
+    days.push(sorted[i].startDay);
+    leaving.add(sorted[i - 1].id);
+    arriving.add(sorted[i].id);
+  }
+  return { days, leaving, arriving };
+}
+
+// True when no two of the stays clash.
+export function fits(stays: DayRange[]) {
+  const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
+  for (let i = 0; i < sorted.length; i++)
+    for (let j = i + 1; j < sorted.length && sorted[j].startDay <= sorted[i].endDay; j++)
+      if (clashes(sorted[i], sorted[j])) return false;
+  return true;
+}
+
 // A stay of a neighbouring year, with its dates counted in this year's days (negative before the timeline).
 export type Ghost = Stay & { year: number };
 
@@ -119,9 +157,48 @@ export function getEdges(): Edges {
   return { year: YEAR, lo: 0, hi: spillLimit(), lastStart: TOTAL_DAYS - 1, ghosts: [], before: [] };
 }
 
+// Moves stays later, in order, so none clashes with `lead` (a stay's new range) or with the one before it. The
+// first may start on `lead`'s last day when `share` allows, making it their travel day; after that each keeps the
+// link it had to the one before: a shared travel day stays shared, a stay starting the next day still does, and
+// a gap soaks up the push. Writes the new ranges into `next`; false if a locked stay or the edge of the days this
+// year may use is in the way.
+function shoveLater(order: Stay[], lead: DayRange, share: boolean, next: Map<string, DayRange>, B: Edges): boolean {
+  let prev = lead;
+  for (let i = 0; i < order.length; i++) {
+    const s = order[i];
+    const edge = prev.endDay + (share && canShare(prev, s) ? 0 : 1); // first day s may start on
+    if (s.startDay >= edge) break;
+    if (isLocked(s)) return false;
+    const moved = { startDay: edge, endDay: edge + (s.endDay - s.startDay) };
+    if (moved.endDay > B.hi || moved.startDay > B.lastStart) return false;
+    next.set(s.id, moved);
+    share = i + 1 < order.length && sharesDay(s, order[i + 1]);
+    prev = moved;
+  }
+  return true;
+}
+
+// The same toward the start of the year: `order` runs from the stay nearest `lead` backwards.
+function shoveEarlier(order: Stay[], lead: DayRange, share: boolean, next: Map<string, DayRange>, B: Edges): boolean {
+  let prev = lead;
+  for (let i = 0; i < order.length; i++) {
+    const s = order[i];
+    const edge = prev.startDay - (share && canShare(s, prev) ? 0 : 1); // last day s may end on
+    if (s.endDay <= edge) break;
+    if (isLocked(s)) return false;
+    const moved = { startDay: edge - (s.endDay - s.startDay), endDay: edge };
+    if (moved.startDay < B.lo) return false;
+    next.set(s.id, moved);
+    share = i + 1 < order.length && sharesDay(order[i + 1], s);
+    prev = moved;
+  }
+  return true;
+}
+
 // Resizes one stay to `range`, shoving whatever is in the way: neighbours slide in the direction of the move,
-// each pushing the next, and gaps soak up the push. Order never changes. Null if a stay would leave the year, or
-// if a locked stay would have to move.
+// each pushing the next, and gaps soak up the push. The dragged edge may land on the neighbour's first (or last)
+// day, which the two then share as a travel day; only past that does the neighbour move. Order never changes.
+// Null if a stay would leave the year, or if a locked stay would have to move.
 export function pushStays(stays: Stay[], id: string, range: DayRange): Stay[] | null {
   const moved = stays.find((s) => s.id === id);
   if (!moved || isLocked(moved)) return null;
@@ -132,34 +209,15 @@ export function pushStays(stays: Stay[], id: string, range: DayRange): Stay[] | 
   if (range.endDay > moved.endDay && range.endDay > B.hi) return null;
   const next = new Map<string, DayRange>([[id, range]]);
   const others = stays.filter((s) => s.id !== id).sort((a, b) => a.startDay - b.startDay);
-
-  let edge = range.endDay + 1; // first free day to the right
-  for (const s of others.filter((o) => o.startDay > moved.startDay)) {
-    if (s.startDay >= edge) break;
-    if (isLocked(s)) return null;
-    const endDay = edge + (s.endDay - s.startDay);
-    if (endDay > B.hi || edge > B.lastStart) return null;
-    next.set(s.id, { startDay: edge, endDay });
-    edge = endDay + 1;
-  }
-
-  edge = range.startDay - 1; // last free day to the left
-  for (const s of others.filter((o) => o.startDay < moved.startDay).reverse()) {
-    if (s.endDay <= edge) break;
-    if (isLocked(s)) return null;
-    const startDay = edge - (s.endDay - s.startDay);
-    if (startDay < B.lo) return null;
-    next.set(s.id, { startDay, endDay: edge });
-    edge = startDay - 1;
-  }
-
+  if (!shoveLater(others.filter((o) => o.startDay > moved.startDay), range, true, next, B)) return null;
+  if (!shoveEarlier(others.filter((o) => o.startDay < moved.startDay).reverse(), range, true, next, B)) return null;
   return stays.map((s) => (next.has(s.id) ? { ...s, ...next.get(s.id)! } : s));
 }
 
 const len = (r: DayRange) => r.endDay - r.startDay + 1;
 
-// Exchanges two neighbouring stays. Each keeps its length and the gap between them, so the span they cover
-// together is unchanged.
+// Exchanges two neighbouring stays. Each keeps its length and the gap (or shared travel day) between them, so the
+// span they cover together is unchanged.
 function swapNeighbours(stays: Stay[], first: Stay, second: Stay): Stay[] {
   return stays.map((s) => {
     if (s.id === first.id) return { ...s, startDay: second.endDay - len(first) + 1, endDay: second.endDay };
@@ -187,12 +245,16 @@ export function reorderStays(stays: Stay[], id: string, desired: DayRange): Stay
     if (!other || isLocked(other)) break;
     const middle = (other.startDay + other.endDay) / 2;
     if (dir > 0 ? desired.endDay < middle : desired.startDay > middle) break;
-    cur = dir > 0 ? swapNeighbours(cur, me, other) : swapNeighbours(cur, other, me);
+    const swapped = dir > 0 ? swapNeighbours(cur, me, other) : swapNeighbours(cur, other, me);
+    // A swap carries the travel days along; stop if that leaves a one-day stay sharing one.
+    if (!fits(swapped)) break;
+    cur = swapped;
   }
   const { me, prev, next } = neighbours();
   const B = getEdges();
-  const lo = prev ? prev.endDay + 1 : B.lo;
-  const hi = Math.min(B.lastStart, (next ? next.startDay - 1 : B.hi) - len(me) + 1);
+  // Sliding never makes a new travel day, but keeps one the stay already shares with a neighbour.
+  const lo = prev ? prev.endDay + (sharesDay(prev, me) ? 0 : 1) : B.lo;
+  const hi = Math.min(B.lastStart, (next ? next.startDay - (sharesDay(me, next) ? 0 : 1) : B.hi) - len(me) + 1);
   if (hi < lo) return cur;
   const startDay = Math.min(hi, Math.max(lo, desired.startDay));
   return cur.map((s) => (s.id === id ? { ...s, startDay, endDay: startDay + len(me) - 1 } : s));
@@ -200,13 +262,14 @@ export function reorderStays(stays: Stay[], id: string, desired: DayRange): Stay
 
 // Cuts one stay in two at `day`, which becomes the first day of the second part. The first part keeps the id and
 // the flight (that is the trip there); the second gets a new id and everything else, like an alt-drag copy.
-// Null when `day` doesn't fall strictly inside the stay, so each part has at least one day, or when the stay is
-// locked.
+// Null when `day` doesn't fall strictly inside the stay, so each part has at least one day, when the stay is
+// locked, or when a one-day part would be left sharing a travel day with a neighbour.
 export function splitStay(stays: Stay[], id: string, day: number): Stay[] | null {
   const stay = stays.find((s) => s.id === id);
   if (!stay || isLocked(stay) || day <= stay.startDay || day > stay.endDay) return null;
   const second: Stay = { ...stay, id: crypto.randomUUID(), ticket: undefined, startDay: day, endDay: stay.endDay };
-  return [...stays.map((s) => (s.id === id ? { ...s, endDay: day - 1 } : s)), second];
+  const result = [...stays.map((s) => (s.id === id ? { ...s, endDay: day - 1 } : s)), second];
+  return fits(result) ? result : null;
 }
 
 // Drops a new stay (an alt-drag copy) and makes room for it, insert-style: nothing before it moves, the original
@@ -221,20 +284,16 @@ export function insertStay(stays: Stay[], added: Stay): Stay[] | null {
 
   // Later: start after any stay already under the drop point, then shove the rest along.
   const later = (): Stay[] | null => {
-    let startDay = added.startDay;
-    for (const s of sorted) if (s.startDay < startDay && s.endDay >= startDay) startDay = s.endDay + 1;
+    const under = sorted.find((s) => s.startDay < added.startDay && s.endDay >= added.startDay);
+    const startDay = under ? under.endDay + 1 : added.startDay;
     const placed = { ...added, startDay, endDay: startDay + len - 1 };
     if (placed.endDay > B.hi || placed.startDay > B.lastStart) return null;
     const next = new Map<string, DayRange>();
-    let edge = placed.endDay + 1;
-    for (const s of sorted.filter((o) => o.startDay >= startDay)) {
-      if (s.startDay >= edge) break;
-      if (isLocked(s)) return null;
-      const endDay = edge + (s.endDay - s.startDay);
-      if (endDay > B.hi || edge > B.lastStart) return null;
-      next.set(s.id, { startDay: edge, endDay });
-      edge = endDay + 1;
-    }
+    // Everything after the drop point moves on, including a stay that begins on the last day of the one the copy
+    // follows (their travel day). The copy never shares a travel day with what it shoves; the stays it shoves keep
+    // theirs.
+    const after = sorted.filter((o) => o !== under && o.startDay >= (under ? under.endDay : startDay));
+    if (!shoveLater(after, placed, false, next, B)) return null;
     return [...stays.map((s) => (next.has(s.id) ? { ...s, ...next.get(s.id)! } : s)), placed];
   };
 
@@ -242,15 +301,7 @@ export function insertStay(stays: Stay[], added: Stay): Stay[] | null {
   const earlier = (): Stay[] | null => {
     if (added.startDay < B.lo || added.endDay > B.hi) return null;
     const next = new Map<string, DayRange>();
-    let edge = added.startDay - 1;
-    for (const s of sorted.filter((o) => o.startDay <= added.endDay).reverse()) {
-      if (s.endDay <= edge) break;
-      if (isLocked(s)) return null;
-      const startDay = edge - (s.endDay - s.startDay);
-      if (startDay < B.lo) return null;
-      next.set(s.id, { startDay, endDay: edge });
-      edge = startDay - 1;
-    }
+    if (!shoveEarlier(sorted.filter((o) => o.startDay <= added.endDay).reverse(), added, false, next, B)) return null;
     return [...stays.map((s) => (next.has(s.id) ? { ...s, ...next.get(s.id)! } : s)), added];
   };
 
@@ -290,7 +341,8 @@ function rangeOf(s: Record<string, unknown>): DayRange | null {
   return null;
 }
 
-// Keeps only well-formed, non-overlapping stays so a bad file can't corrupt the timeline.
+// Keeps only well-formed stays that don't clash (a shared travel day is fine) so a bad file can't corrupt the
+// timeline.
 export function sanitize(data: unknown): Stay[] {
   const raw = Array.isArray(data) ? data : (data as { stays?: unknown } | null)?.stays;
   if (!Array.isArray(raw)) return [];
@@ -314,7 +366,7 @@ export function sanitize(data: unknown): Stay[] {
     const ticket = cleanTicket(s.ticket);
     if (ticket) stay.ticket = ticket;
     if (typeof s.note === 'string' && s.note.trim()) stay.note = s.note.trim();
-    if (out.some((o) => overlaps(o, stay) || o.id === stay.id)) continue;
+    if (out.some((o) => clashes(o, stay) || o.id === stay.id)) continue;
     out.push(stay);
   }
   return out.sort((a, b) => a.startDay - b.startDay);

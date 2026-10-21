@@ -1,3 +1,4 @@
+import { Airplane } from '@phosphor-icons/react/dist/csr/Airplane';
 import { LockSimple } from '@phosphor-icons/react/dist/csr/LockSimple';
 import { useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
@@ -10,8 +11,8 @@ import { ModeChip } from './ModeChip';
 import { transitionName } from '../lib/motion';
 import type { HolidaySet } from '../lib/holidays';
 import { daysText, t, tr, useLocale } from '../lib/i18n';
-import { type Ghost, type Stay, colorOf, getEdges, isLocked, placeName, pushStays } from '../lib/storage';
-import { YEAR, dateOfDay, daysOf, monthRange, monthTitle, todayIndex, weekdayHeaders, type DayRange } from '../lib/weeks';
+import { type Ghost, type Stay, colorOf, getEdges, isLocked, placeName, pushStays, travelDays } from '../lib/storage';
+import { YEAR, dateOfDay, daysCovered, daysOf, monthRange, monthTitle, todayIndex, weekdayHeaders, type DayRange } from '../lib/weeks';
 import './MonthView.css';
 
 type Drag =
@@ -52,10 +53,7 @@ export default function MonthView(props: Props) {
 
   const shown = drag?.kind === 'resize' ? (pushStays(stays, drag.id, drag) ?? stays) : stays;
   const inMonth = [...shown, ...ghosts].filter((s) => s.startDay <= range.endDay && s.endDay >= range.startDay);
-  const plannedDays = inMonth.reduce(
-    (n, s) => n + Math.min(s.endDay, range.endDay) - Math.max(s.startDay, range.startDay) + 1,
-    0,
-  );
+  const plannedDays = daysCovered(inMonth, range);
   const selection: DayRange | null = drag?.kind === 'select' ? { startDay: drag.lo, endDay: drag.hi } : pending;
 
   // The days this year's stays may use (see getEdges): a new one starts on this year's timeline and may run on
@@ -158,15 +156,18 @@ export default function MonthView(props: Props) {
   }
 
   // Position of a day range within one week row, or null if it doesn't touch that week.
-  const segment = (r: DayRange, weekStart: number) => {
+  // A travel day is drawn split: the stay being left ends halfway across it and the next one starts there, with a
+  // plane on the seam.
+  const travel = travelDays(shown);
+  const segment = (r: DayRange, weekStart: number, id?: string) => {
     const from = Math.max(r.startDay, weekStart);
     const to = Math.min(r.endDay, weekStart + 6);
     if (from > to) return null;
-    return {
-      style: { left: `${((from - weekStart) / 7) * 100}%`, width: `${((to - from + 1) / 7) * 100}%` } as CSSProperties,
-      starts: from === r.startDay,
-      ends: to === r.endDay,
-    };
+    const starts = from === r.startDay;
+    const ends = to === r.endDay;
+    const left = from - weekStart + (starts && id && travel.arriving.has(id) ? 0.5 : 0);
+    const right = to - weekStart + 1 - (ends && id && travel.leaving.has(id) ? 0.5 : 0);
+    return { style: { left: `${(left / 7) * 100}%`, width: `${((right - left) / 7) * 100}%` } as CSSProperties, starts, ends };
   };
 
   return (
@@ -256,7 +257,7 @@ export default function MonthView(props: Props) {
                 );
               })}
               {shown.map((s) => {
-                const seg = segment(s, weekStart);
+                const seg = segment(s, weekStart, s.id);
                 if (!seg) return null;
                 const active = drag?.kind === 'resize' && drag.id === s.id;
                 const locked = isLocked(s);
@@ -285,6 +286,13 @@ export default function MonthView(props: Props) {
                   </div>
                 );
               })}
+              {travel.days
+                .filter((d) => d >= weekStart && d < weekStart + 7)
+                .map((d) => (
+                  <span key={d} className="mtravel" style={{ left: `${((d - weekStart + 0.5) / 7) * 100}%` }} title={t('stay.travelDay')}>
+                    <Airplane size={12} weight="bold" />
+                  </span>
+                ))}
               {cutting && cut?.week === w && <div className="mcut" style={{ left: `${(cut.col / 7) * 100}%` }} aria-hidden />}
               {sel && (
                 <div className={`mbar msel${sel.starts ? ' starts' : ''}${sel.ends ? ' ends' : ''}`} style={sel.style}>

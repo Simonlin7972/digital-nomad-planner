@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft';
+import { Airplane } from '@phosphor-icons/react/dist/csr/Airplane';
 import { ArrowRight } from '@phosphor-icons/react/dist/csr/ArrowRight';
 import { LockSimple } from '@phosphor-icons/react/dist/csr/LockSimple';
 import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
@@ -9,7 +10,7 @@ import { usePinchZoom } from '../hooks/usePinchZoom';
 import type { Zoom } from '../hooks/useZoom';
 import type { Holiday, HolidaySet } from '../lib/holidays';
 import { daysText, t, useLocale } from '../lib/i18n';
-import { type Ghost, type Stay, colorOf, countryOf, getEdges, insertStay, isLocked, placeName, pushStays, reorderStays } from '../lib/storage';
+import { type Ghost, type Stay, colorOf, countryOf, getEdges, insertStay, isLocked, placeName, pushStays, reorderStays, travelDays } from '../lib/storage';
 import { seasonWarning } from '../lib/seasons';
 import { clamp } from '../lib/util';
 import {
@@ -24,6 +25,7 @@ import {
   monthName,
   rangeLabel,
   slotsOf,
+  travelSlotsOf,
   weeksLabel,
   type DayRange,
 } from '../lib/weeks';
@@ -112,6 +114,13 @@ export default function YearView(props: Props) {
   const { prevYear, nextYear, onYearEdge, startAtEnd, onSplit, ghosts, onOpenYear, flash } = props;
   useLocale();
   const [drag, setDrag] = useState<Drag | null>(null);
+  // The blocks fade in once when the timeline appears. After that the entrance is switched off for good, so
+  // nothing that re-renders them (the end of a drag, a drop) can make them all play it again.
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setSettled(true), 1000);
+    return () => clearTimeout(timer);
+  }, []);
   const trackRef = useRef<HTMLDivElement>(null);
   const thisWeek = useMemo(() => currentWeekIndex(), []);
   const { scrollRef } = zoom;
@@ -353,13 +362,33 @@ export default function YearView(props: Props) {
         ? (pushStays(stays, drag.id, drag) ?? stays)
         : stays;
 
+  // A travel day is drawn split between the stay being left and the next one (see travelCol).
+  const travel = travelDays(visible);
+  const travelCol = (r: DayRange, id: string): CSSProperties => {
+    const arrives = travel.arriving.has(id);
+    const leaves = travel.leaving.has(id);
+    let { s, e } = grid.cols(r);
+    if (grid.unit === 'half') {
+      // The day sits inside a half-week: both stays meet at the slot boundary nearest its middle.
+      ({ s, e } = travelSlotsOf(r, arrives, leaves));
+      return slotCol(s, e);
+    }
+    // Day columns: each stay covers its half of the shared column, by a margin worked out against its own span.
+    const span = e - s;
+    return {
+      ...slotCol(s, e),
+      ...(arrives ? { marginLeft: `calc(${50 / span}% + 1px)` } : {}),
+      ...(leaves ? { marginRight: `calc(${50 / span}% + 1px)` } : {}),
+    };
+  };
+
   // One strip per country under the stays; back-to-back stays in the same country share a strip.
   const countryBars: { id: string; country: string; city: string; color: string; s: number; e: number }[] = [];
   for (const stay of [...visible].sort((a, b) => a.startDay - b.startDay)) {
     if (!stay.country) continue;
     const { s, e } = grid.cols(stay);
     const last = countryBars[countryBars.length - 1];
-    if (last && last.country === stay.country && last.e === s) last.e = e;
+    if (last && last.country === stay.country && last.e >= s) last.e = Math.max(last.e, e);
     else countryBars.push({ id: stay.id, country: stay.country, city: '', color: colorOf(stay), s, e });
   }
 
@@ -424,7 +453,7 @@ export default function YearView(props: Props) {
           ))}
           <div
             ref={trackRef}
-            className={`row track${drag ? ' dragging' : ''}${altDown ? ' alt' : ''}${cutting ? ' cutting' : ''}`}
+            className={`row track${settled ? ' settled' : ''}${drag ? ' dragging' : ''}${altDown ? ' alt' : ''}${cutting ? ' cutting' : ''}`}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
@@ -476,7 +505,7 @@ export default function YearView(props: Props) {
                   key={s.id}
                   data-stay={s.id}
                   className={`stay${s.id === activeId ? ' active' : ''}${s.id === COPY_ID && copyBlocked ? ' blocked' : ''}${locked ? ' locked' : ''}`}
-                  style={{ ...stayCol(s), background: colorOf(s), '--i': i, viewTransitionName: transitionName('tl', s.id) } as CSSProperties}
+                  style={{ ...travelCol(s, s.id), background: colorOf(s), '--i': i, viewTransitionName: transitionName('tl', s.id) } as CSSProperties}
                   onMouseEnter={(e) => {
                     // No card mid-drag; it would only get in the way.
                     if (drag) return;
@@ -499,6 +528,11 @@ export default function YearView(props: Props) {
                     </small>
                   </span>
                   <FlashRing flash={flash} id={s.id} />
+                  {travel.arriving.has(s.id) && (
+                    <span className="travel" title={t('stay.travelDay')}>
+                      <Airplane size={10} weight="bold" />
+                    </span>
+                  )}
                   {spills ? (
                     <span className="spill" title={t('year.spill', { year: YEAR + 1 })}>
                       {YEAR + 1}

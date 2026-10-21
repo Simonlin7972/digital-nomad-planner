@@ -1,10 +1,11 @@
+import { Airplane } from '@phosphor-icons/react/dist/csr/Airplane';
 import { useEffect, useState } from 'react';
 import type { ChangeEvent, CSSProperties, FormEvent } from 'react';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { normalizeCity } from '../lib/cities';
 import { normalizeCountry } from '../lib/flags';
 import { daysText, t, useLocale } from '../lib/i18n';
-import { PALETTE, cleanTicket, colorKeyOf, defaultColor, getEdges, overlaps, placeName, type ColorKey, type Stay, type Ticket } from '../lib/storage';
+import { PALETTE, clashes, cleanTicket, colorKeyOf, defaultColor, getEdges, placeName, sharesDay, type ColorKey, type Stay, type Ticket } from '../lib/storage';
 import { dayLabel, dayOfIso, dayOfIsoAny, daysOf, isoOfDay, rangeLabel, weeksLabel, type DayRange } from '../lib/weeks';
 import { CityCombobox, CountryCombobox, AirlineCombobox, FlightNoCombobox } from './Combobox';
 import { DatePicker } from './DatePicker';
@@ -98,8 +99,12 @@ export function Editor(props: {
   }, [onClose]);
 
   const dates: DayRange = { startDay, endDay };
-  const clash = others.find((o) => overlaps(o, dates));
+  const clash = others.find((o) => clashes(o, dates));
   const range = clash ? null : dates;
+  // Neighbours this stay shares a travel day with: the one it arrives from on its first day, the one it leaves for
+  // on its last.
+  const from = range && others.find((o) => sharesDay(o, range));
+  const to = range && others.find((o) => sharesDay(range, o));
   const error = clash ? t('editor.clash', { place: placeName(clash), range: rangeLabel(clash) }) : '';
 
   function submit(e: FormEvent) {
@@ -172,6 +177,18 @@ export function Editor(props: {
                 })}
               </p>
             )
+          )}
+          {from && (
+            <p className="range travel">
+              <Airplane size={13} weight="bold" />
+              {t('editor.arrive', { date: dayLabel(from.endDay), place: placeName(from) })}
+            </p>
+          )}
+          {to && (
+            <p className="range travel">
+              <Airplane size={13} weight="bold" />
+              {t('editor.leave', { date: dayLabel(to.startDay), place: placeName(to) })}
+            </p>
           )}
           <SeasonStrip place={place} range={range} />
           <label>

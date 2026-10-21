@@ -70,6 +70,22 @@
 .mbar.ends { border-radius: 0 10px 10px 0; border-right: 3px solid transparent; }
 .mbar.starts.ends { border-radius: 10px; }
 .mbar.active { opacity: 0.85; z-index: 2; }
+/* A travel day: the two stays meet halfway across it, with a plane in the gap between their rounded ends */
+.mtravel {
+  position: absolute;
+  top: 40px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line-strong);
+  color: var(--text);
+  pointer-events: none;
+}
 /* A neighbouring year's stay on this year's days: faded and striped; a click goes to that year */
 .mbar.ghost {
   cursor: pointer;

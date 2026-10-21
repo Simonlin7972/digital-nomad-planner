@@ -170,6 +170,20 @@ export function spillLimit(): number {
 // Days of a range that fall on this year's timeline, for totals that shouldn't count a neighbouring year.
 export const daysOnTimeline = (r: DayRange) => Math.max(0, Math.min(r.endDay, TOTAL_DAYS - 1) - Math.max(r.startDay, 0) + 1);
 
+// Distinct days the ranges cover within `within` (this year's timeline unless given). Two stays can share their
+// travel day, so adding up their lengths would count that day twice.
+export function daysCovered(ranges: DayRange[], within: DayRange = { startDay: 0, endDay: TOTAL_DAYS - 1 }): number {
+  let total = 0;
+  let next = within.startDay; // first day not yet counted
+  for (const r of [...ranges].sort((a, b) => a.startDay - b.startDay)) {
+    const startDay = Math.max(r.startDay, next);
+    const endDay = Math.min(r.endDay, within.endDay);
+    if (endDay >= startDay) total += endDay - startDay + 1;
+    next = Math.max(next, endDay + 1);
+  }
+  return total;
+}
+
 // Slot boundary k sits at Monday (even k) or Friday (odd k) of its week.
 export function dayOfBoundary(k: number): number {
   return Math.floor(k / 2) * 7 + (k % 2 ? 4 : 0);
@@ -184,6 +198,16 @@ export function slotsOf(r: DayRange): { s: number; e: number } {
     s = Math.min(s, SLOTS - 1);
     e = s + 1;
   }
+  return { s, e };
+}
+
+// slotsOf for a stay that shares a travel day with a neighbour: an end on that day meets the neighbour at the
+// slot boundary nearest the middle of the day, so the two blocks touch without overlapping.
+export function travelSlotsOf(r: DayRange, arrives: boolean, leaves: boolean): { s: number; e: number } {
+  let { s, e } = slotsOf(r);
+  const meet = (day: number) => Math.min(SLOTS - 1, Math.max(1, Math.round((day + 0.5) / 3.5)));
+  if (arrives) s = Math.min(meet(r.startDay), e - 1);
+  if (leaves) e = Math.max(meet(r.endDay), s + 1);
   return { s, e };
 }
 

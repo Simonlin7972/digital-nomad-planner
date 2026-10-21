@@ -1,11 +1,11 @@
 import { flagCode } from './flags';
 import type { HolidaySet } from './holidays';
 import { daysText, getLocale, t } from './i18n';
-import { colorOf, countryOf, getEdges, placeFull, placeName, type Stay } from './storage';
+import { colorOf, countryOf, getEdges, placeFull, placeName, travelDays, type Stay } from './storage';
 import { compose, SIZE as AVATAR_SIZE, type Avatar } from './avatar';
 import { getProfile } from './profile';
 import { checkSchengen, residenceDays } from './stayRules';
-import { MONTHS, SLOTS, TOTAL_DAYS, WEEKS, YEAR, daysOf, daysOnTimeline, monthName, monthRange, rangeLabel, slotsOf, weeksLabel } from './weeks';
+import { MONTHS, SLOTS, TOTAL_DAYS, WEEKS, YEAR, daysCovered, daysOf, monthName, monthRange, rangeLabel, slotsOf, travelSlotsOf, weeksLabel } from './weeks';
 
 const FONT = '"975HazyGo", -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
 const TAGLINE_FONT = '16px "Pixelify Sans", monospace';
@@ -82,7 +82,7 @@ function countryBars(sorted: Stay[]) {
     if (!stay.country) continue;
     const { s, e } = slotsOf(stay);
     const last = bars[bars.length - 1];
-    if (last && last.country === stay.country && last.e === s) last.e = e;
+    if (last && last.country === stay.country && last.e >= s) last.e = Math.max(last.e, e);
     else bars.push({ country: stay.country, color: colorOf(stay), s, e });
   }
   return bars;
@@ -110,7 +110,7 @@ export function renderAvatarPng(avatar: Avatar, scale = 8): Promise<Blob> {
 // The line under the title: time planned, places, and the day-count rules when they apply.
 function summaryLine(stays: Stay[]): { text: string; warn: boolean } {
   // This year's timeline only: its stays and the parts of the neighbouring years' that reach onto it.
-  const planned = [...stays, ...getEdges().ghosts].reduce((n, s) => n + daysOnTimeline(s), 0);
+  const planned = daysCovered([...stays, ...getEdges().ghosts]);
   const countries = new Set(stays.filter((s) => s.country).map((s) => s.country)).size;
   const cities = new Set(stays.filter((s) => s.city).map((s) => `${s.country}/${s.city}`)).size;
   const profile = getProfile();
@@ -236,9 +236,10 @@ export async function renderPng(stays: Stay[], { holidaySets = [] }: PngOptions 
     }
   });
 
-  // Stays, with a ticket mark in the corner when a flight is booked
+  // Stays, with a ticket mark in the corner when a flight is booked. Two stays sharing a travel day meet in it.
+  const travel = travelDays(sorted);
   for (const stay of sorted) {
-    const { s, e } = slotsOf(stay);
+    const { s, e } = travelSlotsOf(stay, travel.arriving.has(stay.id), travel.leaving.has(stay.id));
     const x = PAD + s * SLOT_W + 1;
     const w = (e - s) * SLOT_W - 2;
     const y = trackY + 24;
@@ -358,6 +359,7 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, max: number): string[
 
 export async function renderPortraitPng(stays: Stay[]): Promise<Blob> {
   const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
+  const travel = travelDays(sorted);
   const summary = summaryLine(sorted);
   const title = t('app.title');
   const tagline = t('app.tagline');
@@ -431,8 +433,11 @@ export async function renderPortraitPng(stays: Stay[]): Promise<Blob> {
       const from = Math.max(stay.startDay, range.startDay);
       const to = Math.min(stay.endDay, range.endDay);
       if (from > to) continue;
-      const x = PAD + labelW + ((from - range.startDay) / days) * barW;
-      const w = ((to - from + 1) / days) * barW;
+      // A travel day is split: half for the stay being left, half for the one arriving.
+      const a = from - range.startDay + (from === stay.startDay && travel.arriving.has(stay.id) ? 0.5 : 0);
+      const b = to - range.startDay + 1 - (to === stay.endDay && travel.leaving.has(stay.id) ? 0.5 : 0);
+      const x = PAD + labelW + (a / days) * barW;
+      const w = ((b - a) / days) * barW;
       ctx.fillStyle = colorOf(stay);
       ctx.fillRect(x + 0.5, y + 2, Math.max(1, w - 1), 14);
     }

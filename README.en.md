@@ -78,6 +78,7 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 - **Free stretches**: unplanned days between stays are listed in the itinerary too; press `+` to add a stay in that gap
 - **Map**: every place in visit order, joined into a route
 - **Year**: the drop-down beside the view tabs switches between 2025, 2026, 2027 and 2028; each year keeps its own plan. Dragging the month row past December (or January) and letting go moves to the next (or previous) year. A stay can cross into the next year: it is kept in the year it starts in and its end date can fall in the next year (chosen in the editor), shown with "2028 →" at the end of the timeline; the next year's timeline opens with a faded, striped copy marked "From 2027", which takes you back to that year when clicked, and the two years' stays never overlap
+- **Travel days**: the day you leave one place and arrive in the next can belong to both stays: start the next stay on the day the last one ends, or drag a stay's end onto its neighbour's first (or last) day. The calendar splits that day in half with a small plane between the two bars, and the timeline blocks meet in the middle of it; the list, the phone cards and the editor mark it "Travel day". Two stays can share only that one day (and each must be longer than it). Schengen and tax-residence counts include it for both places; totals count it once
 - **Public holidays**: toggle Taiwan's and Australia's 2026 and 2027 holidays, drawn over the timeline and calendar (no holiday data for 2028 yet)
 
 ![Summary, itinerary and the route on the map](docs/demo-map.gif)
@@ -271,7 +272,7 @@ Each year:
 
 Names are accepted on import too: `"country": "泰國"`, `"Thailand"` and `"city": "清邁"` are all recognised and converted to the form above.
 
-Imports are sanitised (`sanitize`): entries that are malformed, out of range, or that overlap an earlier entry are skipped rather than failing the whole file.
+Imports are sanitised (`sanitize`): entries that are malformed, out of range, or that overlap an earlier entry (sharing one travel day doesn't count) are skipped rather than failing the whole file.
 
 Dates can range over the full weeks of the year's timeline: from the Monday of the week containing 1 January to the Sunday of the week containing 31 December. For 2027 that is 2026-12-28 to 2028-01-02 (53 weeks). On import each year is sanitised against its own range, and stays outside it are skipped.
 
@@ -408,7 +409,7 @@ Knowing these before reading the code will save time.
 
 **Dragging, resizing and copying each have their own rule.** Dragging a whole stay calls `reorderStays` (list-style reordering, passing over neighbours); dragging an edge calls `pushStays` (order preserved, neighbours shoved along); `Alt`-dragging calls `insertStay` (insert: nothing before the copy moves; landing inside a stay puts it right after that stay; what it covers, and anything joined on after, shifts later; only when that runs out of year does it push earlier instead). All three are pure functions, recomputed from the original data on every pointer move, so no state accumulates and dragging back to the start always restores the plan.
 
-**Stays never overlap.** You can only be in one place on a given day. Every path that changes the plan — creating, editing, dragging, importing — keeps that true.
+**Stays share at most one travel day.** A stay's last day may be the next one's first (both must be longer than that day), so no day belongs to more than two stays; any other overlap is refused. The rule is `clashes` / `sharesDay` in `lib/storage.ts`, and every path that changes the plan — creating, editing, dragging, importing — keeps it. Dragging an edge can land it on the neighbour's first day to make a travel day, and only further pushes the neighbour; moving a whole stay and `Alt`-copying never make a new travel day, but stays that get pushed keep the ones they had. Totals of days always use `daysCovered`, which counts each day once.
 
 **Every change to the plan goes through one `setStays`.** It comes from `useHistory` and pushes the previous state onto the undo stack, so a new feature that uses it gets undo for free. Only `App.tsx` holds the plan; the year and month views manage their own drag state and report the result through callbacks.
 
@@ -448,6 +449,7 @@ Knowing these before reading the code will save time.
 - **No automated tests**
 - **The month view can't move a whole stay or `Alt`-drag a copy**; drag the ends or change the dates in the editor
 - **A copied stay doesn't carry the flight details** (a flight belongs to one trip)
+- **A travel day can't cross years**: a stay at the end of December and one at the start of the next January can't share a day
 - **One flight per stay**
 - **The shared image doesn't include the map**
 - **Season data covers about 71 cities** and is general guidance; a given year's weather can differ. Season warnings aren't in the shared image
@@ -515,7 +517,7 @@ Issues and pull requests are welcome.
 
 - Make sure `npm run build` passes first
 - Change the plan only through `setStays` in `App.tsx`, so undo keeps working
-- Put logic that moves stays in the pure functions in `lib/storage.ts`, and keep stays from overlapping
+- Put logic that moves stays in the pure functions in `lib/storage.ts`, and keep stays to at most one shared travel day
 - New components go in `src/components/`, with styles in a `.css` file of the same name imported by that component; only things several components share go in `styles/base.css`
 - Anything new that talks to the network must be described under [Data and privacy](#data-and-privacy)
 - All interface text goes in the dictionaries in `src/lib/i18n.tsx`, in all three languages; don't hard-code strings in components

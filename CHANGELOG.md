@@ -7,8 +7,15 @@
   people using the planner, not for developers: what they can now do or what changed for them.
 -->
 
+## 2026-10-22
+
+- 拖曳行程放開後，整條時間軸不會再閃一下
+  EN: Letting go of a dragged stay no longer makes the whole timeline flash
+
 ## 2026-10-21
 
+- 支援移動日：離開一地、抵達下一地的那天可以同時排在前後兩段。後一段的開始日選前一段的結束日，或把行程一端拉到隔壁行程的第一天就行；月曆上這天各畫半格、中間有小飛機，列表和編輯視窗會標出「移動日」，總天數不會重複算
+  EN: Travel days: the day you leave one place and arrive in the next can now belong to both stays. Start the next stay on the day the last one ends, or drag a stay's end onto its neighbour's first day; the calendar splits that day with a small plane, the list and editor mark it as a travel day, and totals count it once
 - 畫面動起來更順：視窗、選單、彈出層關閉時會淡出；剛改過的行程會閃一圈框，復原、切開、匯入時色塊和列表會滑到新位置；摘要的數字會滾到新值；季節區塊展開有動畫
   EN: Smoother motion: dialogs, menus and popovers fade out when closed; a stay you just changed flashes a ring, and after undo, cut or import the blocks and rows slide into place; the summary's figures roll to their new values; the season panel folds open
 - 按住 B 或 Alt 時，畫面角落會提示這時點或拖會做什麼；點行程列表的某一列，就捲到時間軸上那段行程

@@ -1,3 +1,4 @@
+import { Airplane } from '@phosphor-icons/react/dist/csr/Airplane';
 import { CalendarPlus } from '@phosphor-icons/react/dist/csr/CalendarPlus';
 import { Check } from '@phosphor-icons/react/dist/csr/Check';
 import { Copy } from '@phosphor-icons/react/dist/csr/Copy';
@@ -9,10 +10,10 @@ import type { MouseEvent } from 'react';
 import { daysText, t, useLocale } from '../lib/i18n';
 import { download } from '../lib/files';
 import { flightIcs } from '../lib/ics';
-import { cityOf, colorOf, countryOf, getEdges, loadYearPlan, placeName, type Stay } from '../lib/storage';
+import { cityOf, colorOf, countryOf, getEdges, loadYearPlan, placeName, travelDays, type Stay } from '../lib/storage';
 import { noteText, seasonWarning } from '../lib/seasons';
 import { checkSchengen, gapsOf } from '../lib/stayRules';
-import { TOTAL_DAYS, YEAR, YEARS, dateOfDay, daysOf, inYear, longRangeLabel, setYear, todayIndex, weeksLabel } from '../lib/weeks';
+import { TOTAL_DAYS, YEAR, YEARS, dateOfDay, dayLabel, daysOf, inYear, longRangeLabel, setYear, todayIndex, weeksLabel } from '../lib/weeks';
 import { Flag } from './Flag';
 import { YearSelect } from './YearSelect';
 import './MobileItinerary.css';
@@ -28,11 +29,13 @@ export function MobileItinerary({ stays }: { stays: Stay[] }) {
   useLocale();
   const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
   const schengen = useMemo(() => checkSchengen(stays), [stays]);
+  const arriving = travelDays(stays).arriving;
   const today = todayIndex();
   const [showPast, setShowPast] = useState(false);
 
   // "Now" and "next" look through every year's plan, so they stay right whichever year is on screen. A stay can
   // appear in two plans (the borrowed days at a year's edges), so the next stay must start after the current one.
+  // On a travel day two stays cover today: the one being left is "now" and the one arriving today is "next".
   const entries = useMemo(
     () =>
       YEARS.flatMap((year) =>
@@ -46,7 +49,8 @@ export function MobileItinerary({ stays }: { stays: Stay[] }) {
   const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const covering = entries.filter((e) => e.start <= midnight && midnight <= e.end);
   const current = covering.find((e) => e.year === now.getFullYear()) ?? covering[0];
-  const next = entries.find((e) => e.start > (current ? current.end : midnight));
+  const next = entries.find((e) => (current ? e.start > current.start && e.start >= current.end : e.start > midnight));
+  const leavingToday = Boolean(next && next.start === midnight);
 
   // Past stays fold into one line when the year on screen is the one being lived. Gaps before the first stay and
   // after the last are left out: they are just the rest of the year.
@@ -89,7 +93,7 @@ export function MobileItinerary({ stays }: { stays: Stay[] }) {
               </a>
               <p>
                 {inYear(next.year, () => longRangeLabel(next.stay))}
-                {t('sep') + t('mobile.inDays', { days: daysText(Math.round((next.start - midnight) / DAY_MS)) })}
+                {t('sep') + (leavingToday ? t('mobile.travelToday') : t('mobile.inDays', { days: daysText(Math.round((next.start - midnight) / DAY_MS)) }))}
               </p>
               {next.stay.ticket && <Ticket stay={next.stay} />}
             </div>
@@ -154,6 +158,12 @@ export function MobileItinerary({ stays }: { stays: Stay[] }) {
                     {weeksLabel(daysOf(s))}
                     {t('paren', { x: daysText(daysOf(s)) })}
                   </p>
+                  {arriving.has(s.id) && (
+                    <p className="travel">
+                      <Airplane size={14} weight="bold" />
+                      {t('stays.travelDay', { date: dayLabel(s.startDay) })}
+                    </p>
+                  )}
                   {s.companions && <p>{t('with', { who: s.companions })}</p>}
                   {seasonWarning(s)?.notes.map((n, i) => (
                     <p key={i} className="warn">

@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
+import { Airplane } from '@phosphor-icons/react/dist/csr/Airplane';
 import { PencilSimple } from '@phosphor-icons/react/dist/csr/PencilSimple';
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus';
 import { Ticket as TicketIcon } from '@phosphor-icons/react/dist/csr/Ticket';
 import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
 import { daysText, t, useLocale } from '../lib/i18n';
 import { transitionName, withTransition } from '../lib/motion';
-import { cityOf, colorOf, countryOf, overlaps, placeFull, type Stay } from '../lib/storage';
+import { cityOf, colorOf, countryOf, overlaps, placeFull, travelDays, type Stay } from '../lib/storage';
 import { noteText, seasonWarning } from '../lib/seasons';
 import { checkSchengen, gapsOf } from '../lib/stayRules';
-import { TOTAL_DAYS, daysOf, longRangeLabel, monthName, monthRange, weeksLabel, type DayRange } from '../lib/weeks';
+import { TOTAL_DAYS, dayLabel, daysOf, longRangeLabel, monthName, monthRange, weeksLabel, type DayRange } from '../lib/weeks';
 import { Flag } from './Flag';
 import { FlashRing, type Flash } from './Flash';
 import type { Anchor } from './HoverCards';
@@ -44,6 +45,8 @@ export function StayList({ stays, month, onEdit, onLocate, onCreate, ticketCardI
   const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
   const listed = range ? sorted.filter((s) => overlaps(s, range)) : sorted;
   const schengen = useMemo(() => checkSchengen(stays), [stays]);
+  // Stays that begin on a travel day shared with the one before
+  const arriving = travelDays(stays).arriving;
   // Gaps only make sense around stays; an empty plan gets the empty message instead.
   const gaps = stays.length === 0 ? [] : gapsOf(stays).filter((g) => !range || overlaps(g, range));
   const rows = [
@@ -128,6 +131,12 @@ export function StayList({ stays, month, onEdit, onLocate, onCreate, ticketCardI
                   {weeksLabel(daysOf(s))}
                   {t('paren', { x: daysText(daysOf(s)) })}
                 </span>
+                {arriving.has(s.id) && (
+                  <span className="travel-tag">
+                    <Airplane size={12} weight="bold" />
+                    {t('stays.travelDay', { date: dayLabel(s.startDay) })}
+                  </span>
+                )}
                 {s.companions && <span className="weeks">{t('with', { who: s.companions })}</span>}
                 {season && (
                   <span className="warn" role="img" aria-label={t('season.warn', { why: seasonText ?? '' })} title={t('season.warn', { why: seasonText ?? '' })}>
