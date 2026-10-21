@@ -5,6 +5,9 @@ import { CaretLeft } from '@phosphor-icons/react/dist/csr/CaretLeft';
 import { CaretRight } from '@phosphor-icons/react/dist/csr/CaretRight';
 import { useKeyHeld } from '../hooks/useKeyHeld';
 import { Flag } from './Flag';
+import { FlashRing, type Flash } from './Flash';
+import { ModeChip } from './ModeChip';
+import { transitionName } from '../lib/motion';
 import type { HolidaySet } from '../lib/holidays';
 import { daysText, t, tr, useLocale } from '../lib/i18n';
 import { type Ghost, type Stay, colorOf, getEdges, isLocked, placeName, pushStays } from '../lib/storage';
@@ -30,12 +33,13 @@ type Props = {
   onHover: (card: { id: string; x: number; y: number } | null) => void;
   stacked?: boolean; // one of twelve months shown together: a plain title, no previous / next buttons
   onSplit: (id: string, day: number) => void; // B held and a bar clicked: cut the stay, `day` starting the second part
+  flash?: Flash | null; // stays that just changed, ringed for a moment
 };
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
 export default function MonthView(props: Props) {
-  const { stays, ghosts, onOpenYear, month, onMonth, holidaySets, pending, onCreate, onEdit, onResize, onHover, stacked, onSplit } = props;
+  const { stays, ghosts, onOpenYear, month, onMonth, holidaySets, pending, onCreate, onEdit, onResize, onHover, stacked, onSplit, flash } = props;
   useLocale();
   const [drag, setDrag] = useState<Drag | null>(null);
   const weekEls = useRef<(HTMLDivElement | null)[]>([]);
@@ -167,6 +171,8 @@ export default function MonthView(props: Props) {
 
   return (
     <div className={`month-view${stacked ? ' stacked' : ''}`} data-month={month}>
+      {/* What the held key does, while it is held: B cuts (shown on the month being looked at, not on all twelve) */}
+      {!stacked && <ModeChip mode={cutting ? 'cut' : null} />}
       <div className="mhead">
         {!stacked && (
           <button className="icon" onClick={() => onMonth(month - 1)} disabled={month === 0} aria-label={t('month.prev')}>
@@ -259,7 +265,7 @@ export default function MonthView(props: Props) {
                     key={s.id}
                     data-stay={s.id}
                     className={`mbar${seg.starts ? ' starts' : ''}${seg.ends ? ' ends' : ''}${active ? ' active' : ''}${locked ? ' locked' : ''}`}
-                    style={{ ...seg.style, background: colorOf(s) }}
+                    style={{ ...seg.style, background: colorOf(s), viewTransitionName: transitionName(`mb-${month}-${weekStart}`, s.id) } as CSSProperties}
                     onMouseEnter={(e) => {
                       if (drag) return;
                       const r = e.currentTarget.getBoundingClientRect();
@@ -267,6 +273,7 @@ export default function MonthView(props: Props) {
                     }}
                     onMouseLeave={() => onHover(null)}
                   >
+                    <FlashRing flash={flash} id={s.id} />
                     {seg.starts && !locked && <span className="handle" data-edge="l" />}
                     <span className="label">
                       {locked && seg.starts && <LockSimple size={12} weight="bold" aria-label={t('stay.locked')} />}

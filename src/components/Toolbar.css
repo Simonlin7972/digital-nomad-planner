@@ -18,7 +18,7 @@
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow-pop);
-  animation: fade 0.12s ease-out;
+  animation: drop-in var(--dur-fast) var(--ease-out);
 }
 .actions .more-menu button {
   width: 100%;
@@ -46,8 +46,9 @@
     z-index: 31;
     padding: 8px;
     border-radius: var(--radius-lg);
-    animation: sheet-up 0.22s cubic-bezier(0.3, 0.7, 0.2, 1);
+    animation: sheet-up 0.22s var(--ease-out);
   }
+  .more-menu.leaving { animation: sheet-down var(--dur-exit) ease-in forwards; }
   .actions .more-menu button { min-height: 48px; font-size: 15px; }
 }
 

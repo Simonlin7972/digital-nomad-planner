@@ -15,7 +15,7 @@
   min-width: calc(var(--slots) * 11px * var(--zoom, 1));
   /* pulled past either end: shifts a little against the drag, then springs back */
   transform: translateX(var(--pull, 0px));
-  transition: transform 0.25s cubic-bezier(0.3, 0.7, 0.2, 1);
+  transition: transform 0.25s var(--ease-out);
 }
 .timeline.pulling { transition: none; }
 
@@ -130,10 +130,16 @@
   align-items: stretch;
   min-width: 0;
   cursor: grab;
+  position: relative; /* the .flash ring sits over the block */
   z-index: 1;
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.16);
   transition: box-shadow 0.15s, transform 0.15s;
 }
+/* Blocks arrive one after another when the timeline mounts (--i is the block's index); not mid-drag, where the
+   copy being dragged must show at once (and the blocked copy's shake is an animation too) */
+.stay { animation: stay-in var(--dur-base) var(--ease-out) both; animation-delay: min(calc(var(--i, 0) * 25ms), 300ms); }
+@keyframes stay-in { from { opacity: 0; translate: 0 6px; } }
+.track.dragging .stay { animation: none; }
 .stay:hover { box-shadow: 0 4px 12px rgb(0 0 0 / 0.22); transform: translateY(-1px); }
 .stay.active { opacity: 0.9; box-shadow: 0 8px 20px rgb(0 0 0 / 0.3); transform: translateY(-2px); z-index: 2; }
 .track.dragging .stay { cursor: grabbing; transition: none; }
@@ -155,7 +161,13 @@
   pointer-events: none;
   z-index: 3;
 }
-.stay.blocked { opacity: 0.45; outline: 2px dashed var(--danger); outline-offset: 2px; }
+.track.dragging .stay.blocked { opacity: 0.45; outline: 2px dashed var(--danger); outline-offset: 2px; animation: shake 0.3s ease-out; }
+/* The copy being dragged sits 2px up (.active); the shake keeps that while it wobbles sideways */
+@keyframes shake {
+  0%, 100% { transform: translateY(-2px); }
+  25% { transform: translate(-3px, -2px); }
+  75% { transform: translate(3px, -2px); }
+}
 
 .stay .handle {
   flex: 0 0 auto;

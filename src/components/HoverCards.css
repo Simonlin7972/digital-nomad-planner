@@ -15,7 +15,7 @@
   line-height: 1.45;
   color: var(--text);
   pointer-events: none;
-  animation: fade 0.12s ease-out;
+  animation: drop-in var(--dur-fast) var(--ease-out);
 }
 .hover-card .with-icon { display: flex; align-items: center; gap: 6px; }
 .hover-card .set { font-size: 11px; font-weight: 600; }

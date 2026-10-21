@@ -41,6 +41,7 @@ const SECTIONS = [
   ['layout', 'Layout 版面'],
   ['radius', 'Corner radius 圓角'],
   ['shadow', 'Shadow 陰影'],
+  ['motion', 'Motion 動態'],
   ['button', 'Button 按鈕'],
   ['toggle', 'Toggle 開關'],
   ['tabs', 'Tabs 分頁切換'],
@@ -123,6 +124,21 @@ const SHADOWS: [string, string, string][] = [
   ['focus ring', '0 0 0 2px var(--surface), 0 0 0 4px var(--text)', '色票選取（其他元件用 2px outline）'],
 ];
 
+const MOTION_TOKENS: [string, string, string][] = [
+  ['--ease-out', 'cubic-bezier(0.3, 0.7, 0.2, 1)', '所有「滑到定位」的動作：分頁滑塊、年份滑入、選單與資訊卡出現、季節區塊展開、View Transition'],
+  ['--dur-fast', '120ms', '選單、彈出層、資訊卡進場；季節內容淡入'],
+  ['--dur-base', '200ms', '對話框進場、季節區塊高度、月曆換月滑入、色塊與列依序淡入、View Transition'],
+  ['--dur-exit', '150ms', '所有離場：對話框、選單、彈出層、資訊卡、提示標籤、備份提醒收合。hooks/usePresence.ts 也讀這個值決定多留多久；減少動態時為 0'],
+];
+
+const MOTION_RULES: [string, string][] = [
+  ['只動 transform／opacity', '位置用 translate、大小用 scale；高度動畫只用 grid-template-rows 0fr→1fr（季節區塊、備份提醒）'],
+  ['離場比進場短', '進 120–200ms ease-out，出 150ms ease-in；關閉的元素加 .leaving 多留 --dur-exit 再卸載'],
+  ['改動要看得到', '剛改過的行程閃一圈框（.flash，0.7s）；變更用 View Transitions 滑到新位置；摘要數字滾動 0.35s'],
+  ['拖曳中不動畫', '.track.dragging 下沒有 transition，也不播依序淡入；只有放不下的複本會抖一下'],
+  ['減少動態', 'prefers-reduced-motion: reduce 時所有 animation 與 transition 關閉，--dur-exit 為 0，數字直接換'],
+];
+
 const LAYOUT: [string, string][] = [
   ['頁面最大寬度', '1600px（.app）'],
   ['桌面頁邊', '40px；手機 16px 加安全區'],
@@ -140,9 +156,9 @@ export function DesignSystem() {
         <p className="ds-brand">今天不在家工作</p>
         <p className="ds-kicker">Design System</p>
         <p className="ds-group">Foundations</p>
-        {SECTIONS.slice(0, 6).map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}
+        {SECTIONS.slice(0, 7).map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}
         <p className="ds-group">Components</p>
-        {SECTIONS.slice(6).map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}
+        {SECTIONS.slice(7).map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}
       </nav>
 
       <main className="ds-main">
@@ -275,6 +291,30 @@ export function DesignSystem() {
           </div>
           <h3>Focus 外框</h3>
           <p className="ds-note">鍵盤 focus、展開中的選單、開啟的開關都用同一圈：<code>outline: 2px solid var(--text)</code>。按鈕畫在外側（offset 2px），欄位與膠囊畫在內側（offset -1px，邊框隱藏）。</p>
+        </Section>
+
+        <Section id="motion" title="Motion 動態" note="緩動與時長是 :root 上的 token；每個元件的動畫寫在自己的 CSS 裡，用這幾個值。">
+          <table className="ds-table">
+            <tbody>
+              {MOTION_TOKENS.map(([name, value, use]) => (
+                <tr key={name}><td><code>{name}</code></td><td>{value}</td><td>{use}</td></tr>
+              ))}
+            </tbody>
+          </table>
+          <h3>規則</h3>
+          <table className="ds-table">
+            <tbody>
+              {MOTION_RULES.map(([rule, how]) => (
+                <tr key={rule}><td>{rule}</td><td>{how}</td></tr>
+              ))}
+            </tbody>
+          </table>
+          <h3>Keyframes</h3>
+          <p className="ds-note">
+            base.css：<code>fade</code>／<code>fade-out</code>、<code>rise</code>（對話框）、<code>sink</code>（對話框離場）、<code>sheet-up</code>／<code>sheet-down</code>（手機底部視窗與選單）、
+            <code>drop-in</code>（選單、彈出層、資訊卡、提示標籤）、<code>pop</code>（複製後的勾勾）、<code>flash-ring</code>（改動的行程）、<code>shimmer</code>（分享圖與 QR 製作中）。
+            元件自己的：<code>stay-in</code>、<code>row-in</code>（依序淡入）、<code>shake</code>（放不下的複本）、<code>month-next／prev</code>（月曆換月）、<code>flash-row</code>（列表列）。
+          </p>
         </Section>
 
         <Section id="button" title="Button 按鈕" note="所有 <button> 都有基本樣式：14px／600、膠囊形、按下時縮到 96%。Hover 只在有滑鼠的裝置生效。">

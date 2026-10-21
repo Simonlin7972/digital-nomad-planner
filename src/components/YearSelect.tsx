@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { CaretDown } from '@phosphor-icons/react/dist/csr/CaretDown';
 import { Check } from '@phosphor-icons/react/dist/csr/Check';
+import { usePresence } from '../hooks/usePresence';
 import { t, useLocale } from '../lib/i18n';
 import { YEAR, YEARS, setYear } from '../lib/weeks';
 import './YearSelect.css';
@@ -11,6 +12,8 @@ import './YearSelect.css';
 export function YearSelect() {
   useLocale();
   const [open, setOpen] = useState(false);
+  // Closed, the menu fades out before it goes (styles/base.css .leaving)
+  const { shown, leaving } = usePresence(open);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const listId = useId();
@@ -65,9 +68,9 @@ export function YearSelect() {
         <CaretDown size={14} weight="bold" />
       </button>
       {/* Phone only (CSS): the dimmed page behind the sheet; tapping it closes the menu without reaching the page. */}
-      {open && <div className="menu-scrim" aria-hidden="true" onClick={close} />}
-      {open && (
-        <div className="year-menu" role="menu" id={listId} aria-label={t('year.label')}>
+      {shown && <div className={`menu-scrim${leaving ? ' leaving' : ''}`} aria-hidden="true" onClick={close} />}
+      {shown && (
+        <div className={`year-menu${leaving ? ' leaving' : ''}`} role="menu" id={listId} aria-label={t('year.label')}>
           {YEARS.map((y) => (
             <button key={y} type="button" role="menuitemradio" aria-checked={y === YEAR} onClick={() => pick(y)}>
               {y}

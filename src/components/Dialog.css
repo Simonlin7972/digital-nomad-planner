@@ -61,6 +61,10 @@
 .buttons button { border-radius: 8px; padding: 12px 20px; }
 .spacer { flex: 1; }
 
+/* Closing: the page unblurs as the backdrop fades and the dialog sinks (components/Presence.tsx adds .leaving) */
+.leaving > .backdrop { animation: fade-out var(--dur-exit) ease-in forwards; pointer-events: none; }
+.leaving > .backdrop > .editor { animation: sink var(--dur-exit) ease-in forwards; }
+
 /* Phone: dialogs rise from the bottom as a full-width sheet, within thumb reach. The [role] raises specificity
    above the per-dialog widths (.editor.share, .editor.help). */
 @media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
@@ -70,6 +74,7 @@
     max-height: calc(100dvh - 40px);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     padding-bottom: env(safe-area-inset-bottom);
-    animation: sheet-up 0.25s cubic-bezier(0.3, 0.7, 0.2, 1);
+    animation: sheet-up 0.25s var(--ease-out);
   }
+  .leaving > .backdrop > .editor[role] { animation: sheet-down var(--dur-exit) ease-in forwards; }
 }

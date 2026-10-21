@@ -221,7 +221,9 @@ function Ticket({ stay }: { stay: Stay }) {
 
   const copyButton = (text: string, label: string) => (
     <button type="button" className="mact" aria-label={copied === text ? t('mobile.copied') : label} onClick={() => void copy(text)}>
-      {copied === text ? <Check size={16} weight="bold" /> : <Copy size={16} weight="bold" />}
+      <span className="pop" key={copied === text ? 'copied' : 'copy'}>
+        {copied === text ? <Check size={16} weight="bold" /> : <Copy size={16} weight="bold" />}
+      </span>
     </button>
   );
   const empty = !flight && !ticket.departure && !ticket.bookingRef && !ticket.price;

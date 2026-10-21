@@ -3,6 +3,7 @@ import type { KeyboardEvent } from 'react';
 import { CalendarBlank } from '@phosphor-icons/react/dist/csr/CalendarBlank';
 import { CaretLeft } from '@phosphor-icons/react/dist/csr/CaretLeft';
 import { CaretRight } from '@phosphor-icons/react/dist/csr/CaretRight';
+import { usePresence } from '../hooks/usePresence';
 import { t, useLocale } from '../lib/i18n';
 import { fullDate, monthTitle, weekdayHeaders } from '../lib/weeks';
 import './DatePicker.css';
@@ -32,7 +33,16 @@ export function DatePicker({ value, onChange, min, max, rangeWith, openAt, align
   useLocale();
   const selected = fromIso(value);
   const [open, setOpen] = useState(false);
+  // Closed, the calendar fades out before it goes (styles/base.css .leaving)
+  const pop = usePresence(open);
   const [shown, setShown] = useState(() => monthStart(selected ?? fromIso(openAt) ?? fromIso(min) ?? new Date()));
+  // The arrows slide the days in from the side they point to; `n` alternates the animation's name so the same
+  // direction twice still replays (keying the grid instead would drop the keyboard's focus).
+  const [slide, setSlide] = useState({ dir: 0, n: 0 });
+  const turn = (dir: 1 | -1) => {
+    setShown(dir > 0 ? nextMonth : prevMonth);
+    setSlide((s) => ({ dir, n: s.n + 1 }));
+  };
   const rootRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const popId = useId();
@@ -116,16 +126,16 @@ export function DatePicker({ value, onChange, min, max, rangeWith, openAt, align
           {selected ? fullDate(selected) : (placeholder ?? t('date.placeholder'))}
         </span>
       </button>
-      {open && (
-        <div className={`datepicker-pop ${align}`} id={popId} role="dialog" aria-label={label}>
+      {pop.shown && (
+        <div className={`datepicker-pop ${align}${pop.leaving ? ' leaving' : ''}`} id={popId} role="dialog" aria-label={label}>
           <div className="datepicker-head">
-            <button type="button" onClick={() => setShown(prevMonth)} disabled={!canPrev} aria-label={t('month.prev')}>
+            <button type="button" onClick={() => turn(-1)} disabled={!canPrev} aria-label={t('month.prev')}>
               <CaretLeft size={14} weight="bold" />
             </button>
             <strong>
               {monthTitle(shown.getFullYear(), shown.getMonth())}
             </strong>
-            <button type="button" onClick={() => setShown(nextMonth)} disabled={!canNext} aria-label={t('month.next')}>
+            <button type="button" onClick={() => turn(1)} disabled={!canNext} aria-label={t('month.next')}>
               <CaretRight size={14} weight="bold" />
             </button>
           </div>
@@ -134,7 +144,11 @@ export function DatePicker({ value, onChange, min, max, rangeWith, openAt, align
               <span key={d}>{d}</span>
             ))}
           </div>
-          <div className="datepicker-grid" ref={gridRef} onKeyDown={onGridKey}>
+          <div
+            className={`datepicker-grid${slide.dir ? ` slide-${slide.dir > 0 ? 'next' : 'prev'}-${slide.n % 2}` : ''}`}
+            ref={gridRef}
+            onKeyDown={onGridKey}
+          >
             {days.map((d) => {
               const iso = toIso(d);
               const classes = [

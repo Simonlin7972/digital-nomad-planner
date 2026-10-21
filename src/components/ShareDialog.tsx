@@ -84,7 +84,7 @@ export function ShareDialog({ stays, holidaySets, onClose }: Props) {
               </button>
             ))}
           </div>
-          <div className={`share-preview ${layout}`}>
+          <div className={`share-preview ${layout}${!image && !failed ? ' shimmer' : ''}`}>
             {image ? (
               <img src={image.url} alt={t('share.alt')} />
             ) : (

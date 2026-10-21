@@ -11,6 +11,7 @@ import { Question } from '@phosphor-icons/react/dist/csr/Question';
 import { UserCircle } from '@phosphor-icons/react/dist/csr/UserCircle';
 import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork';
 import { UploadSimple } from '@phosphor-icons/react/dist/csr/UploadSimple';
+import { usePresence } from '../hooks/usePresence';
 import { t, useLocale } from '../lib/i18n';
 import { MOD } from '../lib/util';
 import { HOME_URL, PROFILE_URL } from '../lib/links';
@@ -98,6 +99,8 @@ type MenuItem = { label: string; icon: ReactNode; onSelect: () => void; disabled
 // A ⋯ button with a small drop-down. Closes on a pick, Esc, or a press outside; arrow keys move between items.
 function MoreMenu({ items }: { items: MenuItem[] }) {
   const [open, setOpen] = useState(false);
+  // Closed, the menu fades out before it goes (styles/base.css .leaving)
+  const { shown, leaving } = usePresence(open);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuId = useId();
@@ -146,9 +149,9 @@ function MoreMenu({ items }: { items: MenuItem[] }) {
         <DotsThree size={18} weight="bold" />
       </button>
       {/* Phone only (CSS): the dimmed page behind the sheet; tapping it closes the menu without reaching the page. */}
-      {open && <div className="menu-scrim" aria-hidden="true" onClick={close} />}
-      {open && (
-        <div className="more-menu" role="menu" id={menuId}>
+      {shown && <div className={`menu-scrim${leaving ? ' leaving' : ''}`} aria-hidden="true" onClick={close} />}
+      {shown && (
+        <div className={`more-menu${leaving ? ' leaving' : ''}`} role="menu" id={menuId}>
           {items.map((item) => (
             <Fragment key={item.label}>
               {item.divider && <hr className="more-sep" role="separator" />}

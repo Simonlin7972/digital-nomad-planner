@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
+import { Check } from '@phosphor-icons/react/dist/csr/Check';
 import { Copy } from '@phosphor-icons/react/dist/csr/Copy';
 import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork';
 import { X } from '@phosphor-icons/react/dist/csr/X';
@@ -83,7 +84,7 @@ export function TransferDialog({ stays, onClose }: { stays: Stay[]; onClose: () 
         </h2>
         <div className="dialog-body">
           <p className="transfer-text">{t('transfer.body')}</p>
-          <div className="transfer-qr">
+          <div className={`transfer-qr${qr ? '' : ' shimmer'}`}>
             {!qr ? (
               <p>{t('transfer.preparing')}</p>
             ) : qr.code ? (
@@ -116,7 +117,10 @@ export function TransferDialog({ stays, onClose }: { stays: Stay[]; onClose: () 
             </button>
           )}
           <button type="button" className="primary" disabled={!url} onClick={() => void copy()}>
-            <Copy size={16} weight="bold" />
+            {/* keyed so the check pops in (styles/base.css .pop) and the copy icon pops back */}
+            <span className="pop" key={copied ? 'copied' : 'copy'}>
+              {copied ? <Check size={16} weight="bold" /> : <Copy size={16} weight="bold" />}
+            </span>
             {copied ? t('transfer.copied') : t('transfer.copy')}
           </button>
         </div>

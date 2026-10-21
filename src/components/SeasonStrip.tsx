@@ -39,8 +39,9 @@ export function SeasonStrip({ place, range }: { place: Pick<Stay, 'country' | 'c
         )}
         <CaretDown size={14} weight="bold" className="caret" />
       </button>
-      {open && (
-        <>
+      {/* Always in the DOM so it can fold open and shut (SeasonStrip.css); shut, it is inert and takes no room */}
+      <div className={`season-body${open ? ' open' : ''}`} inert={!open}>
+        <div>
           <ol className="season-months" aria-label={t('season.title')}>
             {season.ratings.map((r, m) => (
               <li
@@ -70,8 +71,8 @@ export function SeasonStrip({ place, range }: { place: Pick<Stay, 'country' | 'c
             ))}
             <span>{t('season.disclaimer')}</span>
           </p>
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }

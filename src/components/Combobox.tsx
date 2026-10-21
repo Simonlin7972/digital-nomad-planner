@@ -7,6 +7,7 @@ import { Airplane } from '@phosphor-icons/react/dist/csr/Airplane';
 import { Hash } from '@phosphor-icons/react/dist/csr/Hash';
 import { airlineCode, airlineLogo, searchAirlines } from '../lib/airlines';
 import { countryLabel, flagCode, isListedCountry, searchCountries } from '../lib/flags';
+import { usePresence } from '../hooks/usePresence';
 import { t, useLocale } from '../lib/i18n';
 import { Flag } from './Flag';
 import './Combobox.css';
@@ -47,6 +48,8 @@ function Combobox<T extends Option>({
   autoFocus,
 }: Props<T>) {
   const [open, setOpen] = useState(false);
+  // Closed, the list fades out before it goes (styles/base.css .leaving)
+  const { shown, leaving } = usePresence(open);
   // Until the user types, the field shows the whole list rather than just what matches the current value.
   const [typed, setTyped] = useState(false);
   const [active, setActive] = useState(-1);
@@ -130,8 +133,8 @@ function Combobox<T extends Option>({
           onKeyDown={onKeyDown}
         />
       </div>
-      {open && (
-        <ul className="combo-list" role="listbox" id={listId} ref={listRef}>
+      {shown && (
+        <ul className={`combo-list${leaving ? ' leaving' : ''}`} role="listbox" id={listId} ref={listRef}>
           {options.map((o, i) => (
             <li
               key={`${o.flag}/${o.value}`}

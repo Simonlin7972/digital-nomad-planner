@@ -10,7 +10,9 @@
   gap: 8px;
   flex: none; /* a short dialog scrolls rather than squeezing the code */
   min-height: 120px;
+  border-radius: var(--radius);
 }
+.transfer-qr.shimmer { background: var(--subtle); }
 .transfer-qr p.transfer-qr-note { font-size: 12px; line-height: 1.6; }
 .transfer-qr p { margin: 0; font-size: 14px; color: var(--muted); text-align: center; }
 .editor.transfer .toggle { align-self: flex-start; }

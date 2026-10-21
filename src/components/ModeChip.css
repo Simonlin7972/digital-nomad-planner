@@ -1,0 +1,20 @@
+/* Held-key label: top right of the view it sits in (.year-view and .month-view are positioned), above the content */
+.mode-chip {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--text);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: var(--shadow-pop);
+  pointer-events: none;
+  animation: drop-in var(--dur-fast) var(--ease-out);
+}
+.leaving > .mode-chip { animation: fade-out var(--dur-exit) ease-in forwards; }

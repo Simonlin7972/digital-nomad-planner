@@ -28,6 +28,9 @@ import {
   type DayRange,
 } from '../lib/weeks';
 import { Flag } from './Flag';
+import { FlashRing, type Flash } from './Flash';
+import { ModeChip } from './ModeChip';
+import { transitionName } from '../lib/motion';
 import type { Anchor } from './HoverCards';
 import './YearView.css';
 
@@ -86,6 +89,7 @@ type Props = {
   onYearEdge: (dir: 1 | -1) => void; // pulled far enough past an end: switch to the neighbouring year
   startAtEnd: boolean; // arrived from the following year, so show December first
   onSplit: (id: string, day: number) => void; // B held and a stay clicked: cut it in two, `day` starting the second part
+  flash?: Flash | null; // stays that just changed, ringed for a moment
 };
 
 // How far (px) the month row has to be pulled past the end of the timeline before letting go switches year.
@@ -105,7 +109,7 @@ const slotCol = (s: number, e: number): CSSProperties => ({ gridColumn: `${s + 1
 // when zoomed to DAY_UNIT_ZOOM or beyond. Stays keep their exact dates either way; only drawing and dragging snap.
 export default function YearView(props: Props) {
   const { stays, zoom, holidaySets, pending, onCreate, onEdit, onChange, onOpenMonth, onHoverStay, onHoverHoliday, onDragging } = props;
-  const { prevYear, nextYear, onYearEdge, startAtEnd, onSplit, ghosts, onOpenYear } = props;
+  const { prevYear, nextYear, onYearEdge, startAtEnd, onSplit, ghosts, onOpenYear, flash } = props;
   useLocale();
   const [drag, setDrag] = useState<Drag | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -361,6 +365,8 @@ export default function YearView(props: Props) {
 
   return (
     <div className="year-view">
+      {/* What a held key does, while it is held: B cuts, ⌥ copies */}
+      <ModeChip mode={cutting ? 'cut' : altDown && !drag ? 'copy' : null} />
       {pullYear !== null && (
         <div
           className={`year-pull ${pull > 0 ? 'next' : 'prev'}${pullReady ? ' ready' : ''}`}
@@ -460,7 +466,7 @@ export default function YearView(props: Props) {
                 </span>
               </div>
             ))}
-            {visible.map((s) => {
+            {visible.map((s, i) => {
               const weeks = weeksLabel(daysOf(s));
               // Runs on into next year: the end is off this timeline, so it has no handle to drag here.
               const spills = s.endDay >= TOTAL_DAYS;
@@ -470,7 +476,7 @@ export default function YearView(props: Props) {
                   key={s.id}
                   data-stay={s.id}
                   className={`stay${s.id === activeId ? ' active' : ''}${s.id === COPY_ID && copyBlocked ? ' blocked' : ''}${locked ? ' locked' : ''}`}
-                  style={{ ...stayCol(s), background: colorOf(s) }}
+                  style={{ ...stayCol(s), background: colorOf(s), '--i': i, viewTransitionName: transitionName('tl', s.id) } as CSSProperties}
                   onMouseEnter={(e) => {
                     // No card mid-drag; it would only get in the way.
                     if (drag) return;
@@ -492,6 +498,7 @@ export default function YearView(props: Props) {
                       {s.id === activeId ? rangeLabel(s) : `${weeks}${s.note ? `${t('sep')}${s.note.replace(/\s+/g, ' ')}` : ''}`}
                     </small>
                   </span>
+                  <FlashRing flash={flash} id={s.id} />
                   {spills ? (
                     <span className="spill" title={t('year.spill', { year: YEAR + 1 })}>
                       {YEAR + 1}

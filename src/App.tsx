@@ -6,6 +6,8 @@ import { ShareDialog } from './components/ShareDialog';
 import { TransferDialog } from './components/TransferDialog';
 import { ReportDialog } from './components/ReportDialog';
 import { Editor, type Editing, type StayDetails } from './components/Editor';
+import { changedIds, type Flash } from './components/Flash';
+import { Presence } from './components/Presence';
 import { Footer } from './components/Footer';
 import { HelpDialog } from './components/HelpDialog';
 import { HolidayCard, StayCard, TicketCard, type Anchor } from './components/HoverCards';
@@ -33,8 +35,9 @@ import { langTag, t, useLocale } from './lib/i18n';
 import { loadHolidayToggles, loadView, saveHolidayToggles, saveView } from './lib/prefs';
 import { computeEdges, load, pushStays, save, setEdges, type ColorKey, type Stay, loadYearPlan, saveYearPlan, sanitizeAll, serializeAll, splitStay } from './lib/storage';
 import { decodePlan, onTransferLink, pendingTransfer } from './lib/transfer';
+import { withTransition } from './lib/motion';
 import { MOD, clamp } from './lib/util';
-import { YEAR, YEARS, getYear, setYear, subscribeYear, todayIndex, yearDirection, type DayRange } from './lib/weeks';
+import { YEAR, YEARS, dateOfDay, getYear, setYear, subscribeYear, todayIndex, yearDirection, type DayRange } from './lib/weeks';
 // The map's frame is sized before the library arrives, so the page doesn't jump when it does.
 import './components/MapView.css';
 
@@ -52,6 +55,13 @@ if (window.matchMedia(NARROW_QUERY).matches) {
 }
 
 const VIEW_FADE_MS = 140; // keep in sync with .view in styles/base.css
+
+// The month view's month holding a day: the borrowed days at the timeline's ends count with January or December.
+function monthOfDay(day: number): number {
+  const d = dateOfDay(day);
+  return d.getFullYear() < YEAR ? 0 : d.getFullYear() > YEAR ? 11 : d.getMonth();
+}
+const FLASH_MS = 700; // keep in sync with .flash in styles/base.css
 
 // The page for one year. Changing year remounts it, so nothing derived from the old year's dates survives;
 // `entered` says which way the year changed, for the slide-in.
@@ -108,6 +118,43 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
   }, [view.mode, shownMode]);
 
   useEffect(() => save(stays), [stays]);
+
+  // Stays that just changed (edited, dragged, cut, undone, imported) get a ring for a moment, so the change can be
+  // seen where it landed. Not on the first render, and not when the plan is set to what it already was.
+  const [flash, setFlash] = useState<Flash | null>(null);
+  const prevStays = useRef(stays);
+  const flashTimer = useRef(0);
+  const flashStays = (ids: string[]) => {
+    setFlash((f) => ({ ids: new Set(ids), n: (f?.n ?? 0) + 1 }));
+    clearTimeout(flashTimer.current);
+    flashTimer.current = window.setTimeout(() => setFlash(null), FLASH_MS);
+  };
+  useEffect(() => {
+    const prev = prevStays.current;
+    prevStays.current = stays;
+    if (prev === stays) return;
+    const ids = changedIds(prev, stays);
+    if (ids.length) flashStays(ids);
+  }, [stays]);
+  useEffect(() => () => clearTimeout(flashTimer.current), []);
+
+  // Plan changes slide the stays into place where the browser can (lib/motion.ts); a drag's own preview already
+  // drew its result, so a drop changes nothing on the timeline and only the list rows move.
+  const changeStays = (update: Stay[] | ((prev: Stay[]) => Stay[])) => withTransition(() => setStays(update));
+  const undoPlan = () => withTransition(undo);
+  const redoPlan = () => withTransition(redo);
+
+  // From the list: scroll to the stay on the timeline (or its month, in the month view) and ring it.
+  function locate(s: Stay) {
+    if (view.mode === 'month' && !view.all) {
+      const month = monthOfDay(s.startDay);
+      if (month !== view.month) setView((v) => ({ ...v, month }));
+    }
+    flashStays([s.id]);
+    requestAnimationFrame(() => {
+      document.querySelector(`.view [data-stay="${CSS.escape(s.id)}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+    });
+  }
   useEffect(() => saveHolidayToggles(holidayOn), [holidayOn]);
   useEffect(() => saveView(view), [view]);
   useEffect(() => {
@@ -123,8 +170,8 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
       const el = e.target;
       if (el instanceof Element && el.closest('input:not([type=range]), textarea, [contenteditable]')) return;
       const key = e.key.toLowerCase();
-      if (key === 'z' && !e.shiftKey) undo();
-      else if ((key === 'z' && e.shiftKey) || (key === 'y' && !e.shiftKey)) redo();
+      if (key === 'z' && !e.shiftKey) undoPlan();
+      else if ((key === 'z' && e.shiftKey) || (key === 'y' && !e.shiftKey)) redoPlan();
       else return;
       e.preventDefault();
     };
@@ -142,7 +189,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
       track('stay_create', { view: view.mode, stay_count: bucket(stays.length + 1) });
       trackActivation();
     }
-    setStays((prev) =>
+    changeStays((prev) =>
       editing.id
         ? prev.map((s) => (s.id === editing.id ? { ...s, ...fields } : s))
         : [...prev, { id: crypto.randomUUID(), ...fields }],
@@ -152,7 +199,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
 
   function deleteEditing() {
     if (!editing?.id) return;
-    setStays((prev) => prev.filter((s) => s.id !== editing.id));
+    changeStays((prev) => prev.filter((s) => s.id !== editing.id));
     setEditing(null);
   }
 
@@ -187,7 +234,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
     const here = plans.get(YEAR);
     if (here) {
       // The year on screen goes through setStays, so the import can be undone.
-      setStays(here);
+      changeStays(here);
       if (fromFile) backup.markBackedUp(here);
     } else {
       // Nothing for this year in the file: show the first year it brought in.
@@ -280,8 +327,8 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
           hasStays={stays.length > 0}
           canExport={anyStays}
           onHelp={() => setHelpOpen(true)}
-          onUndo={undo}
-          onRedo={redo}
+          onUndo={undoPlan}
+          onRedo={redoPlan}
           onShare={() => {
             track('share_open', {});
             setShareOpen(true);
@@ -293,7 +340,9 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
         />
       </PillNav>
 
-      {backup.remind && <BackupReminder daysSince={backup.daysSince} onExport={() => exportJson('reminder')} onSnooze={backup.snooze} />}
+      <Presence show={backup.remind} className="reminder-slot">
+        {backup.remind && <BackupReminder daysSince={backup.daysSince} onExport={() => exportJson('reminder')} onSnooze={backup.snooze} />}
+      </Presence>
 
       {narrow ? (
         <>
@@ -337,9 +386,10 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
                     pending={pending}
                     onCreate={(range) => setEditing({ id: null, ...range })}
                     onEdit={edit}
-                    onResize={(id, range) => setStays((prev) => pushStays(prev, id, range) ?? prev)}
+                    onResize={(id, range) => changeStays((prev) => pushStays(prev, id, range) ?? prev)}
                     onHover={setStayCard}
-                    onSplit={(id, day) => setStays((prev) => splitStay(prev, id, day) ?? prev)}
+                    onSplit={(id, day) => changeStays((prev) => splitStay(prev, id, day) ?? prev)}
+                    flash={flash}
                   />
                 ))}
               </AllMonths>
@@ -354,9 +404,10 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
                 pending={pending}
                 onCreate={(range) => setEditing({ id: null, ...range })}
                 onEdit={edit}
-                onResize={(id, range) => setStays((prev) => pushStays(prev, id, range) ?? prev)}
+                onResize={(id, range) => changeStays((prev) => pushStays(prev, id, range) ?? prev)}
                 onHover={setStayCard}
-                onSplit={(id, day) => setStays((prev) => splitStay(prev, id, day) ?? prev)}
+                onSplit={(id, day) => changeStays((prev) => splitStay(prev, id, day) ?? prev)}
+                flash={flash}
               />
             ) : (
               <YearView
@@ -368,7 +419,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
                 pending={pending}
                 onCreate={(range) => setEditing({ id: null, ...range })}
                 onEdit={edit}
-                onChange={setStays}
+                onChange={changeStays}
                 onOpenMonth={(month) => setView((v) => ({ ...v, mode: 'month', month }))}
                 onHoverStay={setStayCard}
                 onHoverHoliday={setHolidayCard}
@@ -377,7 +428,8 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
                 nextYear={neighbour(1)}
                 onYearEdge={(dir) => setYear(YEAR + dir)}
                 startAtEnd={entered === -1}
-                onSplit={(id, day) => setStays((prev) => splitStay(prev, id, day) ?? prev)}
+                onSplit={(id, day) => changeStays((prev) => splitStay(prev, id, day) ?? prev)}
+                flash={flash}
               />
             )}
           </div>
@@ -388,9 +440,11 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
               stays={stays}
               month={view.mode === 'month' && !view.all ? view.month : null}
               onEdit={edit}
+              onLocate={locate}
               onCreate={(range) => setEditing({ id: null, ...range })}
               ticketCardId={ticketCard?.id ?? null}
               onTicket={setTicketCard}
+              flash={flash}
             />
           </section>
         </>
@@ -418,31 +472,40 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
 
       <Footer />
 
-      {hoveredStay && stayCard && <StayCard stay={hoveredStay} x={stayCard.x} y={stayCard.y} />}
-      {ticketStay && ticketCard && <TicketCard stay={ticketStay} x={ticketCard.x} y={ticketCard.y} />}
-      {holidayCard && <HolidayCard {...holidayCard} />}
+      {/* Cards and dialogs leave with a short fade: Presence keeps each mounted for the exit (hooks/usePresence.ts) */}
+      <Presence show={Boolean(hoveredStay && stayCard)}>
+        {hoveredStay && stayCard && <StayCard stay={hoveredStay} x={stayCard.x} y={stayCard.y} />}
+      </Presence>
+      <Presence show={Boolean(ticketStay && ticketCard)}>
+        {ticketStay && ticketCard && <TicketCard stay={ticketStay} x={ticketCard.x} y={ticketCard.y} />}
+      </Presence>
+      <Presence show={Boolean(holidayCard)}>{holidayCard && <HolidayCard {...holidayCard} />}</Presence>
 
-      {helpOpen && <HelpDialog mod={MOD} onClose={() => setHelpOpen(false)} />}
-      {shareOpen && <ShareDialog stays={stays} holidaySets={holidaySets} onClose={() => setShareOpen(false)} />}
-      {transferOpen && <TransferDialog stays={stays} onClose={() => setTransferOpen(false)} />}
-      {reportOpen && <ReportDialog onClose={() => setReportOpen(false)} />}
+      <Presence show={helpOpen}>{helpOpen && <HelpDialog mod={MOD} onClose={() => setHelpOpen(false)} />}</Presence>
+      <Presence show={shareOpen}>
+        {shareOpen && <ShareDialog stays={stays} holidaySets={holidaySets} onClose={() => setShareOpen(false)} />}
+      </Presence>
+      <Presence show={transferOpen}>{transferOpen && <TransferDialog stays={stays} onClose={() => setTransferOpen(false)} />}</Presence>
+      <Presence show={reportOpen}>{reportOpen && <ReportDialog onClose={() => setReportOpen(false)} />}</Presence>
       {dropping && (
         <div className="drop-overlay" aria-hidden="true">
           <p>{t('import.drop')}</p>
         </div>
       )}
 
-      {editing && !narrow && (
-        <Editor
-          key={editing.id ?? `new-${editing.startDay}-${editing.endDay}`}
-          editing={editing}
-          stay={editingStay}
-          others={[...stays.filter((s) => s.id !== editing.id), ...ghosts]}
-          onSave={saveEditing}
-          onDelete={deleteEditing}
-          onClose={() => setEditing(null)}
-        />
-      )}
+      <Presence show={Boolean(editing && !narrow)}>
+        {editing && !narrow && (
+          <Editor
+            key={editing.id ?? `new-${editing.startDay}-${editing.endDay}`}
+            editing={editing}
+            stay={editingStay}
+            others={[...stays.filter((s) => s.id !== editing.id), ...ghosts]}
+            onSave={saveEditing}
+            onDelete={deleteEditing}
+            onClose={() => setEditing(null)}
+          />
+        )}
+      </Presence>
     </div>
   );
 }

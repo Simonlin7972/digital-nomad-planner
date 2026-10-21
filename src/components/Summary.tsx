@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Info } from '@phosphor-icons/react/dist/csr/Info';
 import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
 import { useNarrow } from '../hooks/useNarrow';
+import { useTween } from '../hooks/useTween';
 import { flightStats, type Coords } from '../hooks/useCoords';
 import { cityLabel } from '../lib/cities';
 import { countryLabel } from '../lib/flags';
@@ -43,11 +44,17 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
   const profile = getProfile();
   const home = profile.homeCountry || profile.homeCity ? { country: profile.homeCountry, city: profile.homeCity } : null;
   const flights = useMemo(() => flightStats(stays, coords, home), [stays, coords, home?.country, home?.city]);
-  const plannedDays = counted.reduce((n, s) => n + daysOnTimeline(s), 0);
   const schengen = useMemo(() => checkSchengen(stays), [stays]);
   const residence = profile.taxResidence;
-  const twDays = residenceDays(stays, residence);
   const residenceName = countryLabel(residence);
+  // The figures roll to their new values when the plan changes, so a change reads as a change (hooks/useTween.ts).
+  const plannedDays = Math.round(useTween(counted.reduce((n, s) => n + daysOnTimeline(s), 0)));
+  const countries = Math.round(useTween(countryCount));
+  const cities = Math.round(useTween(cityCount));
+  const legs = Math.round(useTween(flights.legs));
+  const hours = Math.round(useTween(Math.round(flights.hours)));
+  const peak = Math.round(useTween(schengen.peak));
+  const twDays = Math.round(useTween(residenceDays(stays, residence)));
 
   return (
     <div className="panel">
@@ -55,10 +62,10 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
       <p className="stat">
         {tr('summary.time', { planned: <b>{weeksLabel(plannedDays)}</b>, free: <b>{weeksLabel(TOTAL_DAYS - plannedDays)}</b> })}
         <br />
-        {tr('summary.places', { countries: <b>{countryCount}</b>, cities: <b>{cityCount}</b> })}
+        {tr('summary.places', { countries: <b>{countries}</b>, cities: <b>{cities}</b> })}
         <br />
         <Hint text={t(home ? 'summary.flightsHintHome' : 'summary.flightsHint')}>
-          {tr('summary.flights', { legs: <b>{flights.legs}</b>, hours: <b>{Math.round(flights.hours)}</b> })}
+          {tr('summary.flights', { legs: <b>{legs}</b>, hours: <b>{hours}</b> })}
           {flights.unknown > 0 && t('summary.flightsSkipped', { n: flights.unknown })}
         </Hint>
       </p>
@@ -66,7 +73,7 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
         <ul className="rules">
           {schengen.days > 0 && (
             <li className={schengen.firstOver === null ? undefined : 'over'}>
-              <Hint text={t('rules.schengenHint', { start: fullDate(dateOfDay(0)) })}>{tr('rules.schengen', { peak: <b>{schengen.peak}</b> })}</Hint>
+              <Hint text={t('rules.schengenHint', { start: fullDate(dateOfDay(0)) })}>{tr('rules.schengen', { peak: <b>{peak}</b> })}</Hint>
               {schengen.firstOver !== null && (
                 <span className="over-note">
                   <Warning size={16} weight="bold" />

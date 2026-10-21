@@ -7,6 +7,15 @@
   people using the planner, not for developers: what they can now do or what changed for them.
 -->
 
+## 2026-10-21
+
+- 畫面動起來更順：視窗、選單、彈出層關閉時會淡出；剛改過的行程會閃一圈框，復原、切開、匯入時色塊和列表會滑到新位置；摘要的數字會滾到新值；季節區塊展開有動畫
+  EN: Smoother motion: dialogs, menus and popovers fade out when closed; a stay you just changed flashes a ring, and after undo, cut or import the blocks and rows slide into place; the summary's figures roll to their new values; the season panel folds open
+- 按住 B 或 Alt 時，畫面角落會提示這時點或拖會做什麼；點行程列表的某一列，就捲到時間軸上那段行程
+  EN: Holding B or Alt shows a small hint of what a click or drag will do; clicking a row in the itinerary scrolls to that stay on the timeline
+- 系統設定「減少動態」時，這些動畫一律不播
+  EN: With the system's reduced-motion setting on, none of these animations play
+
 ## 2026-10-15
 
 - 新增「十大數位遊牧城市」頁：清邁、里斯本、曼谷、倉古、峴港、吉隆坡、台北、東京、提比里斯、墨西哥城，每城有月租、月花費、網速、適合月份、簽證（台灣護照）、亮點與缺點，和一篇介紹；從首頁和規劃頁底部連過去

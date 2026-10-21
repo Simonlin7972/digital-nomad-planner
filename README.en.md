@@ -156,6 +156,7 @@ The live site and a local copy use separate browser storage (different addresses
 | Hold `B` + click a stay | Cut it in two at the line | Cut it in two at the line |
 | Drag a stay's edge | Resize, pushing neighbours | Resize, pushing neighbours |
 | Hover a stay | Show its details | Show its details |
+| Click a row in the itinerary | Scroll to that stay and ring it | Open the month it starts in and ring it |
 | Drag the month row | Pan the timeline | — |
 | Drag the month row past the start or end of the year and let go | Move to the previous or next year | — |
 | Click a month | Open that month | — |
@@ -171,6 +172,8 @@ The live site and a local copy use separate browser storage (different addresses
 | `Enter` (in the editor) | Save |
 
 Undo and redo shortcuts are left alone while you are typing in a field, while the editor is open, or mid-drag.
+
+While `B` or `Alt` is held, a small label in the view's corner says what a click or drag will do now; it goes when you let go. A stay that just changed (edited, dropped, cut, undone, imported) flashes a ring, so you can see where the change landed.
 
 ---
 
@@ -331,6 +334,9 @@ src/
     QrCode              The QR card: square modules, rounded finder eyes, the pixel mascot on its top edge
     MobileItinerary     The read-only phone itinerary (now / next, stay cards)
     HoverCards          Floating cards for stays, tickets and holidays
+    Presence            Keeps a closing dialog or card around long enough to play its exit
+    Flash               The ring on a stay that just changed
+    ModeChip            The corner label while B or Alt is held
     Combobox            Searchable country and city pickers
     DatePicker          Custom date picker (instead of the browser's)
     MapView             Map (lazy-loaded)
@@ -346,6 +352,8 @@ src/
     usePinchZoom        Trackpad, touch and wheel zoom gestures
     useCoords           Place coordinates, distances and the flight estimate
     useScrollLock       Stops the page scrolling behind a dialog
+    usePresence         Keeps a closed menu or popover mounted for --dur-exit so it can animate out
+    useTween            Rolls a number to its new value (the summary)
     useNarrow           Whether to use the read-only phone layout (720px or narrower, or a touch screen 500px or less tall)
     useNearView         Whether an element has been scrolled near the viewport (loads the map late)
     useScrolled         Whether the page is scrolled past a given height (for PillNav)
@@ -375,6 +383,7 @@ src/
     avatar.ts           The paper doll: each part's pixel art, colours, ready-made characters, composing a 32×32 image
     profile.ts          Settings (character, nickname, home, passport, tax residence, temperature unit, backup reminder) and whether the Schengen rule applies
     util.ts             Small helpers
+    motion.ts           Runs a plan change as a View Transition; view-transition-name helper
     i18n.tsx            Dictionaries, current locale, `t()`
   styles/base.css       Design tokens, page background, shared buttons and panels
 README.md               Chinese README
@@ -416,6 +425,8 @@ Knowing these before reading the code will save time.
 **The backup reminder isn't part of the plan.** `dnp-backup` remembers a fingerprint of the plan at the last export or import (an FNV-1a hash of the export format, independent of stay order). The clock starts when the plan differs from that fingerprint and the reminder shows after 7 days; undoing back to the exported state stops it. It isn't in the undo history and isn't written to exports.
 
 **Season data is fixed and hand-written.** `lib/seasons.ts` has one entry per city: twelve monthly ratings (0 avoid, 1 fine, 2 best), typical daily highs and lows per month (rounded climate normals, shown after each reason as "19 to 36°C"), and reasons tied to months, keyed by how stays store places (ISO code / English city name), with `ALIASES` for a few neighbouring places. It is general guidance (climate, monsoons, smoke, heat, crowds), not a forecast, and calls no API. To add a city, add an entry in the same shape and make sure every month rated 0 has an avoid reason and every month rated 2 a best reason.
+
+**Motion follows fixed rules.** Easing and durations are tokens on `base.css` (`--ease-out`, `--dur-fast` 120ms, `--dur-base` 200ms, `--dur-exit` 150ms); only transform and opacity move, and exits are shorter than entrances. Dialogs, menus, popovers and hover cards don't vanish when closed: `hooks/usePresence.ts` (or the `components/Presence.tsx` wrapper) keeps them mounted for `--dur-exit` with a `.leaving` class that plays the exit. The duration is read from the CSS variable, so under reduced motion it is zero and nothing waits for an animation event. Plan changes (edit, cut, undo, import, a finished drag) run as browser View Transitions so the blocks, calendar bars and list rows slide to their new places (`lib/motion.ts`; each element has its own `view-transition-name`, and browsers without the API just switch), while the stays that changed flash a ring (`components/Flash.tsx`). The summary's figures roll to their new values with `hooks/useTween.ts`. With the system's reduced-motion preference on, every animation and transition is off.
 
 **The PNG is drawn separately.** `lib/exportPng.ts` redraws the year on a canvas rather than capturing the screen, so the output has a fixed size regardless of window and zoom — but new on-screen elements don't appear in it unless they are added there too. Landscape and portrait are two separate drawing functions.
 

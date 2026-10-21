@@ -77,7 +77,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           <b>點一下</b>行程可以編輯：日期、顏色、跟誰去、機票、備註，或刪除。
         </>,
         <>
-          下方行程列表會列出還沒排的<b>空檔</b>，按右邊的 <b>+</b> 直接排一段。
+          下方行程列表會列出還沒排的<b>空檔</b>，按右邊的 <b>+</b> 直接排一段。點列表上的某一列，會捲到時間軸上那段行程。
         </>,
         <>
           熱門城市在編輯視窗有<b>適合的季節</b>按鈕，點開看各月推薦／普通／避開；排到該避開的月份，色塊和列表會出現警示。
@@ -210,7 +210,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           <b>Click</b> a stay to edit its dates, color, companions, flight and note, or to delete it.
         </>,
         <>
-          The itinerary below lists the <b>free stretches</b> between stays; press the <b>+</b> beside one to plan a stay there.
+          The itinerary below lists the <b>free stretches</b> between stays; press the <b>+</b> beside one to plan a stay there. Click a row to scroll to that stay on the timeline.
         </>,
         <>
           For popular cities the editor has a <b>When to go</b> button that opens each month's rating (best / fine / avoid); a stay in a month to avoid gets a warning on its block
@@ -350,7 +350,7 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
           滞在を<b>クリック</b>すると編集できます：日付、色、同行者、航空券、メモ、または削除。
         </>,
         <>
-          下の滞在リストにはまだ予定のない<b>空き</b>も並びます。右の <b>+</b> でそこに滞在を追加できます。
+          下の滞在リストにはまだ予定のない<b>空き</b>も並びます。右の <b>+</b> でそこに滞在を追加できます。行をクリックすると、タイムライン上のその滞在までスクロールします。
         </>,
         <>
           人気の都市は編集画面に<b>おすすめの時期</b>ボタンがあり、月ごとのおすすめ／ふつう／避けるを見られます。避けるべき月に予定を入れると、ブロックとリストに注意が出ます。

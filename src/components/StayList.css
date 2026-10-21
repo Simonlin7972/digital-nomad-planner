@@ -30,6 +30,13 @@
   transition: background 0.12s;
 }
 .stays li:first-child { border-top-color: transparent; }
+/* Rows arrive one after another (--i is the row's index), and a stay row is a link to the stay on the timeline */
+.stays li { animation: row-in var(--dur-base) var(--ease-out) both; animation-delay: min(calc(var(--i, 0) * 20ms), 240ms); }
+@keyframes row-in { from { opacity: 0; translate: 0 4px; } }
+.stays li.stay-row { cursor: pointer; }
+/* A row whose stay just changed: a wash of grey that fades, instead of the ring the timeline blocks get */
+.stays li .flash { border-radius: var(--radius); animation: flash-row 0.7s ease-out forwards; }
+@keyframes flash-row { from { background: rgb(34 34 34 / 0.1); } to { background: transparent; } }
 .stays li:hover { background: var(--subtle); border-radius: var(--radius); border-top-color: transparent; }
 .stays li:hover + li { border-top-color: transparent; }
 /* ticket button: always visible on stays with a flight booked */

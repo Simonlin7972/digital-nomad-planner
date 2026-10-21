@@ -102,6 +102,9 @@ const zh = {
   'stays.editPlace': '編輯 {place}',
   'stays.gap': '空檔',
   'stays.gapAdd': '排一段',
+  'stays.locate': '在時間軸上顯示',
+  'mode.cut': '點一下切開行程',
+  'mode.copy': '拖曳即複製',
   'stays.gapAddLabel': '在 {range} 排一段行程',
   'stays.schengenOver': '申根 180 天內會待到 {n} 天，超過 90 天上限',
 
@@ -574,6 +577,9 @@ const en: Record<keyof typeof zh, string> = {
   'stays.editPlace': 'Edit {place}',
   'stays.gap': 'Free',
   'stays.gapAdd': 'Plan',
+  'stays.locate': 'Show on the timeline',
+  'mode.cut': 'Click a stay to cut it',
+  'mode.copy': 'Drag to copy',
   'stays.gapAddLabel': 'Plan a stay for {range}',
   'stays.schengenOver': 'Reaches {n} Schengen days in 180, over the 90-day limit',
 
@@ -1046,6 +1052,9 @@ const ja: Record<keyof typeof zh, string> = {
   'stays.editPlace': '{place} を編集',
   'stays.gap': '空き',
   'stays.gapAdd': '追加',
+  'stays.locate': 'タイムラインで表示',
+  'mode.cut': '滞在をクリックして分割',
+  'mode.copy': 'ドラッグでコピー',
   'stays.gapAddLabel': '{range} に滞在を追加',
   'stays.schengenOver': 'シェンゲン圏の滞在が 180 日間で {n} 日に達し、上限の 90 日を超えます',
 

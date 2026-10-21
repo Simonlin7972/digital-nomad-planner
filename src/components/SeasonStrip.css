@@ -11,7 +11,12 @@
 .season-toggle[aria-expanded='true'] .caret { transform: rotate(180deg); }
 .season-flag { display: inline-flex; align-items: center; gap: 4px; color: var(--danger); }
 .season > :not(.season-toggle) { align-self: stretch; }
-.season-months { margin-top: 4px; }
+/* The months, reasons and legend fold open under the button: a grid row growing from 0fr to 1fr, no measuring.
+   Shut, the -6px cancels the field's gap so the empty row takes no room; open, the inner padding puts it back. */
+.season-body { display: grid; grid-template-rows: 0fr; margin-top: -6px; transition: grid-template-rows var(--dur-base) var(--ease-out); }
+.season-body.open { grid-template-rows: 1fr; }
+.season-body > div { min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 6px; opacity: 0; transition: opacity var(--dur-fast) ease-in; }
+.season-body.open > div { padding-top: 10px; opacity: 1; transition: opacity var(--dur-base) ease-out var(--dur-fast); }
 
 .season-months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; }
 .season-months li {
