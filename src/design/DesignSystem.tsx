@@ -126,8 +126,8 @@ const SHADOWS: [string, string, string][] = [
 
 const MOTION_TOKENS: [string, string, string][] = [
   ['--ease-out', 'cubic-bezier(0.3, 0.7, 0.2, 1)', '所有「滑到定位」的動作：分頁滑塊、年份滑入、選單與資訊卡出現、季節區塊展開、View Transition'],
-  ['--dur-fast', '120ms', '選單、彈出層、資訊卡進場；季節內容淡入'],
-  ['--dur-base', '200ms', '對話框進場、季節區塊高度、月曆換月滑入、色塊與列依序淡入、View Transition'],
+  ['--dur-fast', '120ms', '季節內容淡入'],
+  ['--dur-base', '200ms', '對話框、選單、彈出層、資訊卡進場；季節區塊高度、月曆換月滑入、色塊與列依序淡入、View Transition'],
   ['--dur-exit', '150ms', '所有離場：對話框、選單、彈出層、資訊卡、提示標籤、備份提醒收合。hooks/usePresence.ts 也讀這個值決定多留多久；減少動態時為 0'],
 ];
 
@@ -312,7 +312,7 @@ export function DesignSystem() {
           <h3>Keyframes</h3>
           <p className="ds-note">
             base.css：<code>fade</code>／<code>fade-out</code>、<code>rise</code>（對話框）、<code>sink</code>（對話框離場）、<code>sheet-up</code>／<code>sheet-down</code>（手機底部視窗與選單）、
-            <code>drop-in</code>（選單、彈出層、資訊卡、提示標籤）、<code>pop</code>（複製後的勾勾）、<code>flash-ring</code>（改動的行程）、<code>shimmer</code>（分享圖與 QR 製作中）。
+            <code>pop-in</code>／<code>pop-out</code>（選單、彈出層、資訊卡、提示標籤：從掛著的那個角縮放，各元件設 transform-origin）、<code>pop</code>（複製後的勾勾）、<code>flash-ring</code>（改動的行程）、<code>shimmer</code>（分享圖與 QR 製作中）。
             元件自己的：<code>stay-in</code>、<code>row-in</code>（依序淡入）、<code>shake</code>（放不下的複本）、<code>month-next／prev</code>（月曆換月）、<code>flash-row</code>（列表列）。
           </p>
         </Section>

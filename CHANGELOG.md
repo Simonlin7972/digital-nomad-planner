@@ -13,6 +13,10 @@
   EN: Smoother motion: dialogs, menus and popovers fade out when closed; a stay you just changed flashes a ring, and after undo, cut or import the blocks and rows slide into place; the summary's figures roll to their new values; the season panel folds open
 - 按住 B 或 Alt 時，畫面角落會提示這時點或拖會做什麼；點行程列表的某一列，就捲到時間軸上那段行程
   EN: Holding B or Alt shows a small hint of what a click or drag will do; clicking a row in the itinerary scrolls to that stay on the timeline
+- 選單、日曆和搜尋清單打開時從它掛著的那個角放大出來，關閉時縮回去
+  EN: Menus, the calendar and the search lists grow out of the corner they hang from, and shrink back when closed
+- 編輯視窗的城市欄位圖示從地標針改成城市天際線
+  EN: The city field's icon in the editor is now a city skyline instead of a map pin
 - 系統設定「減少動態」時，這些動畫一律不播
   EN: With the system's reduced-motion setting on, none of these animations play
 

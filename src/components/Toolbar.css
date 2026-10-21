@@ -18,7 +18,8 @@
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow-pop);
-  animation: drop-in var(--dur-fast) var(--ease-out);
+  transform-origin: top right; /* grows out of the ⋯ button it hangs from */
+  animation: pop-in var(--dur-base) var(--ease-out);
 }
 .actions .more-menu button {
   width: 100%;

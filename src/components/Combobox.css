@@ -28,7 +28,8 @@
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow-pop);
-  animation: drop-in var(--dur-fast) var(--ease-out);
+  transform-origin: top left; /* grows out of the field's corner */
+  animation: pop-in var(--dur-base) var(--ease-out);
 }
 .combo-list li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; font-size: 14px; font-weight: 400; cursor: pointer; }
 .combo-list li.active { background: var(--subtle); }

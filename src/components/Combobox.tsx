@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { cityLabel, searchCities } from '../lib/cities';
 import { GlobeHemisphereWest } from '@phosphor-icons/react/dist/csr/GlobeHemisphereWest';
-import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin';
+import { City } from '@phosphor-icons/react/dist/csr/City';
 import { Airplane } from '@phosphor-icons/react/dist/csr/Airplane';
 import { Hash } from '@phosphor-icons/react/dist/csr/Hash';
 import { airlineCode, airlineLogo, searchAirlines } from '../lib/airlines';
@@ -231,7 +231,7 @@ export function CityCombobox(props: {
       search={search}
       placeholder={t('city.placeholder')}
       emptyText={t('city.empty')}
-      icon={<MapPin size={16} weight="bold" />}
+      icon={<City size={16} weight="bold" />}
     />
   );
 }

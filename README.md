@@ -422,7 +422,7 @@ CLAUDE.md               給 Claude Code 的專案須知
 
 **季節資料是手寫的固定資料。** `lib/seasons.ts` 每個城市一筆：12 個月的評分（0 避開、1 普通、2 推薦）、每月平均高低溫（氣候平年值的概略值，原因後面顯示「約 19～36°C」），加上帶月份的原因，依行程存的「國碼／城市英文名」對應，幾個鄰近地點用 `ALIASES` 沿用。內容是一般性的整理（氣候、季風、燒山、酷熱、人潮），不是天氣預報，也不連任何 API。要新增城市，照同一格式加一筆，並確保評分 0 的月份有「避開」原因、評分 2 的月份有「推薦」原因。
 
-**動態效果有固定規則。** 緩動與時長是 `base.css` 上的 token（`--ease-out`、`--dur-fast` 120ms、`--dur-base` 200ms、`--dur-exit` 150ms），只動 transform 與 opacity，離場比進場短。對話框、選單、彈出層、資訊卡關閉時不是直接消失，而是由 `hooks/usePresence.ts`（或包在外面的 `components/Presence.tsx`）多留 `--dur-exit` 那麼久、加上 `.leaving` class 播放離場動畫；時長從 CSS 變數讀，所以減少動態時它是 0，不用等動畫事件。行程的變更（編輯、切開、復原、匯入、拖完）用瀏覽器的 View Transitions API 讓色塊、月曆橫條、列表列滑到新位置（`lib/motion.ts`；每個元素有自己的 `view-transition-name`，沒有這個 API 的瀏覽器就直接換），同時剛改到的行程閃一圈框（`components/Flash.tsx`）。摘要的數字用 `hooks/useTween.ts` 滾到新值。系統偏好減少動態時，所有動畫與過渡一律關掉。
+**動態效果有固定規則。** 緩動與時長是 `base.css` 上的 token（`--ease-out`、`--dur-fast` 120ms、`--dur-base` 200ms、`--dur-exit` 150ms），只動 transform 與 opacity，離場比進場短。選單、彈出層、資訊卡、提示標籤從它掛著的那個角縮放出來（`pop-in`，0.92 → 1，各元件只設 `transform-origin`），關閉時縮回去（`pop-out`）；對話框、選單、彈出層、資訊卡關閉時不是直接消失，而是由 `hooks/usePresence.ts`（或包在外面的 `components/Presence.tsx`）多留 `--dur-exit` 那麼久、加上 `.leaving` class 播放離場動畫；時長從 CSS 變數讀，所以減少動態時它是 0，不用等動畫事件。行程的變更（編輯、切開、復原、匯入、拖完）用瀏覽器的 View Transitions API 讓色塊、月曆橫條、列表列滑到新位置（`lib/motion.ts`；每個元素有自己的 `view-transition-name`，沒有這個 API 的瀏覽器就直接換），同時剛改到的行程閃一圈框（`components/Flash.tsx`）。摘要的數字用 `hooks/useTween.ts` 滾到新值。系統偏好減少動態時，所有動畫與過渡一律關掉。
 
 **PNG 是另外畫的。** `lib/exportPng.ts` 用 canvas 重新繪製，不是截取畫面，所以輸出尺寸固定、不受視窗與縮放影響，但新增的畫面元素不會自動出現在 PNG 裡。橫式與直式是兩支各自的繪製函式。
 

@@ -26,7 +26,8 @@
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow-pop);
-  animation: drop-in var(--dur-fast) var(--ease-out);
+  transform-origin: top left; /* grows out of the year button */
+  animation: pop-in var(--dur-base) var(--ease-out);
 }
 .year-menu button {
   display: flex;
