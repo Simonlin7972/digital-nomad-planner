@@ -9,6 +9,8 @@
 
 ## 2026-10-22
 
+- 修正正式網站上對話框背後和捲動後的頁首沒有模糊效果
+  EN: Fixed the blur behind dialogs and under the scrolled header, which was missing on the live site
 - 拖曳行程放開後，整條時間軸不會再閃一下
   EN: Letting go of a dragged stay no longer makes the whole timeline flash
 
