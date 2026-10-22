@@ -67,5 +67,5 @@
 /* Small icon buttons beside a ticket line: copy, add to calendar */
 .mticket > div { flex: 1; min-width: 0; }
 .mticket p { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 28px; }
-.mact { display: grid; place-items: center; flex: none; width: 40px; height: 40px; margin: -6px -8px -6px 0; padding: 0; border: 0; background: none; color: var(--muted); }
+.mact { display: grid; place-items: center; flex: none; width: 40px; height: 40px; margin: -6px -8px -6px 0; padding: 0; border: 0; --hover-ring: none; background: none; color: var(--muted); }
 .mact:active:not(:disabled) { transform: scale(0.9); }

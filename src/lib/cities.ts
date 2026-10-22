@@ -1,4 +1,4 @@
-import { normalizeCountry } from './flags';
+import { isListedCountry, normalizeCountry } from './flags';
 import { getLocale, type Locale } from './i18n';
 
 // A hand-picked list of cities people commonly base themselves in, keyed by ISO country code. It is a typing
@@ -109,9 +109,21 @@ export function normalizeCity(country: string, city: string): string {
   return find(country, city)?.en ?? city.trim();
 }
 
-// What to show for a stored city, in the given language (the current one by default).
+// Whether a city can stay with a newly chosen country. Only a listed city that belongs elsewhere fails, and only
+// against a recognised country: free text and unlisted countries always fit, since the list is incomplete.
+export function cityFitsCountry(country: string, city: string): boolean {
+  const name = city.trim();
+  if (!name || !isListedCountry(country)) return true;
+  const code = normalizeCountry(country);
+  const matches = everyCity().filter((c) => c.zh === name || fold(c.en) === fold(name));
+  return matches.length === 0 || matches.some((c) => c.country === code);
+}
+
+// What to show for a stored city, in the given language (the current one by default). A listed city is named in
+// that language even when the country says otherwise (while the country is being typed, or a pair saved that
+// way), so the city doesn't flip to English as the country field changes.
 export function cityLabel(country: string, city: string, locale: Locale = getLocale()): string {
-  const entry = find(country, city);
+  const entry = find(country, city) ?? find('', city);
   return entry ? nameIn(entry, locale) : city;
 }
 

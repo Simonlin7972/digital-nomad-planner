@@ -60,7 +60,7 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 
 ### What a stay records
 
-- Country and city (at least one). Both are picked from searchable lists, in any of the three languages:
+- Country and city (at least one). Both are picked from searchable lists, in any of the three languages; while a field with something in it has focus, an × at its end clears it and shows the whole list (the airline and flight number fields too):
   - Countries: about 260, also searchable by ISO code or common alias (`thai`, `jp`, `韓國`)
   - Cities: about 330 common ones built in. With a country chosen only its cities are listed; picking a city with no country fills the country in. Cities not on the list can simply be typed
 - Exact start and end dates
@@ -78,7 +78,7 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 - **Free stretches**: unplanned days between stays are listed in the itinerary too; press `+` to add a stay in that gap
 - **Map**: every place in visit order, joined into a route
 - **Year**: the drop-down beside the view tabs switches between 2025, 2026, 2027 and 2028; each year keeps its own plan. Dragging the month row past December (or January) and letting go moves to the next (or previous) year. A stay can cross into the next year: it is kept in the year it starts in and its end date can fall in the next year (chosen in the editor), shown with "2028 →" at the end of the timeline; the next year's timeline opens with a faded, striped copy marked "From 2027", which takes you back to that year when clicked, and the two years' stays never overlap
-- **Travel days**: the day you leave one place and arrive in the next can belong to both stays: start the next stay on the day the last one ends, or drag a stay's end onto its neighbour's first (or last) day. The calendar splits that day in half with a small plane between the two bars, and the timeline blocks meet in the middle of it; the list, the phone cards and the editor mark it "Travel day". Two stays can share only that one day (and each must be longer than it). Schengen and tax-residence counts include it for both places; totals count it once
+- **Travel days**: the day you leave one place and arrive in the next can belong to both stays: start the next stay on the day the last one ends, or drag a stay's end onto its neighbour's first (or last) day. The calendar splits that day in half with a small plane between the two bars, and the timeline blocks meet in the middle of it (with no plane); the list, the phone cards and the editor mark it "Travel day". Two stays can share only that one day (and each must be longer than it). Schengen and tax-residence counts include it for both places; totals count it once
 - **Public holidays**: toggle Taiwan's and Australia's 2026 and 2027 holidays, drawn over the timeline and calendar (no holiday data for 2028 yet)
 
 ![Summary, itinerary and the route on the map](docs/demo-map.gif)
@@ -294,6 +294,7 @@ cities/index.html       Ten-cities page entry (/cities/)
 profile/index.html      Settings page entry (/profile/)
 design/index.html       Design system page entry (/design/; served by `npm run dev` only, not built)
 pixel/index.html        Pixel style guide entry (/pixel/; dev only as well)
+demo/index.html         Demo canvases entry (/demo/; dev only as well)
 CHANGELOG.md            The user-facing release notes, source of the changelog page (format in the file's header comment)
 public/favicon.svg      16×16 pixel-art globe
 public/apple-touch-icon.png, icon-192.png, icon-512.png  Home-screen icons (the favicon scaled up with a margin)
@@ -312,6 +313,7 @@ src/
   cities/               The ten-cities page: Cities (layout), CityCard (card), CityArticle (article)
   profile/              The settings page (AvatarPicker is the character picker)
   pixel/                Pixel style guide: the rules behind the avatar and the mascot (grid, palette, layers, crops, motion, scaling, brand use), every picture drawn live by lib/avatar.ts; scenes.ts holds the 21:9 city scenes (Sydney, Tokyo, Taipei)
+  demo/                 Demo canvases: a row of 9:16 canvases (540×960, half of 1080×1920), each holding one real app component at its own size, centred, for recording reels; currently the editor's country search list, its start / end dates, the country and city pair, the airline and flight number pair, the colour swatches, the season strip, the header's ⋯ menu, the settings page's avatar picker, and the year select
   design/               Design system page: colour, type, spacing, layout, radius and shadow, plus every state of the buttons, toggles, tabs, dropdowns, inputs and other base components; uses the app's own CSS, and forceStates copies :hover / :focus / :active rules to classes so states sit side by side
   landing/              Landing page: Landing (layout), Demos (scripted feature demos), motion (scroll triggers and looping)
   App.tsx               Wires the pieces together; owns the plan and page-level state

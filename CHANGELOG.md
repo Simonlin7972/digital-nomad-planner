@@ -9,10 +9,30 @@
 
 ## 2026-10-22
 
+- 修正國家、城市清單有時跑到欄位下方很遠的地方、寬度也變窄
+  EN: Fixed the country and city lists sometimes opening far below their fields and too narrow
+- 國家、城市、航空公司、航班編號欄位點進去有內容時，右邊多一個 ×，一按就清空重選
+  EN: The country, city, airline and flight number fields now show an × while you're in them, to clear and pick again
+- 時間軸上的移動日不再畫小飛機，兩段直接相接；月曆上照樣有
+  EN: The timeline no longer draws a plane on travel days; the two stays just meet. The calendar still shows it
+- 日期選擇器的區間色帶在每一列頭尾變成圓角，接到選中的日期時不再有方角缺口；滑鼠移上去的框也改成圓形
+  EN: In the date picker, the band across a stay's dates now has rounded ends on every row and meets the chosen day without a square gap, and the hover ring is round
+- 選好國家後，城市選單裡的城市改用城市圖示，不再每一列重複同一面國旗
+  EN: Once a country is picked, the city list shows a city icon on each row instead of repeating the same flag
+- 國家和城市選單展開時，欄位左邊的圖示會縮放切換成放大鏡，收起後再換回國旗或城市圖示
+  EN: While the country or city list is open, the field's icon scales over to a search icon, and back to the flag or city icon once it closes
+- 換了國家之後，如果原本填的城市屬於別的國家，城市欄會自動清空，不會存成錯的組合
+  EN: Changing the country now clears the city if it belongs to another country, so a stay can't be saved with a mismatched pair
+- 滑鼠移到按鈕、欄位與選單按鈕上時，外框統一變成跟展開時一樣的粗框，並帶一點淡入
+  EN: Hovering a button, field or menu button now fades in the same thicker outline it has when open
 - 修正正式網站上對話框背後和捲動後的頁首沒有模糊效果
   EN: Fixed the blur behind dialogs and under the scrolled header, which was missing on the live site
 - 拖曳行程放開後，整條時間軸不會再閃一下
   EN: Letting go of a dragged stay no longer makes the whole timeline flash
+- 國家、城市、航空公司、航班編號的搜尋清單：還有選項在下面時最後幾列漸漸淡出，往下捲過之後最上面幾列也淡出，提示兩邊還有東西，不再硬生生切掉；到底或回到頂就恢復。滑鼠移到淡出的地方會浮出一個小箭頭，指著它清單就自己往那邊捲，按一下跳一頁
+  EN: The country, city, airline and flight-number lists now fade out their last rows while there are more options below, and their first rows once you have scrolled down, as a hint that the list goes on, instead of a hard cut; the fade goes at either end. Moving the pointer over a fade shows a small arrow: resting on it rolls the list that way, and a click jumps a page
+- 在國家欄打字時，旁邊的城市不會再一下子變成英文；清單上的城市一律用目前語言顯示，就算國家欄還沒選好
+  EN: Typing in the country field no longer flips the city beside it to English; a listed city is always shown in the current language, even before the country is settled
 
 ## 2026-10-21
 

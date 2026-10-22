@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft';
-import { Airplane } from '@phosphor-icons/react/dist/csr/Airplane';
 import { ArrowRight } from '@phosphor-icons/react/dist/csr/ArrowRight';
 import { LockSimple } from '@phosphor-icons/react/dist/csr/LockSimple';
 import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
@@ -528,11 +527,6 @@ export default function YearView(props: Props) {
                     </small>
                   </span>
                   <FlashRing flash={flash} id={s.id} />
-                  {travel.arriving.has(s.id) && (
-                    <span className="travel" title={t('stay.travelDay')}>
-                      <Airplane size={10} weight="bold" />
-                    </span>
-                  )}
                   {spills ? (
                     <span className="spill" title={t('year.spill', { year: YEAR + 1 })}>
                       {YEAR + 1}

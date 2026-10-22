@@ -1,6 +1,6 @@
 /* Send to another device: the editor's shell, a QR code, the details switch and the link */
 .editor.transfer { width: min(440px, 100%); }
-.editor.transfer .close { position: absolute; top: 50%; right: 16px; transform: translateY(-50%); width: 32px; height: 32px; padding: 0; border: 0; display: grid; place-items: center; }
+.editor.transfer .close { position: absolute; top: 50%; right: 16px; transform: translateY(-50%); width: 32px; height: 32px; padding: 0; border: 0; --hover-ring: none; display: grid; place-items: center; }
 .editor.transfer .close:active:not(:disabled) { transform: translateY(-50%) scale(0.94); }
 .transfer-text { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text); }
 /* Holds the QR card (QrCode.css), or a line while it's being made */

@@ -8,7 +8,7 @@ import { CityCombobox, CountryCombobox } from '../components/Combobox';
 import { PillNav } from '../components/PillNav';
 import { PixelNomad } from '../components/PixelNomad';
 import { CHANGELOG } from '../lib/changelog';
-import { normalizeCity } from '../lib/cities';
+import { cityFitsCountry, normalizeCity } from '../lib/cities';
 import { normalizeCountry } from '../lib/flags';
 import { LOCALES, LOCALE_NAMES, langTag, setLocale, t, useLocale } from '../lib/i18n';
 import { APP_URL, CHANGELOG_URL, HOME_URL } from '../lib/links';
@@ -119,7 +119,12 @@ export function Profile() {
           </Row>
           <Row label={t('profile.home')}>
             <div className="dates place">
-              <CountryCombobox value={profile.homeCountry} onChange={(v) => update({ homeCountry: v })} recent={[]} />
+              <CountryCombobox
+                value={profile.homeCountry}
+                onChange={(v) => update({ homeCountry: v })}
+                onSettle={(c) => !cityFitsCountry(c, profile.homeCity) && update({ homeCity: '' })}
+                recent={[]}
+              />
               <CityCombobox
                 value={profile.homeCity}
                 country={profile.homeCountry}

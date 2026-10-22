@@ -26,7 +26,7 @@
 }
 /* Tabs never paint a background of their own, so hover or focus can't grey out the selected one. */
 .segmented button,
-.segmented button:hover:not(:disabled) { position: relative; border: 0; background: none; padding: 6px 18px; font-size: 13px; color: var(--muted); }
+.segmented button:hover:not(:disabled) { position: relative; border: 0; --hover-ring: none; background: none; padding: 6px 18px; font-size: 13px; color: var(--muted); }
 .segmented button:hover:not(:disabled),
 .segmented button[aria-selected='true'] { color: var(--text); }
 .segmented button { transition: color 0.2s, transform 0.1s; }
@@ -42,7 +42,7 @@
   border-radius: 999px;
   background: var(--surface);
 }
-.zoombar button { border: 0; background: none; color: var(--text); }
+.zoombar button { border: 0; --hover-ring: none; background: none; color: var(--text); }
 .zoombar button:hover:not(:disabled) { background: var(--subtle); }
 .zoombar button[aria-label] { width: 30px; height: 30px; padding: 0; display: grid; place-items: center; }
 .zoombar .reset { padding: 6px 12px; font-size: 13px; font-weight: 500; }
@@ -96,8 +96,8 @@
   background: #fff;
   box-shadow: 0 2px 4px rgb(0 0 0 / 0.18);
 }
-.zoombar input[type='range']:hover::-webkit-slider-thumb { transform: scale(1.1); border-color: var(--text); }
-.zoombar input[type='range']:active::-webkit-slider-thumb { transform: scale(1.18); border-color: var(--text); }
+.zoombar input[type='range']:hover::-webkit-slider-thumb { transform: scale(1.1); border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text), 0 2px 4px rgb(0 0 0 / 0.18); }
+.zoombar input[type='range']:active::-webkit-slider-thumb { transform: scale(1.18); border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text), 0 2px 4px rgb(0 0 0 / 0.18); }
 .zoombar input[type='range']:focus-visible { outline: none; }
 .zoombar input[type='range']:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--text); outline-offset: 2px; }
 .zoombar input[type='range']:focus-visible::-moz-range-thumb { outline: 2px solid var(--text); outline-offset: 2px; }

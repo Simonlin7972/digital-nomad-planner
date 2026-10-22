@@ -9,8 +9,12 @@ import './YearSelect.css';
 
 // Which year is being planned: a pill that opens a small list, styled like the toolbar's ⋯ menu. Picking another
 // year swaps the plan in place. Closes on a pick, Esc, or a press outside; arrow keys move, Enter or Space picks.
-export function YearSelect() {
+// The planner's year, shown as a pill that opens a menu of the years there are plans for. On its own it shows the
+// live year and a pick switches the whole page (setYear); given `value` and `onChange` it is controlled instead
+// and touches nothing (the demo page).
+export function YearSelect({ value, onChange }: { value?: number; onChange?: (year: number) => void } = {}) {
   useLocale();
+  const year = value ?? YEAR;
   const [open, setOpen] = useState(false);
   // Closed, the menu fades out before it goes (styles/base.css .leaving)
   const { shown, leaving } = usePresence(open);
@@ -34,9 +38,10 @@ export function YearSelect() {
     buttonRef.current?.focus();
   }
 
-  function pick(year: number) {
+  function pick(next: number) {
     close();
-    setYear(year);
+    if (onChange) onChange(next);
+    else setYear(next);
   }
 
   function onKeyDown(e: KeyboardEvent) {
@@ -64,7 +69,7 @@ export function YearSelect() {
         aria-controls={open ? listId : undefined}
         onClick={() => setOpen((o) => !o)}
       >
-        {YEAR}
+        {year}
         <CaretDown size={14} weight="bold" />
       </button>
       {/* Phone only (CSS): the dimmed page behind the sheet; tapping it closes the menu without reaching the page. */}
@@ -72,9 +77,9 @@ export function YearSelect() {
       {shown && (
         <div className={`year-menu${leaving ? ' leaving' : ''}`} role="menu" id={listId} aria-label={t('year.label')}>
           {YEARS.map((y) => (
-            <button key={y} type="button" role="menuitemradio" aria-checked={y === YEAR} onClick={() => pick(y)}>
+            <button key={y} type="button" role="menuitemradio" aria-checked={y === year} onClick={() => pick(y)}>
               {y}
-              {y === YEAR && <Check size={14} weight="bold" />}
+              {y === year && <Check size={14} weight="bold" />}
             </button>
           ))}
         </div>

@@ -23,7 +23,7 @@
 /* Tabs in a grey track; the chosen one is a white pill, like the year / month switch */
 .ap-tabs { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--subtle); overflow-x: auto; scrollbar-width: none; }
 .ap-tabs::-webkit-scrollbar { display: none; }
-.ap-tabs button { flex: 1 0 auto; padding: 6px 8px; border: 0; background: none; font-size: 13px; color: var(--muted); }
+.ap-tabs button { flex: 1 0 auto; padding: 6px 8px; border: 0; --hover-ring: none; background: none; font-size: 13px; color: var(--muted); }
 .ap-tabs button[aria-selected='true'] { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgb(0 0 0 / 0.12); }
 .ap-tabs button:focus-visible { outline-offset: -2px; }
 @media (hover: hover) {

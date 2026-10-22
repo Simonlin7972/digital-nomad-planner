@@ -197,6 +197,7 @@ const zh = {
 
   'help.title': '如何使用',
   'help.close': '關閉',
+  'combo.clear': '清除',
 
   'mobile.now': '現在',
   'mobile.next': '下一站',
@@ -677,6 +678,7 @@ const en: Record<keyof typeof zh, string> = {
 
   'help.title': 'How to use',
   'help.close': 'Close',
+  'combo.clear': 'Clear',
 
   'mobile.now': 'Now',
   'mobile.next': 'Next',
@@ -1157,6 +1159,7 @@ const ja: Record<keyof typeof zh, string> = {
 
   'help.title': '使い方',
   'help.close': '閉じる',
+  'combo.clear': 'クリア',
 
   'mobile.now': '現在',
   'mobile.next': '次',

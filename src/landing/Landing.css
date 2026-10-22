@@ -30,13 +30,15 @@ html { scroll-behavior: smooth; }
   font-size: 15px;
   font-weight: 600;
   text-decoration: none;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  outline: 2px solid transparent;
+  outline-offset: -1px;
+  transition: background 0.15s, border-color 0.15s, outline-color 0.15s, transform 0.1s;
 }
 .l-btn:active { transform: scale(0.96); }
 .l-btn.primary { background: var(--text); border-color: var(--text); color: #fff; }
 .l-btn.primary svg { transition: transform 0.2s; }
 @media (hover: hover) {
-  .l-btn:hover { border-color: var(--text); background: var(--subtle); }
+  .l-btn:hover { outline-color: var(--text); border-color: transparent; background: var(--subtle); }
   .l-btn.primary:hover { background: #000; }
   .l-btn.primary:hover svg { transform: translateX(3px); }
 }

@@ -14,6 +14,10 @@
   background: var(--surface);
   resize: vertical;
   min-width: 0;
+  /* Transparent ring at rest, so hover and focus fade it in */
+  outline: 2px solid transparent;
+  outline-offset: -1px;
+  transition: border-color 0.15s, outline-color 0.15s;
 }
 .editor input::placeholder,
 .editor textarea::placeholder { color: #b0b0b0; }
@@ -29,6 +33,7 @@
   height: 30px;
   padding: 0;
   border: 0;
+  --hover-ring: none;
   border-radius: 50%;
   cursor: pointer;
 }
@@ -50,12 +55,12 @@
 .editor .dates > .field { flex: 1; min-width: 0; }
 .editor .error { margin: -4px 0 0; font-size: 13px; color: var(--danger); }
 
-/* One look for every field in the editor, taken from the text inputs: a 1px grey border at rest, a darker 1px
-   border on hover, and a 2px dark ring drawn inside the box when focused, open or switched on. */
+/* One look for every field in the editor, taken from the text inputs: a 1px grey border at rest, and the same
+   2px dark ring, inside the box, on hover and when focused, open or switched on. */
 .editor input:hover:not(:focus),
-.editor textarea:hover:not(:focus) { border-color: var(--text); }
+.editor textarea:hover:not(:focus) { outline-color: var(--text); border-color: transparent; }
 .editor .toggle:hover:not(:disabled),
-.editor .season-toggle:hover:not(:disabled) { background: var(--surface); border-color: var(--text); }
+.editor .season-toggle:hover:not(:disabled) { background: var(--surface); }
 .editor .toggle:focus-visible,
 .editor .season-toggle:focus-visible,
 .editor .season-toggle[aria-expanded='true'] { outline: 2px solid var(--text); outline-offset: -1px; border-color: transparent; }

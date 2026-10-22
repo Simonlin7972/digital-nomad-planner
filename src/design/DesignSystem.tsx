@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { ArrowCounterClockwise } from '@phosphor-icons/react/dist/csr/ArrowCounterClockwise';
 import { CalendarBlank } from '@phosphor-icons/react/dist/csr/CalendarBlank';
 import { CaretDown } from '@phosphor-icons/react/dist/csr/CaretDown';
+import { CaretUp } from '@phosphor-icons/react/dist/csr/CaretUp';
 import { Check } from '@phosphor-icons/react/dist/csr/Check';
 import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
 import { GlobeHemisphereWest } from '@phosphor-icons/react/dist/csr/GlobeHemisphereWest';
@@ -134,6 +135,7 @@ const MOTION_TOKENS: [string, string, string][] = [
 const MOTION_RULES: [string, string][] = [
   ['只動 transform／opacity', '位置用 translate、大小用 scale；高度動畫只用 grid-template-rows 0fr→1fr（季節區塊、備份提醒）'],
   ['離場比進場短', '進 120–200ms ease-out，出 150ms ease-in；關閉的元素加 .leaving 多留 --dur-exit 再卸載'],
+  ['圖示互換', '下拉欄位展開時左側圖示換成放大鏡：兩個圖示疊在同一格，離開的縮小淡出、進來的放大淡入（scale 0.4↔1，--dur-base --ease-out）'],
   ['改動要看得到', '剛改過的行程閃一圈框（.flash，0.7s）；變更用 View Transitions 滑到新位置；摘要數字滾動 0.35s'],
   ['拖曳中不動畫', '.track.dragging 下沒有 transition；依序淡入只在時間軸出現時播一次（1 秒後 .track.settled 永久關掉），所以放開時不會整條重播；只有放不下的複本會抖一下'],
   ['減少動態', 'prefers-reduced-motion: reduce 時所有 animation 與 transition 關閉，--dur-exit 為 0，數字直接換'],
@@ -317,7 +319,7 @@ export function DesignSystem() {
           </p>
         </Section>
 
-        <Section id="button" title="Button 按鈕" note="所有 <button> 都有基本樣式：14px／600、膠囊形、按下時縮到 96%。Hover 只在有滑鼠的裝置生效。">
+        <Section id="button" title="Button 按鈕" note="所有 <button> 都有基本樣式：14px／600、膠囊形、按下時縮到 96%。Hover 時邊框變成內側 2px 深色框（同展開／開啟狀態，外框 outline 2px、offset -1px、原邊框透明），靜止時框在但透明，hover 只換 outline-color，0.15s 淡入；沒有邊框的按鈕設 --hover-ring: none 不加框。Hover 只在有滑鼠的裝置生效。">
           <StateTable
             states={BUTTON_STATES}
             rows={[
@@ -388,7 +390,7 @@ export function DesignSystem() {
           </div>
         </Section>
 
-        <Section id="input" title="Input 輸入框" note="編輯器裡所有欄位同一個樣子：靜止時 1px 灰框，hover 換深色框，focus／展開時內側 2px 深色框。輸入框沒有專屬的 disabled 樣式（瀏覽器預設）。">
+        <Section id="input" title="Input 輸入框" note="編輯器裡所有欄位同一個樣子：靜止時 1px 灰框，hover、focus、展開時都是內側 2px 深色框。輸入框沒有專屬的 disabled 樣式（瀏覽器預設）。">
           <div className="editor ds-bare">
             <StateTable
               states={[{ label: 'Empty' }, HOVER, FOCUS, { label: 'Filled' }, { label: 'Error' }, DISABLED]}
@@ -427,6 +429,21 @@ export function DesignSystem() {
                 </ul>
               </div>
               <p className="combo-hint">提示文字：.combo-hint，12px muted</p>
+            </div>
+            <h3>Combobox 清單兩端漸層</h3>
+            <p className="ds-note">清單還有內容在下面時加上 .more、往下捲過之後加上 .above：最後一個 li.combo-more 與第一個 li.combo-less 各蓋在那一端的幾列上，40px 由邊緣往內 surface → 透明的漸層，sticky 在捲動框的那一邊、不佔空間，到底或回到頂就淡出；元件依捲動位置自己加減這兩個 class。滑鼠移到漸層範圍時加 .near-bottom / .near-top，中間的 22px 圓形 chevron 從 0.6 倍放大、從邊緣浮出；指著它清單會自己往那邊捲，按一下跳一頁。</p>
+            <div className="combo ds-combo-demo">
+              <div className="combo-input">
+                <span className="field-icon"><GlobeHemisphereWest size={16} weight="bold" /></span>
+                <input className="is-focus" defaultValue="" placeholder="國家" aria-label="國家" />
+                <ul className="combo-list ds-static more above near-top near-bottom" role="listbox">
+                  <li className="combo-less" aria-hidden="true"><span><CaretUp size={12} weight="bold" /></span></li>
+                  {['泰國', '日本', '葡萄牙', '台灣', '南韓', '越南', '馬來西亞', '印尼', '西班牙', '義大利'].map((name) => (
+                    <li key={name} role="option" aria-selected="false">{name}<small>Default</small></li>
+                  ))}
+                  <li className="combo-more" aria-hidden="true"><span><CaretDown size={12} weight="bold" /></span></li>
+                </ul>
+              </div>
             </div>
           </div>
         </Section>

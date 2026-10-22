@@ -1,0 +1,35 @@
+/* The demo page (dev only): 9:16 canvases side by side on a flat ground, a caption under each */
+.demo { max-width: 1280px; margin: 0 auto; padding: 40px 24px 96px; }
+.demo-head { margin-bottom: 32px; }
+.demo h1 { margin: 0; font: 400 clamp(36px, 6vw, 56px)/1.1 'Pixelify Sans', monospace; }
+.demo-head p { margin: 8px 0 0; color: var(--muted); }
+.demo-reels { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; }
+
+.reel { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+/* The canvas: a faint beige, a touch warmer than the page, clipped at the reel's edges; what pops out of a field
+   stays inside */
+.reel-canvas {
+  flex: none;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  background: #f4eee2;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+}
+.reel figcaption { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--muted); }
+.reel figcaption b { color: var(--text); font-weight: 600; }
+.reel figcaption code { font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+
+/* The editor's field look inside a canvas: a card the stay editor's width, in the middle, without the dialog's
+   height limit and entrance, and with the lighter card shadow (the dialog's is made for a blurred backdrop) */
+.reel-canvas .demo-card { align-self: center; width: min(440px, 100%); max-height: none; overflow: visible; padding: 20px; animation: none; box-shadow: var(--shadow-card); }
+.reel-canvas .demo-card .combo input { padding-left: 40px; }
+/* A card for something wider than an editor field (the avatar picker): the whole canvas, less its padding */
+.reel-canvas .demo-card.wide { width: 100%; padding: 16px; }
+/* A component that isn't an editor field (the header's action row) sits in the middle on its own */
+.reel-canvas .demo-row { display: flex; justify-content: center; }

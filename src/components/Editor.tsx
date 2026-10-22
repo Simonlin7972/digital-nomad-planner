@@ -2,7 +2,7 @@ import { Airplane } from '@phosphor-icons/react/dist/csr/Airplane';
 import { useEffect, useState } from 'react';
 import type { ChangeEvent, CSSProperties, FormEvent } from 'react';
 import { useScrollLock } from '../hooks/useScrollLock';
-import { normalizeCity } from '../lib/cities';
+import { cityFitsCountry, normalizeCity } from '../lib/cities';
 import { normalizeCountry } from '../lib/flags';
 import { daysText, t, useLocale } from '../lib/i18n';
 import { PALETTE, clashes, cleanTicket, colorKeyOf, defaultColor, getEdges, placeName, sharesDay, type ColorKey, type Stay, type Ticket } from '../lib/storage';
@@ -131,7 +131,14 @@ export function Editor(props: {
           <div className="dates place">
             <label>
               {t('editor.country')}
-              <CountryCombobox value={country} onChange={setCountry} recent={countries} autoFocus />
+              <CountryCombobox
+                value={country}
+                onChange={setCountry}
+                // A city from another country can't stay: clear it so it isn't saved under the wrong one.
+                onSettle={(c) => !cityFitsCountry(c, city) && setCity('')}
+                recent={countries}
+                autoFocus
+              />
             </label>
             <label>
               {t('editor.city')}

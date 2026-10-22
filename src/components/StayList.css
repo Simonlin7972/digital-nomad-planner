@@ -40,7 +40,7 @@
 .stays li:hover { background: var(--subtle); border-radius: var(--radius); border-top-color: transparent; }
 .stays li:hover + li { border-top-color: transparent; }
 /* ticket button: always visible on stays with a flight booked */
-.stays .ticket { width: 26px; height: 22px; border-radius: 6px; padding: 0; border: 0; background: none; display: grid; place-items: center; color: var(--text); }
+.stays .ticket { width: 26px; height: 22px; border-radius: 6px; padding: 0; border: 0; --hover-ring: none; background: none; display: grid; place-items: center; color: var(--text); }
 .stays .ticket:hover { background: var(--line); }
 /* edit button: revealed on row hover or keyboard focus; always shown where there is no hover */
 .stays .edit {

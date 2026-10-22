@@ -194,24 +194,6 @@
 .stay .handle:hover::after { opacity: 1; height: 58%; }
 .track.dragging .stay:not(.active) .handle::after { opacity: 0; }
 
-/* A travel day: the plane sits on the seam where the stay arriving that day meets the one it left */
-.stay .travel {
-  position: absolute;
-  top: 50%;
-  left: -1px;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--surface);
-  box-shadow: 0 0 0 1px var(--line-strong);
-  color: var(--text);
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-
 /* A neighbouring year's stay reaching onto this timeline: faded and striped, its cut-off side squared, and a
    click goes to that year rather than starting a drag */
 .stay.ghost {

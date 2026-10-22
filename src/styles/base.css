@@ -98,17 +98,24 @@ button {
   background: var(--surface);
   color: var(--text);
   cursor: pointer;
-  transition: box-shadow 0.15s, border-color 0.15s, background 0.15s, transform 0.1s;
+  /* The hover ring's style; a button with no border of its own sets it to none */
+  --hover-ring: solid;
+  /* The ring is always there, transparent at rest, so hover can fade its colour in */
+  outline: 2px var(--hover-ring) transparent;
+  outline-offset: -1px;
+  transition: box-shadow 0.15s, border-color 0.15s, outline-color 0.15s, background 0.15s, transform 0.1s;
 }
 button:active:not(:disabled) { transform: scale(0.96); }
 button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
 button.primary { background: var(--text); border-color: var(--text); color: #fff; }
-button.danger { border-color: transparent; background: none; color: var(--danger); text-decoration: underline; padding-inline: 8px; }
+button.danger { --hover-ring: none; border-color: transparent; background: none; color: var(--danger); text-decoration: underline; padding-inline: 8px; }
 /* Hover only where there is a pointer that hovers: on a touch screen the state sticks after a tap. */
 @media (hover: hover) {
-  button:hover:not(:disabled) { border-color: var(--text); background: var(--subtle); }
-  button.primary:hover:not(:disabled) { background: #000; border-color: #000; }
+  /* Hover darkens the border into the same 2px ring, inside the edge, that open menus and switched-on toggles
+     use. Not while focused from the keyboard, which keeps its own outline. */
+  button:hover:not(:disabled):not(:focus-visible) { outline-color: var(--text); border-color: transparent; background: var(--subtle); }
+  button.primary:hover:not(:disabled) { background: #000; border-color: #000; outline-color: #000; }
   button.danger:hover:not(:disabled) { border-color: transparent; background: var(--subtle); }
 }
 

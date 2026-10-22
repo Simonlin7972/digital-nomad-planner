@@ -1,5 +1,5 @@
 /* Problem report: the editor's shell and fields, with a row of screenshot thumbnails */
-.editor.report .close { position: absolute; top: 50%; right: 16px; transform: translateY(-50%); width: 32px; height: 32px; padding: 0; border: 0; display: grid; place-items: center; }
+.editor.report .close { position: absolute; top: 50%; right: 16px; transform: translateY(-50%); width: 32px; height: 32px; padding: 0; border: 0; --hover-ring: none; display: grid; place-items: center; }
 .editor.report .close:active:not(:disabled) { transform: translateY(-50%) scale(0.94); }
 
 .report-shots { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -14,12 +14,13 @@
   padding: 0;
   display: grid;
   place-items: center;
-  border: 0;
+  border: 0; --hover-ring: none;
   border-radius: 50%;
   background: rgb(0 0 0 / 0.6);
   color: #fff;
 }
 .report-add {
+  --hover-ring: dashed;
   width: 88px;
   height: 88px;
   padding: 0;
@@ -36,7 +37,7 @@
   color: var(--muted);
 }
 @media (hover: hover) {
-  .report-add:hover:not(:disabled) { border-color: var(--text); color: var(--text); background: none; }
+  .report-add:hover:not(:disabled) { color: var(--text); background: none; }
 }
 .report-note { margin: -4px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
 
