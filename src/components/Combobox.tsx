@@ -45,6 +45,8 @@ const FADE_HEIGHT = 40;
 // Pixels the list must have scrolled before the top fade shows: its own padding, so the fade sits flush with the
 // border by the time it is seen.
 const ABOVE_FROM = 6;
+// The list's border and padding: a row that ends within this of the list's bottom edge is fully in view.
+const LIST_INSET = 7;
 
 // Text field with a searchable list, so names are picked rather than typed out. Free text is always accepted:
 // the plan may hold older or unusual entries, and no list of places is complete.
@@ -92,7 +94,12 @@ function Combobox<T extends Option>({
     scrollTimer.current = window.setTimeout(() => setScrolling(false), 800);
   };
   const measure = (el: HTMLElement) => {
-    setMore(el.scrollHeight - el.scrollTop - el.clientHeight > 1);
+    // More below only when the last row is actually cut off. scrollHeight can't say: the fades overlap the rows
+    // with negative margins, which can leave a pixel or two of scroll on a list that fits.
+    const rows = el.querySelectorAll('[role="option"]');
+    const last = rows[rows.length - 1]?.getBoundingClientRect();
+    const box = el.getBoundingClientRect();
+    setMore(Boolean(last) && last.bottom > box.bottom - LIST_INSET + 1);
     setAbove(el.scrollTop > ABOVE_FROM);
   };
   // With the pointer over a fade a small chevron appears there (.near-top / .near-bottom); while it is over the

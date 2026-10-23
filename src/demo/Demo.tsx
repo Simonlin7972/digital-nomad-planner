@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { AirlineCombobox, CityCombobox, CountryCombobox, FlightNoCombobox } from '../components/Combobox';
 import { DatePicker } from '../components/DatePicker';
 import { SeasonStrip } from '../components/SeasonStrip';
@@ -13,16 +13,21 @@ import { t, useLocale } from '../lib/i18n';
 import { PALETTE, type ColorKey } from '../lib/storage';
 import '../components/Dialog.css';
 import '../components/Editor.css';
+import '../components/ViewBar.css';
 import './Demo.css';
 
 // The demo page (dev only, /demo/): a row of 9:16 canvases, each holding a live app component at phone size, for
 // recording reels. Add a canvas by appending to REELS; the component inside is the real one, with the editor's
 // field styles, so it looks and behaves exactly as in the planner. Chinese only, like the other dev pages.
 
-// Canvas size in CSS pixels: 9:16, half of the reel's 1080×1920. Record at 2× device pixels for full size. The
-// components inside keep their real size and sit in the middle.
-export const REEL_W = 540;
-export const REEL_H = 960;
+// Canvas sizes in CSS pixels, half of the real thing, so recording at 2× device pixels gives full size: 9:16 is a
+// reel (1080×1920), 4:5 a feed post (1080×1350). Same width either way; the components inside keep their real size
+// and sit in the middle.
+const RATIOS = [
+  { id: '9:16', w: 540, h: 960, full: '1080×1920' },
+  { id: '4:5', w: 540, h: 675, full: '1080×1350' },
+] as const;
+type Ratio = (typeof RATIOS)[number];
 
 type Reel = { id: string; title: string; note: string; render: () => ReactNode };
 
@@ -212,17 +217,17 @@ const REELS: Reel[] = [
   { id: 'year', title: '年份選單', note: '檢視列的年份：藥丸按鈕打開四個年份的選單，選到的打勾；這裡只換畫布上的數字，不會動到規劃頁', render: () => <YearPill /> },
 ];
 
-function Canvas({ reel }: { reel: Reel }) {
+function Canvas({ reel, ratio }: { reel: Reel; ratio: Ratio }) {
   return (
     <figure className="reel" id={reel.id}>
-      <div className="reel-canvas" style={{ width: REEL_W, height: REEL_H }}>
+      <div className="reel-canvas" style={{ width: ratio.w, height: ratio.h }}>
         {reel.render()}
       </div>
       <figcaption>
         <b>{reel.title}</b>
         <span>{reel.note}</span>
         <code>
-          {REEL_W}×{REEL_H} · 9:16
+          {ratio.w}×{ratio.h} · {ratio.id}
         </code>
       </figcaption>
     </figure>
@@ -231,15 +236,25 @@ function Canvas({ reel }: { reel: Reel }) {
 
 export function Demo() {
   useLocale();
+  const [ratio, setRatio] = useState<Ratio>(RATIOS[0]);
   return (
     <div className="demo">
       <header className="demo-head">
         <h1>Demo</h1>
-        <p>9:16 的畫布，每一格放一個真的元件，原尺寸、置中。瀏覽器放大到 200% 就是 1080×1920。</p>
+        <p>每一格放一個真的元件，原尺寸、置中。瀏覽器放大到 200% 就是 {ratio.full}。</p>
+        {/* The view bar's year / month switch, here picking the canvas shape */}
+        <div className="segmented" role="tablist" aria-label="畫布比例" style={{ '--i': RATIOS.indexOf(ratio) } as CSSProperties}>
+          <span className="thumb" aria-hidden />
+          {RATIOS.map((r) => (
+            <button key={r.id} role="tab" aria-selected={ratio === r} onClick={() => setRatio(r)}>
+              {r.id}
+            </button>
+          ))}
+        </div>
       </header>
       <main className="demo-reels">
         {REELS.map((reel) => (
-          <Canvas key={reel.id} reel={reel} />
+          <Canvas key={reel.id} reel={reel} ratio={ratio} />
         ))}
       </main>
     </div>

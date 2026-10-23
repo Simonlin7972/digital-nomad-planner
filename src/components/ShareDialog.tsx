@@ -14,12 +14,13 @@ import type { Stay } from '../lib/storage';
 import './Dialog.css';
 import './ShareDialog.css';
 
-type Props = { stays: Stay[]; holidaySets: HolidaySet[]; onClose: () => void };
+// `silent`: no analytics (the landing page's sample plan, which isn't the visitor sharing their year).
+type Props = { stays: Stay[]; holidaySets: HolidaySet[]; onClose: () => void; silent?: boolean };
 
 // Shows the PNG before it is saved, with a download button and, where the device supports sharing files
 // (most phones), the system share sheet. Two shapes: the wide year (the default on a computer) and a 9:16 one for
 // stories (the default on a phone).
-export function ShareDialog({ stays, holidaySets, onClose }: Props) {
+export function ShareDialog({ stays, holidaySets, onClose, silent = false }: Props) {
   useLocale();
   useScrollLock();
   const narrow = useNarrow();
@@ -60,7 +61,7 @@ export function ShareDialog({ stays, holidaySets, onClose }: Props) {
     if (!file) return;
     try {
       await navigator.share({ files: [file], title: t('app.title') });
-      track('share_download', { method: 'native_share' });
+      if (!silent) track('share_download', { method: 'native_share' });
     } catch {
       // cancelled from the share sheet, or the browser refused: nothing to do
     }
@@ -104,7 +105,7 @@ export function ShareDialog({ stays, holidaySets, onClose }: Props) {
           <button type="button" className="primary" disabled={!image} onClick={() => {
               if (!image) return;
               download(image.blob, 'png');
-              track('share_download', { method: 'download' });
+              if (!silent) track('share_download', { method: 'download' });
             }}>
             <DownloadSimple size={16} weight="bold" />
             {t('share.download')}

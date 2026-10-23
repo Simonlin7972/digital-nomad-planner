@@ -62,7 +62,7 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 
 - Country and city (at least one). Both are picked from searchable lists, in any of the three languages; while a field with something in it has focus, an × at its end clears it and shows the whole list (the airline and flight number fields too):
   - Countries: about 260, also searchable by ISO code or common alias (`thai`, `jp`, `韓國`)
-  - Cities: about 330 common ones built in. With a country chosen only its cities are listed; picking a city with no country fills the country in. Cities not on the list can simply be typed
+  - Cities: about 330 common ones built in. With a country chosen only its cities are listed; with none, the popular nomad bases come first (Chiang Mai, Bangkok, Lisbon, Canggu…), and picking a city fills the country in. Cities not on the list can simply be typed
 - Exact start and end dates
 - Color (black plus 8 others; a new place starts black, a place you've used before keeps its color)
 - Who you're travelling with
@@ -107,7 +107,7 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 - Every change is saved automatically
 - Backup reminder: when the plan has changed and gone 7 days without an export, a reminder appears under the header, with buttons to export or to put it off for 3 days
 - Every page's header sticks to the top: scroll down and it folds in place into a floating frosted pill, and opens back up at the top. The planner's shrinks its title and folds the tagline away, keeping the toolbar; on a phone the planner's one-row header neither sticks nor folds
-- Landing page (the site root; the app is at `/app/`): introduces the features, each with a short animation that plays when scrolled into view (drag-select, cut, month view, map route, Schengen and Taiwan day counts, seasons, share image, and a tablet frame showing the desktop app switch from year to month view, then shrinking into the phone layout). The demos are simplified HTML/CSS redraws and never read your plan. The nav bar sticks to the top: flat and transparent at the top of the page, it folds into a floating, frosted pill once you scroll down
+- Landing page (the site root; the app is at `/app/`): it looks like the app itself (dot-grid paper, ink, white panels, colour only from the stays, flags and pixel art); each section's label is drawn as a stay, and a year-of-stays bar across the top fills as you scroll. The demos are **the real components** on a sample plan, and you can use them: the timeline (drag to add, reorder, stretch and push, hold `B` to cut, `Alt` to copy, click a month for the calendar), the month view, the editor, the summary and itinerary, the map, the phone layout and the share preview, all linked. The sample lives only in that page's memory: a reload resets it, it never reads or writes your plan, looks up no coordinates and sends no analytics for share downloads; once changed, a "Reset the sample" button appears. On a phone the try-it area shows the phone layout instead. There are also Schengen / 183-day / season questions, the pixel characters, the ten cities (each with a twelve-month season strip), what is kept where, an FAQ, in all three languages. The nav bar sticks to the top: flat and transparent at the top of the page, it folds into a floating, frosted pill once you scroll down
 
 ---
 
@@ -202,7 +202,7 @@ The page talks to these outside services:
 | Service | What is sent | Why |
 | --- | --- | --- |
 | [Nominatim](https://nominatim.openstreetmap.org/) (OpenStreetMap) | The "city, country" text for each place | To find coordinates for the map and the flight estimate. Each place is looked up once |
-| [OpenFreeMap](https://openfreemap.org/) | Map tile requests | The base map |
+| [OpenFreeMap](https://openfreemap.org/) | Map tile requests | The base map (the planner, and the landing page once its map scrolls near) |
 | [emfont](https://font.emtech.cc/) | Font file requests | The interface typeface |
 | [Google Fonts](https://fonts.google.com/) | Font file requests | The pixel typefaces of the tagline under the title (English, Japanese); the Chinese one ships with the site, no extra request |
 | [Google Maps](https://www.google.com/maps) | When you tap the map pin on a phone card, that stay's "city, country" | Opens the place in Google Maps; nothing is sent unless you tap |
@@ -313,9 +313,9 @@ src/
   cities/               The ten-cities page: Cities (layout), CityCard (card), CityArticle (article)
   profile/              The settings page (AvatarPicker is the character picker)
   pixel/                Pixel style guide: the rules behind the avatar and the mascot (grid, palette, layers, crops, motion, scaling, brand use), every picture drawn live by lib/avatar.ts; scenes.ts holds the 21:9 city scenes (Sydney, Tokyo, Taipei)
-  demo/                 Demo canvases: a row of 9:16 canvases (540×960, half of 1080×1920), each holding one real app component at its own size, centred, for recording reels; currently the editor's country search list, its start / end dates, the country and city pair, the airline and flight number pair, the colour swatches, the season strip, the header's ⋯ menu, the settings page's avatar picker, and the year select
+  demo/                 Demo canvases: a row of canvases, switchable in the header between 9:16 (540×960, half a 1080×1920 reel) and 4:5 (540×675, half a 1080×1350 post), each holding one real app component at its own size, centred, for recording reels; currently the editor's country search list, its start / end dates, the country and city pair, the airline and flight number pair, the colour swatches, the season strip, the header's ⋯ menu, the settings page's avatar picker, and the year select
   design/               Design system page: colour, type, spacing, layout, radius and shadow, plus every state of the buttons, toggles, tabs, dropdowns, inputs and other base components; uses the app's own CSS, and forceStates copies :hover / :focus / :active rules to classes so states sit side by side
-  landing/              Landing page: Landing (layout), Demos (scripted feature demos), motion (scroll triggers and looping)
+  landing/              Landing page: Landing (layout), sandbox (the sample plan and the real components wired to it), motion (scroll triggers)
   App.tsx               Wires the pieces together; owns the plan and page-level state
   components/           UI components, each with its stylesheet (.css) beside it
     Toolbar             Header actions and the ⋯ menu (export, import, send to another device, share, how to use, about, report a problem)

@@ -7,8 +7,17 @@
   people using the planner, not for developers: what they can now do or what changed for them.
 -->
 
+## 2026-10-24
+
+- 還沒選國家時打開城市清單，熱門的遊牧城市（清邁、曼谷、里斯本、倉古⋯⋯）排在最前面
+  EN: With no country chosen, the city list now opens with the popular nomad bases (Chiang Mai, Bangkok, Lisbon, Canggu…) at the top
+
 ## 2026-10-23
 
+- 搜尋清單只有幾個結果、不用捲動時，底部不再蓋一層淡出
+  EN: A search list short enough to fit no longer has a fade over its last rows
+- 首頁改版：外觀跟規劃頁一樣，示範換成真的時間軸、月曆、編輯視窗、摘要、地圖、手機版和分享圖，用一份範例行程直接玩，改了也不會動到你自己的行程；另外介紹了移動日、機票鎖定、像素角色和十大城市，並有常見問題，三種語言都有
+  EN: The home page is redone: it looks like the planner, and its demos are now the real timeline, calendar, editor, summary, map, phone view and share image, running on a sample plan you can play with without touching your own; it also covers travel days, locked bookings, the pixel character and the ten cities, with an FAQ, in all three languages
 - 國家、城市、航空公司清單的捲軸平常隱藏，捲動時才出現細細的一條
   EN: The scrollbar in the country, city and airline lists stays hidden and appears as a thin bar only while you scroll
 - 編輯視窗的「適合的季節」展開後比較好讀：你排的月份改成黑底白字，原因排成月份、原因、溫度三欄對齊的表；像「4–6 月」和「9–11 月」這種分開的時段各自一列，溫度也各算各的；圖例移到按鈕右邊；按鈕前面多了一個雲和太陽的小圖示

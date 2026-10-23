@@ -41,7 +41,7 @@ README 寫著「不會送出任何行程內容」。事件參數只能是：
 | `export_json` | `years`: 檔案含幾個年份；`source`: `menu`／`reminder` | 匯出 JSON | `App.tsx` `exportJson` |
 | `import_result` | `ok`: true／false；`years`: 幾個年份 | 匯入成功、檔案無內容或解析失敗（使用者在確認視窗取消不送） | `App.tsx` `importJson` |
 | `share_open` | — | 開啟分享預覽 | `App.tsx` |
-| `share_download` | `method`: `download`／`native_share` | 下載 PNG，或系統分享完成（取消不送） | `components/ShareDialog.tsx` |
+| `share_download` | `method`: `download`／`native_share` | 下載 PNG，或系統分享完成（取消不送）；介紹頁範例的分享不送（`silent`） | `components/ShareDialog.tsx` |
 
 ### 第 2 階段：功能使用率（未實作）
 

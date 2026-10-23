@@ -3,6 +3,7 @@
 .demo-head { margin-bottom: 32px; }
 .demo h1 { margin: 0; font: 400 clamp(36px, 6vw, 56px)/1.1 'Pixelify Sans', monospace; }
 .demo-head p { margin: 8px 0 0; color: var(--muted); }
+.demo-head .segmented { margin-top: 16px; }
 .demo-reels { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; }
 
 .reel { margin: 0; display: flex; flex-direction: column; gap: 12px; }

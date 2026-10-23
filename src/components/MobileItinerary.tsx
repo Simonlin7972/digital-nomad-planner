@@ -25,7 +25,9 @@ type Entry = { year: number; stay: Stay; start: number; end: number };
 
 // The phone layout: nothing to drag, just where you are, where you go next, and every stay written out in
 // full (flight details included, since that is what you look up on the road).
-export function MobileItinerary({ stays }: { stays: Stay[] }) {
+// `isolated` (the landing page's sample plan): only the stays given, never the visitor's other years, and a year
+// picker that shows the year without switching the planner to it.
+export function MobileItinerary({ stays, isolated = false }: { stays: Stay[]; isolated?: boolean }) {
   useLocale();
   const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
   const schengen = useMemo(() => checkSchengen(stays), [stays]);
@@ -39,11 +41,11 @@ export function MobileItinerary({ stays }: { stays: Stay[] }) {
   const entries = useMemo(
     () =>
       YEARS.flatMap((year) =>
-        (year === YEAR ? stays : loadYearPlan(year)).map((stay) =>
+        (year === YEAR ? stays : isolated ? [] : loadYearPlan(year)).map((stay) =>
           inYear(year, () => ({ year, stay, start: dateOfDay(stay.startDay).getTime(), end: dateOfDay(stay.endDay).getTime() })),
         ),
       ).sort((a, b) => a.start - b.start),
-    [stays],
+    [stays, isolated],
   );
   const now = new Date();
   const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
@@ -104,7 +106,7 @@ export function MobileItinerary({ stays }: { stays: Stay[] }) {
       <div className="panel">
         <div className="mobile-head">
           <h2>{t('stays.title')}</h2>
-          <YearSelect />
+          {isolated ? <YearSelect value={YEAR} onChange={() => {}} /> : <YearSelect />}
         </div>
         {sorted.length === 0 ? (
           <p className="empty">{t('mobile.empty')}</p>

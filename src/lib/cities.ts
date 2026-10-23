@@ -91,6 +91,23 @@ const fold = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCas
 let all: Entry[] | null = null;
 const everyCity = () => (all ??= Object.entries(CITIES).flatMap(([country, list]) => list.map(([zh, en]) => ({ zh, en, country }))));
 
+// The bases nomads pick most, roughly in that order, as "code/English name" keys into CITIES. With no country
+// chosen, the city list opens with these, so the usual suspects are a click away; the rest follow in CITIES
+// order. Every key must name a listed city, or it is silently skipped.
+const POPULAR = [
+  'th/Chiang Mai', 'th/Bangkok', 'pt/Lisbon', 'id/Canggu', 'id/Bali', 'vn/Da Nang', 'my/Kuala Lumpur', 'tw/Taipei', 'jp/Tokyo',
+  'ge/Tbilisi', 'mx/Mexico City', 'es/Barcelona', 'co/Medellín', 'ar/Buenos Aires', 'es/Las Palmas', 'pt/Madeira', 'pt/Porto',
+  'hu/Budapest', 'cz/Prague', 'de/Berlin', 'bg/Bansko', 'ee/Tallinn', 'tr/Istanbul', 'ae/Dubai', 'vn/Ho Chi Minh City', 'vn/Hanoi',
+  'kr/Seoul', 'sg/Singapore', 'my/Penang', 'th/Phuket', 'th/Koh Phangan', 'in/Goa', 'mx/Playa del Carmen', 'mx/Oaxaca',
+  'br/Florianópolis', 'za/Cape Town', 'es/Valencia', 'es/Madrid', 'hr/Split', 'gr/Athens', 'au/Sydney', 'au/Melbourne', 'ca/Vancouver',
+];
+let popular: Entry[] | null = null;
+const popularCities = () =>
+  (popular ??= POPULAR.map((key) => {
+    const [country, en] = key.split('/');
+    return everyCity().find((c) => c.country === country && c.en === en);
+  }).filter((c): c is Entry => Boolean(c)));
+
 // The list has no Japanese names, so Japanese shows the English ones.
 const nameIn = (e: Entry, locale: Locale) => (locale === 'zh' ? e.zh : e.en);
 
@@ -134,7 +151,10 @@ export function searchCities(query: string, country: string, recent: { city: str
   const other: Locale = locale === 'zh' ? 'en' : 'zh';
   const code = normalizeCountry(country);
   const scoped = Boolean(CITIES[code]);
-  const pool = scoped ? everyCity().filter((c) => c.country === code) : everyCity();
+  // Within one country the list keeps CITIES order; across all of them the popular bases come first.
+  const pool = scoped
+    ? everyCity().filter((c) => c.country === code)
+    : [...popularCities(), ...everyCity().filter((c) => !popularCities().includes(c))];
   const option = (e: Entry): CityOption => ({ value: e.en, name: nameIn(e, locale), sub: nameIn(e, other), country: e.country });
 
   const used: CityOption[] = [];
