@@ -81,6 +81,16 @@ function Combobox<T extends Option>({
   // says so (Combobox.css).
   const [more, setMore] = useState(false);
   const [above, setAbove] = useState(false);
+  // The scrollbar shows only while the list is scrolling, and goes a moment after it stops (Combobox.css).
+  const [scrolling, setScrolling] = useState(false);
+  const scrollTimer = useRef(0);
+  useEffect(() => () => clearTimeout(scrollTimer.current), []);
+  const onListScroll = (e: UIEvent<HTMLUListElement>) => {
+    measure(e.currentTarget);
+    setScrolling(true);
+    clearTimeout(scrollTimer.current);
+    scrollTimer.current = window.setTimeout(() => setScrolling(false), 800);
+  };
   const measure = (el: HTMLElement) => {
     setMore(el.scrollHeight - el.scrollTop - el.clientHeight > 1);
     setAbove(el.scrollTop > ABOVE_FROM);
@@ -229,11 +239,11 @@ function Combobox<T extends Option>({
       </div>
       {shown && (
         <ul
-          className={`combo-list${more ? ' more' : ''}${above ? ' above' : ''}${near ? ` near-${near}` : ''}${leaving ? ' leaving' : ''}`}
+          className={`combo-list${more ? ' more' : ''}${above ? ' above' : ''}${scrolling ? ' scrolling' : ''}${near ? ` near-${near}` : ''}${leaving ? ' leaving' : ''}`}
           role="listbox"
           id={listId}
           ref={listRef}
-          onScroll={(e: UIEvent<HTMLUListElement>) => measure(e.currentTarget)}
+          onScroll={onListScroll}
           onMouseMove={onListMove}
           onMouseLeave={() => setNear(null)}
         >

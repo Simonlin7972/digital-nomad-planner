@@ -9,6 +9,8 @@
 
 ## 2026-10-23
 
+- 國家、城市、航空公司清單的捲軸平常隱藏，捲動時才出現細細的一條
+  EN: The scrollbar in the country, city and airline lists stays hidden and appears as a thin bar only while you scroll
 - 編輯視窗的「適合的季節」展開後比較好讀：你排的月份改成黑底白字，原因排成月份、原因、溫度三欄對齊的表；像「4–6 月」和「9–11 月」這種分開的時段各自一列，溫度也各算各的；圖例移到按鈕右邊；按鈕前面多了一個雲和太陽的小圖示
   EN: The "When to go" block in the editor is easier to read when open: your stay's months are filled dark, the reasons line up in three columns (months, reason, temperatures), separate spells such as Apr–Jun and Sep–Nov get a row each with their own temperatures, and the legend sits beside the button; the button now starts with a small cloud-and-sun icon
 

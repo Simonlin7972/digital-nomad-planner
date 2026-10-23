@@ -58,7 +58,11 @@
   box-shadow: var(--shadow-pop);
   transform-origin: top left; /* grows out of the field's corner */
   animation: pop-in var(--dur-base) var(--ease-out);
+  /* A thin scrollbar, invisible until the list scrolls (.scrolling), whatever the system's scrollbar setting */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
 }
+.combo-list.scrolling { scrollbar-color: rgb(0 0 0 / 0.22) transparent; }
 /* While the list goes on past an end, a fade over the rows at that end says so instead of a hard cut: the first
    (.combo-less, once scrolled) and last (.combo-more, while there is more below) children of the list, stuck to
    that edge of the scrolling box and taking no room of their own; the component sets .above / .more from the
