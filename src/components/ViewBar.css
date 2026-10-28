@@ -45,7 +45,7 @@
 .zoombar button { border: 0; --hover-ring: none; background: none; color: var(--text); }
 .zoombar button:hover:not(:disabled) { background: var(--subtle); }
 .zoombar button[aria-label] { width: 30px; height: 30px; padding: 0; display: grid; place-items: center; }
-.zoombar .reset { padding: 6px 12px; font-size: 13px; font-weight: 500; }
+.zoombar .reset { padding: 6px 12px; font-size: 13px; font-weight: 400; }
 .zoom-value {
   min-width: 46px;
   padding: 0 4px 0 8px;

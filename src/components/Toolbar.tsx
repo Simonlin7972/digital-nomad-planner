@@ -3,6 +3,7 @@ import type { KeyboardEvent, ReactNode } from 'react';
 import { ArrowClockwise } from '@phosphor-icons/react/dist/csr/ArrowClockwise';
 import { ArrowCounterClockwise } from '@phosphor-icons/react/dist/csr/ArrowCounterClockwise';
 import { Bug } from '@phosphor-icons/react/dist/csr/Bug';
+import { CloudArrowUp } from '@phosphor-icons/react/dist/csr/CloudArrowUp';
 import { DeviceMobile } from '@phosphor-icons/react/dist/csr/DeviceMobile';
 import { DotsThree } from '@phosphor-icons/react/dist/csr/DotsThree';
 import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
@@ -11,6 +12,7 @@ import { Question } from '@phosphor-icons/react/dist/csr/Question';
 import { UserCircle } from '@phosphor-icons/react/dist/csr/UserCircle';
 import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork';
 import { UploadSimple } from '@phosphor-icons/react/dist/csr/UploadSimple';
+import type { SyncStatus } from '../hooks/useCloudSync';
 import { usePresence } from '../hooks/usePresence';
 import { t, useLocale } from '../lib/i18n';
 import { MOD } from '../lib/util';
@@ -34,17 +36,23 @@ type Props = {
   onTransfer: () => void; // send every year's plan to another device by link
   onReport: () => void; // e-mail a problem report
   onImport: (file: File) => void;
+  signedIn: boolean;
+  syncStatus: SyncStatus; // drawn as a dot on the settings link while signed in
+  onSignIn: () => void;
 };
 
 // The row of plan-wide actions in the page header. Undo and redo are icons only; the file actions (export,
-// import, share as PNG) sit in a ⋯ menu, with the guide and the product page below a divider.
-export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHelp, onUndo, onRedo, onShare, onExport, onTransfer, onReport, onImport }: Props) {
+// import, share as PNG) sit in a ⋯ menu, with the guide and the product page below a divider. Signed out, the
+// menu also offers to sign in; signed in, the settings link carries the sync's state as a small dot.
+export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHelp, onUndo, onRedo, onShare, onExport, onTransfer, onReport, onImport, signedIn, syncStatus, onSignIn }: Props) {
   // Read once: the profile only changes on the settings page, which is another page load away.
   const [avatar] = useState(() => getProfile().avatar);
   const fileRef = useRef<HTMLInputElement>(null);
   useLocale();
   const undoLabel = t('toolbar.shortcut', { action: t('toolbar.undo'), keys: `${MOD}Z` });
   const redoLabel = t('toolbar.shortcut', { action: t('toolbar.redo'), keys: `${MOD}⇧Z` });
+  const syncText = signedIn && syncStatus !== 'off' ? t(`sync.${syncStatus === 'paused' ? 'pausedShort' : syncStatus}`) : null;
+  const profileLabel = syncText ? `${t('profile.open')} · ${syncText}` : t('profile.open');
   return (
     <div className="actions">
       {!readOnly && (
@@ -62,6 +70,7 @@ export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHel
           { label: t('toolbar.export'), icon: <DownloadSimple size={16} weight="bold" />, onSelect: onExport, disabled: !canExport },
           { label: t('toolbar.import'), icon: <UploadSimple size={16} weight="bold" />, onSelect: () => fileRef.current?.click() },
           { label: t('toolbar.transfer'), icon: <DeviceMobile size={16} weight="bold" />, onSelect: onTransfer, disabled: !canExport },
+          ...(signedIn ? [] : [{ label: t('toolbar.signIn'), icon: <CloudArrowUp size={16} weight="bold" />, onSelect: onSignIn }]),
           { label: t('toolbar.share'), icon: <ShareNetwork size={16} weight="bold" />, onSelect: onShare, disabled: !hasStays },
           { label: t('toolbar.help'), icon: <Question size={16} weight="bold" />, onSelect: onHelp, divider: true },
           {
@@ -75,8 +84,10 @@ export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHel
       />
       {/* Settings live on their own page (/profile/), so this is a link rather than a button. It shows the saved
           character's face, or a plain person icon before one is saved. */}
-      <a className={`profile-link${avatar ? ' has-avatar' : ''}`} href={PROFILE_URL} aria-label={t('profile.open')} title={t('profile.open')}>
+      <a className={`profile-link${avatar ? ' has-avatar' : ''}`} href={PROFILE_URL} aria-label={profileLabel} title={profileLabel}>
         {avatar ? <Avatar avatar={avatar} crop={FACE_CROP} /> : <UserCircle size={20} weight="bold" />}
+        {/* The sync's state, signed in only: green in step, amber working, grey waiting, red failed */}
+        {syncText && <span className={`sync-dot ${syncStatus}`} aria-hidden="true" />}
       </a>
       <input
         ref={fileRef}

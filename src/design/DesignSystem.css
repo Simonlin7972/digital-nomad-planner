@@ -137,3 +137,8 @@
 /* Avatar presets in a row, name under each */
 .ds-avatars { display: flex; flex-wrap: wrap; gap: 16px; }
 .ds-avatars > div { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; border-radius: var(--radius); background: var(--subtle); }
+
+/* Notice strips stacked, then the sync dot in each of its states with a label under each */
+.ds-notices { display: flex; flex-direction: column; gap: 16px; max-width: 760px; }
+.ds-dots { gap: 24px !important; margin-top: 8px; }
+.ds-dot { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }

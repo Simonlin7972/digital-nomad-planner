@@ -2,13 +2,13 @@
 
 **A Digital Nomad Planner** — 英文介面叫 **Not WFH**，日文介面叫 **今日は在宅じゃない**，同一個梗的三種說法。
 
-一頁式的年度行程規劃工具：把一整年拆成 53 週，拖一拖就排好「幾月在哪個城市」。資料只存在你的瀏覽器，沒有帳號、沒有後端。
+一頁式的年度行程規劃工具：把一整年拆成 53 週，拖一拖就排好「幾月在哪個城市」。不用帳號也能用，資料存在你的瀏覽器；想在手機上看同一份，再用 Google 登入同步。
 
 **線上版：<https://simonlin7972.github.io/digital-nomad-planner/app/>**（產品介紹頁：<https://simonlin7972.github.io/digital-nomad-planner/>）
 
 ![整年時間軸與行程清單（範例資料）](docs/overview.png)
 
-> A single-page planner for a year of digital nomading. Drag across a 53-week timeline to block out where you'll be, refine exact dates in a month view, and see the route on a map. Everything stays in your browser — no account, no backend. The interface is available in Traditional Chinese, English and Japanese (chosen on the settings page). **[English README](README.en.md)**
+> A single-page planner for a year of digital nomading. Drag across a 53-week timeline to block out where you'll be, refine exact dates in a month view, and see the route on a map. Works without an account, with everything in your browser; sign in with Google only if you want your phone and computer in step. The interface is available in Traditional Chinese, English and Japanese (chosen on the settings page). **[English README](README.en.md)**
 
 ---
 
@@ -59,8 +59,9 @@
 ### 每段行程可記錄
 
 - 國家、城市（至少填一項）。兩者都從可搜尋的選單挑選，名稱依介面語言顯示，可用中文、英文或日文搜尋；欄位有內容時，點進去右邊會出現 ×，一鍵清空並列出整份清單（航空公司、航班編號欄位也一樣）：
-  - 國家：約 260 個，另可用國碼或常見別名搜尋（例如打 `thai`、`jp`、`韓國`）
-  - 城市：內建約 330 個常見城市；選了國家就只列該國的，沒選國家時清單先列熱門的遊牧城市（清邁、曼谷、里斯本、倉古⋯⋯），挑了城市會自動帶入國家。清單沒有的城市直接打字即可
+  - 國家：約 260 個，另可用國碼或常見別名搜尋（例如打 `thai`、`jp`、`韓國`）；整份清單分成「熱門」（用過的和常用的）、「全部」、「區域」三段
+  - 城市：內建約 330 個常見城市；選了國家就只列該國的，沒選國家時分「熱門」（用過的和熱門遊牧城市：清邁、曼谷、里斯本、倉古⋯⋯）、「全部」兩段，挑了城市會自動帶入國家。清單沒有的城市直接打字即可
+  - 搜尋結果裡符合的字會加粗；打錯一個字母也找得到（`tailand`、`bankok`）；完全找不到時，清單只剩一列「使用「你打的字」」，點它或按 Enter 就照打的存
 - 確切開始日、結束日
 - 顏色（黑色加 8 色；新地點預設黑色，同一個地點沿用既有顏色）
 - 跟誰去
@@ -83,6 +84,7 @@
 
 ### 其他
 
+- **Google 登入與雲端同步（選用）**：登入後行程和設定多存一份在雲端，手機和電腦看到同一份；改完 1.5 秒推上去，開頁、切回前景、另一台寫入時更新；不登入一切照舊。入口在 `⋯` 選單、備份提醒條、手機的空白頁，以及設定頁的「帳號」區。第一次在某台裝置登入時若兩邊都有行程而且不同，會請你選一份（選雲端的會先把這台匯出成 JSON）。設定頁可登出（只登出這台，資料留著）或刪除雲端資料（並把所有裝置登出）
 - 內建「如何使用」說明（可展開收合的分段）：操作方式、資料存在哪、備份與搬移
 - 繁體中文、英文、日文介面，在設定頁選擇（首頁、城市頁和更新日誌頁的頁首也能切換）；預設依瀏覽器語言，選擇會記住
 - 工具列精簡：復原、重做只有圖示；匯出、匯入、分享收在 `⋯` 選單裡，分隔線下方是「如何使用」、「產品介紹」（新分頁開啟首頁）與「問題回報與建議」（填標題、內容，可附最多 3 張截圖與聯絡 Email，直接寄給開發者）
@@ -177,13 +179,15 @@ npm run dev
 
 ## 資料與隱私
 
-**你的行程不會上傳到任何伺服器。** 所有資料存在瀏覽器的 `localStorage`：
+**不登入時，你的行程不會上傳到任何伺服器。** 所有資料存在瀏覽器的 `localStorage`，登入 Google 後才多存一份到雲端（見下表的 Supabase 一列）：
 
 | Key | 內容 |
 | --- | --- |
 | `dnp-plan-2026`、`dnp-plan-2027`、`dnp-plan-2028` | 各年份的行程本體 |
 | `dnp-year` | 目前選的年份 |
 | `dnp-profile` | 設定頁的角色、「關於我」與溫度單位、備份提醒間隔 |
+| `dnp-sync` | 登入後：每年上次與雲端一致時的行程指紋與雲端更新時間、設定的同樣記錄、是否暫停同步；登出時清掉 |
+| `sb-qdjungqzeovpdnrijyls-auth-token` | 登入後：Supabase 的登入憑證（由 supabase-js 管理） |
 | `dnp-geocode` | 地名查到的座標快取 |
 | `dnp-zoom` | 時間軸縮放比例 |
 | `dnp-view` | 目前檢視（年／月）與月份 |
@@ -192,7 +196,7 @@ npm run dev
 | `dnp-ga-activated`、`dnp-ga-internal` | 統計用：是否已送過「第一次建立行程」事件；這個瀏覽器是否標成站長自己（網址加 `?internal=1`） |
 | `dnp-backup`、`dnp-backup-<年份>` | 上次匯出（或匯入）的時間與行程指紋，用來決定何時出現備份提醒；2027 用 `dnp-backup`，其他年份各一個 |
 
-清除瀏覽器資料、換瀏覽器或換電腦都會看不到行程，請用 `⋯` 選單裡的「匯出」備份。
+沒登入的話，清除瀏覽器資料、換瀏覽器或換電腦都會看不到行程，請用 `⋯` 選單裡的「匯出」備份，或登入同步。
 
 頁面會對外連線到下列服務：
 
@@ -200,11 +204,12 @@ npm run dev
 | --- | --- | --- |
 | [Nominatim](https://nominatim.openstreetmap.org/)（OpenStreetMap） | 你輸入的「城市, 國家」文字 | 查座標，供地圖與飛行估算使用。每個地名只查一次 |
 | [OpenFreeMap](https://openfreemap.org/) | 地圖圖磚請求 | 地圖底圖（規劃頁，以及介紹頁捲到地圖時） |
-| [emfont](https://font.emtech.cc/) | 字型檔請求 | 介面字體 |
-| [Google Fonts](https://fonts.google.com/) | 字型檔請求 | 標題下方副標的像素字體（英文、日文）；繁中的像素字體隨網站出貨，不另外連線 |
+| [emfont](https://font.emtech.cc/) | 字型檔請求 | 中文介面字體 |
+| [Google Fonts](https://fonts.google.com/) | 字型檔請求 | 英文介面字體，以及標題下方副標的像素字體（英文、日文）；繁中的像素字體隨網站出貨，不另外連線 |
 | [Google 地圖](https://www.google.com/maps) | 你在手機卡片上點地圖圖釘時，該段行程的「城市, 國家」 | 在 Google 地圖打開那個地點；只有點了才會連線 |
+| [Supabase](https://supabase.com/)（只在你用 Google 登入後） | 登入：Google 帳號的 email 與識別碼。同步：每一年的行程（與匯出檔同一格式，含機票訂位代號與備註）和設定頁的角色、暱稱、家、護照、稅務居住地、溫度單位、備份間隔；語言、假日開關、檢視、縮放不送 | 多裝置看到同一份。資料放在 Supabase 專案的 `nomad` schema（與開發者另一個小產品 Wordrobe 共用專案；表結構見 `docs/nomad-schema.sql`），每一列只有本人讀得到（Row Level Security）。不登入一律不連；登出後不再連，這台的資料留著；設定頁的「刪除雲端資料」會刪掉雲端的一切。Google 的同意畫面顯示的是開發者的 Google Cloud 專案名稱 |
 | [FormSubmit](https://formsubmit.co/) | 只有你送出「問題回報與建議」時：你填的標題、內容、截圖（縮小成 JPEG）、選填的 Email，以及頁面、語言、年份、視窗大小與瀏覽器版本 | 把回報寄到開發者信箱；**不含任何行程內容** |
-| [Google Analytics](https://analytics.google.com/)（GA4） | 瀏覽頁面、捲動、外連點擊等匿名使用紀錄；點「開始規劃」、新增行程、匯出、匯入、分享等操作事件，只帶介面選擇與分組後的數量（例如「2–5 段行程」）；以及瀏覽器、裝置與大致地區；會設 `_ga` cookie | 統計流量與功能使用情形，事件清單見 [ANALYTICS.md](ANALYTICS.md)。只在線上版載入，`npm run dev` 不送；**不會送出任何行程內容** |
+| [Google Analytics](https://analytics.google.com/)（GA4） | 瀏覽頁面、捲動、外連點擊等匿名使用紀錄；點「開始規劃」、新增行程、匯出、匯入、分享、登入、登出、首次同步選了哪一份等操作事件，只帶介面選擇與分組後的數量（例如「2–5 段行程」）；以及瀏覽器、裝置與大致地區；會設 `_ga` cookie | 統計流量與功能使用情形，事件清單見 [ANALYTICS.md](ANALYTICS.md)。只在線上版載入，`npm run dev` 不送；**不會送出任何行程內容** |
 
 機票的訂位代號等欄位會存在 `localStorage`，也會寫進匯出的 JSON。分享匯出檔之前請留意。
 
@@ -279,6 +284,8 @@ npm run dev
 
 「傳到其他裝置」的連結是 `…/app/#plan=<代碼>`。代碼第一個字元是 `z`（後面是 deflate-raw 壓縮後的 JSON，base64url）或 `j`（瀏覽器不支援 CompressionStream 時，未壓縮的 JSON，base64url）。JSON 比匯出檔精簡，好讓整份行程放得進一個 QR code：`{ "v": 3, "y": { "<年份>": [行程…] } }`，每段行程是一個陣列 `[距上一段結束的天數, 天數差, country, city, color, companions, note, ticket]`（日期從該年 1/1 起算，ticket 是 `[airline, flightNo, departure, bookingRef, price, returnFlightNo, returnDeparture, returnAirline]`，尾端的空值省略），不帶 id（匯入時重新產生）。一年 20 段、有備註與機票約 700 字元；4 年共 100 段約 2,400 字元。內容與匯出檔相同（不含機票細節時拿掉 `bookingRef` 與 `price`），匯入規則也相同，只是不算備份，不會重設備份提醒。
 
+登入後，雲端 `nomad.plans` 每一列的 `data` 就是上面「每一年」的那個物件（原樣，由資料庫記 `updated_at`），`nomad.settings` 的 `data` 是設定頁的 `dnp-profile`；讀回來時經過與匯入相同的檢查，所以雲端沒有自己的格式版本。
+
 ---
 
 ## 專案結構
@@ -301,6 +308,7 @@ public/og.png           分享連結時的預覽圖（1200×630，三語標示�
 public/airlines/        航空公司 logo（<代號>.png），由 scripts/fetch-airline-logos.mjs 一次性下載
 scripts/fetch-airline-logos.mjs  下載 airlines.ts 裡每家航空的 logo；新增航空公司後重跑
 scripts/subset-tagline-font.mjs  從俐方體 11 號切出中文副標用到的字；改了中文副標後重跑
+scripts/record-picker-demo.mjs   錄國家／城市選單的示範影片（1080×1350，IG 4:5，無字幕）到 docs/picker-demo-4x5.mp4：`npm run record:picker`。需要 Chrome 和 ffmpeg，不用開 dev server，約 5 分鐘
 src/assets/              切好的副標字型檔
 docs/overview.png       README 用的範例圖（由 app 的「分享」下載）
 docs/demo-*.gif         README 的功能示範動畫（英文介面、範例資料）
@@ -323,7 +331,10 @@ src/
     AllMonths           月檢視「看全部」：12 個月堆疊與回到頂端按鈕
     Summary             摘要面板（含申根與台灣停留天數）
     StayList            行程列表、空檔列與季度篩選
-    BackupReminder      頁首下方的備份提醒
+    BackupReminder      頁首下方的備份提醒（未登入時多一顆「登入同步」）
+    NoticeStrip         提示條的外殼，備份提醒與同步暫停共用
+    SyncPaused          同步暫停時的提示條（首次登入選了「稍後」）
+    SyncConflictDialog  首次登入兩邊行程不同時的選擇視窗
     Editor              新增／編輯行程的視窗
     HelpDialog          「如何使用」說明視窗
     YearSelect          年份下拉選單
@@ -358,6 +369,8 @@ src/
     useNearView         元素捲到畫面附近了沒（地圖延後載入）
     useScrolled         頁面捲過某個高度了沒（PillNav 用）
     useBackupReminder   追蹤多久沒匯出，決定是否提醒
+    useCloudSync        登入狀態、推拉時機、衝突與暫停（規劃頁）
+    useSettingsSync     設定頁那一側：登入／登出、設定列的同步
   lib/                  與畫面無關的邏輯與資料
     weeks.ts            日期模型：週、日索引、半週格、月份範圍、標籤格式
     storage.ts          資料型別、讀寫、匯入清理、換序／推擠／插入演算法、配色
@@ -365,7 +378,9 @@ src/
     stayRules.ts        空檔、申根 90/180、稅務居住地 183 天的計算
     seasons.ts          熱門城市的季節資料（每月評分與原因）與警示判斷
     nomadCities.ts      城市頁的十個城市：數字、簽證、亮點、缺點、三語短文、來源（手工整理）
-    backup.ts           備份提醒的狀態與判斷
+    backup.ts           備份提醒的狀態與判斷；行程指紋（雲端同步也用）
+    cloud.ts            Supabase client（supabase-js 按需載入：沒登入過的瀏覽器不會下載它）、Google 登入、兩張表的讀寫、Realtime、設定的同步流程
+    sync.ts             雲端同步的記錄（dnp-sync）與「推／拉／問」的純判斷
     analytics.ts        Google Analytics：載入、事件 track()（只在線上版）
     changelog.ts        把 CHANGELOG.md 解析成依日期分組的中英文條目
     flags.ts            國家清單、搜尋、名稱 → ISO 代碼對照
@@ -437,7 +452,10 @@ CLAUDE.md               給 Claude Code 的專案須知
 
 ## 已知限制
 
-- **設定不會跟著匯出或傳到其他裝置**：換瀏覽器或裝置要重新設定一次
+- **設定不會跟著匯出或傳到其他裝置**：換瀏覽器或裝置要重新設定一次，除非有登入（登入後跟著同步）
+- **雲端同步是單人多裝置**：兩台同時改同一年時後改的贏，不合併；只有第一次登入兩邊都有且不同時才問
+- **登入只有 Google**；Google 的同意畫面顯示的是開發者的 Google Cloud 專案名稱，不是這個網站的
+- **刪除帳號要靠開發者手動**：設定頁只能刪雲端資料並登出
 
 - **年份只有 2025、2026、2027、2028**（`lib/weeks.ts` 的 `YEARS`）；國定假日資料只有 2026、2027 年；切換年份時復原紀錄會清空
 - **介面語言有繁體中文、英文、日文**；規格文件（`MVP.md`）只有中文
@@ -477,7 +495,7 @@ CLAUDE.md               給 Claude Code 的專案須知
 - 其他國家的簽證天數規則（目前只有申根 90/180）
 - 月檢視支援整條拖曳
 - 一段行程多張機票、住宿與預算
-- 選用的雲端同步
+- 刪除帳號
 
 完整的產品規格與歷次決策見 [MVP.md](MVP.md)。
 
@@ -495,11 +513,13 @@ CLAUDE.md               給 Claude Code 的專案須知
 | [Nominatim](https://nominatim.org/) | 地名轉座標 | 需遵守其[使用政策](https://operations.osmfoundation.org/policies/nominatim/) |
 | [Phosphor Icons](https://phosphoricons.com/) | 圖示 | MIT |
 | [flag-icons](https://github.com/lipis/flag-icons) | 國旗 | MIT |
-| [975 朦朧黑體](https://font.emtech.cc/fonts/975HazyGo)（經 emfont） | 介面字體 | 見字體頁面的授權標示 |
+| [未來熒黑 Glow Sans TC](https://font.emtech.cc/fonts/GlowSansTC)（經 emfont） | 中文介面字體 | 見字體頁面的授權標示 |
+| [IBM Plex Sans](https://fonts.google.com/specimen/IBM+Plex+Sans)（經 Google Fonts） | 英文介面字體 | OFL-1.1 |
 | [Pixelify Sans](https://fonts.google.com/specimen/Pixelify+Sans)（經 Google Fonts） | 英文副標字體 | OFL-1.1 |
 | [DotGothic16](https://fonts.google.com/specimen/DotGothic16)（經 Google Fonts） | 日文副標字體 | OFL-1.1 |
 | [俐方體 11 號 Cubic 11](https://github.com/ACh-K/Cubic-11) | 繁中副標字體（只含副標用到的字，`src/assets/`） | OFL-1.1 |
 | [uqr](https://github.com/unjs/uqr) | 產生 QR code | MIT |
+| [Supabase](https://supabase.com/)（[supabase-js](https://github.com/supabase/supabase-js)） | Google 登入與雲端同步（選用） | 服務依其條款；supabase-js MIT |
 
 2026、2027 年國定假日資料為手動整理：台灣依新聞報導的 115、116 年政府行政機關辦公日曆表（2027 的端午、中秋、教師節三個單日依曆法推算）；澳洲只列全國性假日。這些日期未逐一對照官方原始公告，實際放假安排請以官方為準。
 

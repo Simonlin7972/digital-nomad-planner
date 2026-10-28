@@ -42,9 +42,8 @@ export function saveBackup(state: BackupState) {
   }
 }
 
-// A short fingerprint of the plan's content (FNV-1a over the export form), independent of stay order.
-export function planHash(stays: Stay[]): string {
-  const text = JSON.stringify(serialize([...stays].sort((a, b) => a.startDay - b.startDay)));
+// A short fingerprint of some text (FNV-1a), for telling "the same" from "changed" without keeping a copy.
+export function fnv1a(text: string): string {
   let h = 0x811c9dc5;
   for (let i = 0; i < text.length; i++) {
     h ^= text.charCodeAt(i);
@@ -52,6 +51,10 @@ export function planHash(stays: Stay[]): string {
   }
   return (h >>> 0).toString(36);
 }
+
+// A short fingerprint of the plan's content (over the export form), independent of stay order. The cloud sync
+// compares plans by it too, so it must only depend on what `serialize` writes.
+export const planHash = (stays: Stay[]): string => fnv1a(JSON.stringify(serialize([...stays].sort((a, b) => a.startDay - b.startDay))));
 
 // Brings the record up to date with the current plan: starts or stops the "changed since backup" clock.
 export function track(state: BackupState, stays: Stay[], now: number): BackupState {

@@ -7,7 +7,7 @@ import { getProfile } from './profile';
 import { checkSchengen, residenceDays } from './stayRules';
 import { MONTHS, SLOTS, TOTAL_DAYS, WEEKS, YEAR, daysCovered, daysOf, monthName, monthRange, rangeLabel, slotsOf, travelSlotsOf, weeksLabel } from './weeks';
 
-const FONT = '"975HazyGo", -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
+const FONT = '"IBM Plex Sans", "GlowSansTC", -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
 const TAGLINE_FONT = '16px "Pixelify Sans", monospace';
 const SCALE = 2;
 const PAD = 40;

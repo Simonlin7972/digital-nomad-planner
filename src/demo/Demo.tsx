@@ -179,6 +179,9 @@ function MenuRow() {
         onTransfer={noop}
         onReport={noop}
         onImport={noop}
+        signedIn={false}
+        syncStatus="off"
+        onSignIn={noop}
       />
     </div>
   );

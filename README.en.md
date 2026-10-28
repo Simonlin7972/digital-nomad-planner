@@ -4,7 +4,7 @@
 
 [繁體中文](README.md) · **English**
 
-A single-page planner for a year of digital nomading. The year is laid out as 53 weeks; drag across them to block out which city you'll be in and when. Your data stays in your browser — no account, no backend.
+A single-page planner for a year of digital nomading. The year is laid out as 53 weeks; drag across them to block out which city you'll be in and when. It works without an account, with your data in your browser; sign in with Google only if you want your phone and computer to see the same plan.
 
 **Live: <https://simonlin7972.github.io/digital-nomad-planner/app/>** (landing page: <https://simonlin7972.github.io/digital-nomad-planner/>)
 
@@ -61,8 +61,9 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 ### What a stay records
 
 - Country and city (at least one). Both are picked from searchable lists, in any of the three languages; while a field with something in it has focus, an × at its end clears it and shows the whole list (the airline and flight number fields too):
-  - Countries: about 260, also searchable by ISO code or common alias (`thai`, `jp`, `韓國`)
-  - Cities: about 330 common ones built in. With a country chosen only its cities are listed; with none, the popular nomad bases come first (Chiang Mai, Bangkok, Lisbon, Canggu…), and picking a city fills the country in. Cities not on the list can simply be typed
+  - Countries: about 260, also searchable by ISO code or common alias (`thai`, `jp`, `韓國`); the full list comes in three sections, "Popular" (used here and common ones), "All" and "Regions"
+  - Cities: about 330 common ones built in. With a country chosen only its cities are listed; with none, the list has "Popular" (used here and the popular nomad bases: Chiang Mai, Bangkok, Lisbon, Canggu…) and "All", and picking a city fills the country in. Cities not on the list can simply be typed
+  - The matching letters are bold in the results; a one-letter typo still finds the name (`tailand`, `bankok`); when nothing matches, the list has one row, "Use “what you typed”", and clicking it or pressing Enter saves it as typed
 - Exact start and end dates
 - Color (black plus 8 others; a new place starts black, a place you've used before keeps its color)
 - Who you're travelling with
@@ -85,6 +86,7 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 
 ### Also
 
+- **Google sign-in and cloud sync (optional)**: signed in, your plan and settings are also kept in the cloud so your phone and computer see the same one; a change goes up 1.5 s later, and the cloud is read again on load, on returning to the tab and when another device writes. Signed out, nothing changes. Find it in the `⋯` menu, on the backup reminder, on the phone's empty page and in the settings page's "Account" section. The first sign-in on a device that finds a different plan on each side asks which to keep (choosing the cloud's first exports this device's plan as JSON). The settings page can sign out (this device only; its data stays) or delete the cloud data (and sign out every device)
 - A built-in "How to use" guide in sections that open and close: gestures, where data lives, backup and transfer
 - Traditional Chinese, English and Japanese interface, chosen on the settings page (the landing, cities and changelog pages can switch it from their headers too); defaults to the browser's language and remembers your choice
 - A compact toolbar: undo and redo are icons; export, import and Share live in the `⋯` menu, with "How to use", "About this app" (opens the landing page in a new tab) and "Report a problem or suggest" (a title, a description, up to 3 screenshots and an optional email, sent straight to the developer) below a divider
@@ -187,6 +189,8 @@ While `B` or `Alt` is held, a small label in the view's corner says what a click
 | `dnp-plan-2026`, `dnp-plan-2027`, `dnp-plan-2028` | The plan for each year |
 | `dnp-year` | The year being planned |
 | `dnp-profile` | The settings page's character, "about me", temperature unit and backup reminder interval |
+| `dnp-sync` | Signed in: per year, the plan's fingerprint and the cloud row's updated time as of the last sync, the same for the settings, and whether the sync is paused; cleared on sign-out |
+| `sb-qdjungqzeovpdnrijyls-auth-token` | Signed in: the Supabase session (managed by supabase-js) |
 | `dnp-geocode` | Cached coordinates for place names |
 | `dnp-zoom` | Timeline zoom level |
 | `dnp-view` | Current view (year or month) and month |
@@ -203,11 +207,12 @@ The page talks to these outside services:
 | --- | --- | --- |
 | [Nominatim](https://nominatim.openstreetmap.org/) (OpenStreetMap) | The "city, country" text for each place | To find coordinates for the map and the flight estimate. Each place is looked up once |
 | [OpenFreeMap](https://openfreemap.org/) | Map tile requests | The base map (the planner, and the landing page once its map scrolls near) |
-| [emfont](https://font.emtech.cc/) | Font file requests | The interface typeface |
-| [Google Fonts](https://fonts.google.com/) | Font file requests | The pixel typefaces of the tagline under the title (English, Japanese); the Chinese one ships with the site, no extra request |
+| [emfont](https://font.emtech.cc/) | Font file requests | The Chinese interface typeface |
+| [Google Fonts](https://fonts.google.com/) | Font file requests | The Latin interface typeface, and the pixel typefaces of the tagline under the title (English, Japanese); the Chinese one ships with the site, no extra request |
 | [Google Maps](https://www.google.com/maps) | When you tap the map pin on a phone card, that stay's "city, country" | Opens the place in Google Maps; nothing is sent unless you tap |
 | [FormSubmit](https://formsubmit.co/) | Only when you send "Report a problem or suggest": the title, description and screenshots you add (scaled down to JPEG), the optional email, and the page, language, year, window size and browser | Delivers the report to the developer's inbox; **nothing from your plan is sent** |
-| [Google Analytics](https://analytics.google.com/) (GA4) | Anonymous usage such as page views, scrolling and outbound clicks; events for actions such as opening the planner, adding a stay, exporting, importing and sharing, carrying only interface choices and bucketed counts (e.g. "2–5 stays"); plus browser, device and rough location; sets a `_ga` cookie | Traffic and feature-use figures; the event list is in [ANALYTICS.md](ANALYTICS.md). Loaded on the live site only, not under `npm run dev`; **nothing from your plan is sent** |
+| [Supabase](https://supabase.com/) (only once you sign in with Google) | Sign-in: your Google account's e-mail and id. Sync: each year's plan (the export format, including booking references and notes) and the settings page's character, nickname, home, passport, tax residence, temperature unit and backup interval; language, holiday toggles, view and zoom are not sent | One plan on every device. Rows live in the `nomad` schema of a Supabase project shared with the developer's other small product, Wordrobe (schema in `docs/nomad-schema.sql`); Row Level Security lets only you read your rows. Nothing is sent while signed out; signing out stops it and leaves this device's data alone; "Delete cloud data" on the settings page removes everything in the cloud. Google's consent screen shows the developer's Google Cloud project name |
+| [Google Analytics](https://analytics.google.com/) (GA4) | Anonymous usage such as page views, scrolling and outbound clicks; events for actions such as opening the planner, adding a stay, exporting, importing, sharing, signing in and out and which copy a first sync kept, carrying only interface choices and bucketed counts (e.g. "2–5 stays"); plus browser, device and rough location; sets a `_ga` cookie | Traffic and feature-use figures; the event list is in [ANALYTICS.md](ANALYTICS.md). Loaded on the live site only, not under `npm run dev`; **nothing from your plan is sent** |
 
 Flight details such as booking references are stored in `localStorage` and are written into exported JSON. Keep that in mind before sharing an export.
 
@@ -282,6 +287,8 @@ Older formats still load: week-based `startWeek`/`endWeek`, a single `location` 
 
 A "Send to another device" link is `…/app/#plan=<code>`. The code's first character is `z` (followed by JSON compressed with deflate-raw, in base64url) or `j` (uncompressed JSON in base64url, for browsers without CompressionStream). The JSON is packed tighter than an export file so a whole plan fits in one QR code: `{ "v": 3, "y": { "<year>": [stays…] } }`, each stay an array `[days since the previous stay ended, length in days, country, city, color, companions, note, ticket]` (dates counted from 1 January of that year, the ticket as `[airline, flightNo, departure, bookingRef, price, returnFlightNo, returnDeparture, returnAirline]`, empty trailing values dropped), with no ids (an import makes new ones). A year of 20 stays with notes and flights comes to about 700 characters; four years, 100 stays, about 2,400. It holds the same as an export file (minus `bookingRef` and `price` when flight details are left out) and imports by the same rules, except that it doesn't count as a backup, so the backup reminder isn't reset.
 
+Signed in, each `nomad.plans` row's `data` is that per-year object as is (the database records `updated_at`), and the `nomad.settings` row's `data` is the settings page's `dnp-profile`; both are checked on the way back exactly like an imported file, so the cloud has no format version of its own.
+
 ---
 
 ## Project structure
@@ -303,6 +310,7 @@ public/sw.js            Offline service worker (keeps loaded files)
 public/og.png           Link-preview image (1200×630, marks all three languages)
 public/airlines/        Airline logos (<code>.png), downloaded once by scripts/fetch-airline-logos.mjs
 scripts/subset-tagline-font.mjs  Cuts the characters of the Chinese tagline out of Cubic 11; re-run after changing the Chinese tagline
+scripts/record-picker-demo.mjs   Records the country / city picker demo video (1080×1350, Instagram 4:5, no captions) to docs/picker-demo-4x5.mp4: `npm run record:picker`. Needs Chrome and ffmpeg, no dev server; takes about 5 minutes
 src/assets/              The subset tagline font file
 scripts/fetch-airline-logos.mjs  Downloads a logo for every airline in airlines.ts; rerun after adding airlines
 docs/overview.png       Sample image for the README (downloaded from the app's Share dialog)
@@ -326,7 +334,10 @@ src/
     AllMonths           The month view's "All months": twelve stacked months and the back-to-top button
     Summary             Summary panel (including Schengen and Taiwan day counts)
     StayList            Itinerary, free-stretch rows and quarter filter
-    BackupReminder      Backup reminder under the header
+    BackupReminder      Backup reminder under the header (offers sign-in while signed out)
+    NoticeStrip         The strip's shell, shared by the backup reminder and the paused sync
+    SyncPaused          The strip shown while a first sign-in's choice is put off
+    SyncConflictDialog  The choice between two different plans on a first sign-in
     Editor              Dialog for adding and editing a stay
     HelpDialog          The "How to use" guide
     YearSelect          The year drop-down
@@ -361,6 +372,8 @@ src/
     useNearView         Whether an element has been scrolled near the viewport (loads the map late)
     useScrolled         Whether the page is scrolled past a given height (for PillNav)
     useBackupReminder   Tracks time since the last export and decides whether to remind
+    useCloudSync        Session, when to push and pull, conflicts and pausing (planner)
+    useSettingsSync     The settings page's side: sign in and out, the settings row
   lib/                  Logic and data that isn't UI
     weeks.ts            Date model: weeks, day indexes, half-week slots, month ranges, labels
     storage.ts          Types, load/save, import sanitising, reorder/push/insert algorithms, colors
@@ -368,7 +381,9 @@ src/
     stayRules.ts        Free stretches, Schengen 90/180 and the tax-residence 183 days
     seasons.ts          Season data for popular cities (monthly ratings and reasons) and the warning rule
     nomadCities.ts      The cities page's ten cities: figures, visa, upsides, downsides, trilingual articles, sources (hand-compiled)
-    backup.ts           Backup reminder state and rules
+    backup.ts           Backup reminder state and rules; the plan fingerprint the cloud sync compares by
+    cloud.ts            Supabase client (supabase-js is loaded on demand: a browser that never signed in never downloads it), Google sign-in, the two tables, Realtime, the settings reconcile
+    sync.ts             The sync record (dnp-sync) and the pure push / pull / ask decisions
     analytics.ts        Google Analytics: loading and track() events (live site only)
     changelog.ts        Parses CHANGELOG.md into dated, bilingual entries
     flags.ts            Country list, search, name → ISO code
@@ -441,7 +456,10 @@ Knowing these before reading the code will save time.
 
 ## Known limits
 
-- **Settings aren't exported or sent to other devices**: set them again in another browser or on another device
+- **Settings aren't exported or sent to other devices**: set them again in another browser or on another device, unless you sign in (then they sync)
+- **Cloud sync is one person on several devices**: two devices changing the same year at once means the later change wins, with no merging; only a first sign-in that finds two different plans asks
+- **Sign-in is Google only**, and Google's consent screen shows the developer's Google Cloud project name, not this site's
+- **Deleting the account itself needs the developer**: the settings page can only delete the cloud data and sign out
 
 - **Only 2025, 2026, 2027 and 2028** (`YEARS` in `lib/weeks.ts`); holiday data exists for 2026 and 2027 only; switching year clears the undo history
 - **Three interface languages**, Traditional Chinese, English and Japanese; the product spec (`MVP.md`) is in Chinese only
@@ -481,7 +499,7 @@ Not scheduled; discussion welcome.
 - Visa day rules for other countries (only Schengen 90/180 so far)
 - Dragging whole stays in the month view
 - Several flights per stay, accommodation, budget
-- Optional cloud sync
+- Account deletion
 
 The full product spec and decision history are in [MVP.md](MVP.md) (Chinese).
 
@@ -499,11 +517,13 @@ The full product spec and decision history are in [MVP.md](MVP.md) (Chinese).
 | [Nominatim](https://nominatim.org/) | Place names to coordinates | Subject to its [usage policy](https://operations.osmfoundation.org/policies/nominatim/) |
 | [Phosphor Icons](https://phosphoricons.com/) | Icons | MIT |
 | [flag-icons](https://github.com/lipis/flag-icons) | Flags | MIT |
-| [975HazyGo](https://font.emtech.cc/fonts/975HazyGo) (via emfont) | Interface typeface | See the license shown on the font's page |
+| [Glow Sans TC](https://font.emtech.cc/fonts/GlowSansTC) (via emfont) | Chinese interface typeface | See the license shown on the font's page |
+| [IBM Plex Sans](https://fonts.google.com/specimen/IBM+Plex+Sans) (via Google Fonts) | Latin interface typeface | OFL-1.1 |
 | [Pixelify Sans](https://fonts.google.com/specimen/Pixelify+Sans) (via Google Fonts) | English tagline typeface | OFL-1.1 |
 | [DotGothic16](https://fonts.google.com/specimen/DotGothic16) (via Google Fonts) | Japanese tagline typeface | OFL-1.1 |
 | [Cubic 11 (俐方體 11 號)](https://github.com/ACh-K/Cubic-11) | Chinese tagline typeface (only the tagline's characters, in `src/assets/`) | OFL-1.1 |
 | [uqr](https://github.com/unjs/uqr) | QR code generation | MIT |
+| [Supabase](https://supabase.com/) ([supabase-js](https://github.com/supabase/supabase-js)) | Google sign-in and cloud sync (optional) | Service under its terms; supabase-js MIT |
 
 The 2026 and 2027 holiday data was compiled by hand. Taiwan's holidays follow press reports of the government's 2026 and 2027 office calendars (for 2027, the Dragon Boat Festival, Mid-Autumn Festival and Teachers' Day are single days worked out from the calendar). Australia lists national holidays only. None of the dates were checked one by one against the original official notices, so treat the official sources as authoritative.
 

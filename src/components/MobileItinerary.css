@@ -69,3 +69,6 @@
 .mticket p { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 28px; }
 .mact { display: grid; place-items: center; flex: none; width: 40px; height: 40px; margin: -6px -8px -6px 0; padding: 0; border: 0; --hover-ring: none; background: none; color: var(--muted); }
 .mact:active:not(:disabled) { transform: scale(0.9); }
+
+/* Signed out and nothing planned: sign in as the way to bring the computer's plan here */
+.mobile-signin { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 8px; }

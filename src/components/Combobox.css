@@ -125,8 +125,10 @@
 /* An icon in the flag's slot (cities of the chosen country), as wide as a flag so names stay aligned */
 .combo-icon { flex: none; width: 20px; display: grid; place-items: center; color: var(--muted); }
 .combo-list li small { margin-left: auto; padding-left: 12px; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.combo-list li.none { color: var(--muted); cursor: default; }
-.combo-hint { font-size: 12px; font-weight: 400; color: var(--muted); }
+/* Section headings in the full list (popular / all / regions): small caps-like labels, not rows */
+.combo-list li.group { padding: 10px 10px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: var(--muted); cursor: default; pointer-events: none; }
+/* The part of a name that matched what was typed */
+.combo-list mark { background: none; color: inherit; font-weight: 600; }
 /* Airline logos: a small rounded square where a flag would be; the flag moves to the right end, after the names */
 .combo-logo { flex: none; width: 24px; height: 24px; border-radius: 6px; object-fit: contain; background: #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08); }
 .combo .field-icon .combo-logo { width: 22px; height: 22px; }

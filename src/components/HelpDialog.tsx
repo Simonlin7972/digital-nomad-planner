@@ -118,10 +118,13 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
       title: '資料存在哪裡',
       items: [
         <>
-          行程<b>只存在這個瀏覽器裡</b>，不會上傳，也不需要帳號。每次變動都自動儲存。
+          不登入時，行程<b>只存在這個瀏覽器裡</b>，不會上傳。每次變動都自動儲存。
         </>,
         <>
-          所以換瀏覽器、換電腦、用無痕視窗，或清除瀏覽器資料，都會<b>看不到原本的行程</b>。
+          所以換瀏覽器、換電腦、用無痕視窗，或清除瀏覽器資料，都會<b>看不到原本的行程</b>——除非你有登入。
+        </>,
+        <>
+          <b>用 Google 登入</b>（<b>⋯</b> 選單，或<b>個人檔案與設定</b>頁的「帳號」）後，行程和設定會多存一份在雲端，手機和電腦看到同一份；改完一兩秒就同步，離線改的回到線上再送。這台瀏覽器的資料還是在，登出後也留著。第一次登入時兩邊都有行程而且不同，會請你選一份留下。
         </>,
         <>
           只有兩種資訊會送出去：你填的<b>地名</b>（用來在地圖上找位置），以及載入地圖與字體時的一般連線。另外網站用 Google Analytics 統計匿名的瀏覽人次與操作次數（例如新增、匯出、分享），不含任何行程內容。在手機卡片上點地圖圖釘時，會用 Google 地圖查那個地名。
@@ -258,11 +261,13 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
       title: 'Where your data lives',
       items: [
         <>
-          Your plan is stored <b>only in this browser</b>. Nothing is uploaded and there is no account. Every change saves
-          automatically.
+          Signed out, your plan is stored <b>only in this browser</b> and nothing is uploaded. Every change saves automatically.
         </>,
         <>
-          That means a different browser or computer, a private window, or clearing your browsing data will <b>not show this plan</b>.
+          That means a different browser or computer, a private window, or clearing your browsing data will <b>not show this plan</b>, unless you sign in.
+        </>,
+        <>
+          <b>Sign in with Google</b> (the <b>⋯</b> menu, or “Account” on the <b>Profile &amp; settings</b> page) and your plan and settings are also kept in the cloud, so your phone and computer see the same one; a change is up a second or two later, and changes made offline go when you are back online. This browser keeps its own copy, and keeps it after signing out. If the first sign-in on a device finds a different plan on each side, you are asked which to keep.
         </>,
         <>
           Only two things leave your device: the <b>place names</b> you enter (to find them on the map), and ordinary requests to load
@@ -397,10 +402,13 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
       title: 'データの保存場所',
       items: [
         <>
-          計画は<b>このブラウザの中にだけ</b>保存されます。アップロードされず、アカウントも不要です。変更は自動で保存されます。
+          ログインしていないとき、計画は<b>このブラウザの中にだけ</b>保存され、アップロードされません。変更は自動で保存されます。
         </>,
         <>
-          そのため、別のブラウザや別のパソコン、プライベートウィンドウ、閲覧データの消去では<b>この計画は表示されません</b>。
+          そのため、別のブラウザや別のパソコン、プライベートウィンドウ、閲覧データの消去では<b>この計画は表示されません</b>。ログインしている場合は別です。
+        </>,
+        <>
+          <b>Google でログイン</b>（<b>⋯</b> メニュー、または<b>プロフィールと設定</b>ページの「アカウント」）すると、計画と設定がクラウドにも保存され、スマホと PC で同じものが見られます。変更は 1〜2 秒で同期され、オフラインでの変更はオンラインに戻ったときに送られます。このブラウザのデータはそのまま残り、ログアウト後も消えません。ある端末で初めてログインしたとき両側に違う計画があれば、どちらを残すか聞かれます。
         </>,
         <>
           外に送られるのは 2 つだけ：入力した<b>地名</b>（地図上の位置を探すため）と、地図やフォントを読み込む通常の通信です。サイトでは Google Analytics で匿名の訪問数と操作回数（追加・書き出し・共有など）を集計しますが、計画の内容は含みません。スマホのカードで地図のピンをタップすると、その地名を Google マップで検索します。

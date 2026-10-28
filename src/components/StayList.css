@@ -1,7 +1,7 @@
 .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .panel-head h2 { margin: 0; }
 .pills { display: flex; gap: 6px; flex-wrap: wrap; }
-.pills button { padding: 6px 14px; font-size: 13px; font-weight: 500; }
+.pills button { padding: 6px 14px; font-size: 13px; font-weight: 400; }
 .pills button[aria-pressed='true'] { background: var(--text); border-color: var(--text); color: #fff; }
 
 .stays li {

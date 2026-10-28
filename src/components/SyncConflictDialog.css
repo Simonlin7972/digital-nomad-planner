@@ -1,0 +1,14 @@
+/* The two copies side by side; only the years that differ are listed */
+.sync-conflict { max-width: 520px; }
+.sync-intro { margin: 0 0 16px; color: var(--muted); line-height: 1.6; }
+.sync-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.sync-side { padding: 14px 16px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--subtle); }
+.sync-side h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; font-size: 14px; font-weight: 600; }
+.sync-side ul { margin: 0; padding: 0; list-style: none; }
+.sync-side li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; font-size: 14px; font-variant-numeric: tabular-nums; }
+.sync-side li span { color: var(--muted); }
+.sync-side p { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
+.sync-note { margin: 16px 0 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+@media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
+  .sync-sides { grid-template-columns: 1fr; }
+}

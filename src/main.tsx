@@ -7,9 +7,12 @@ import App from './App';
 import { initAnalytics } from './lib/analytics';
 import { registerOffline } from './lib/offline';
 import { takeTransferHash } from './lib/transfer';
+import { takeAuthCode } from './lib/cloud';
 
-// Before analytics: a plan link must be out of the address before the page view is sent.
+// Before analytics: a plan link, and the sign-in code Google sends back, must be out of the address before the
+// page view is sent.
 takeTransferHash();
+takeAuthCode();
 initAnalytics();
 registerOffline();
 

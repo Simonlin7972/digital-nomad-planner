@@ -44,6 +44,16 @@
 .p-options button[aria-checked='true'] { background: var(--text); border-color: var(--text); color: #fff; }
 .p-toggles { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
 
+/* The account: signed out, why and the one button; signed in, who, the sync's state and the two actions */
+.p-account { display: flex; flex-direction: column; gap: 8px; padding: 12px 0 4px; }
+.p-account .p-about { margin: 0; }
+.p-account .p-note { margin: 0; }
+.p-google { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; font-size: 14px; }
+.p-account-id { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; font-size: 15px; }
+.p-account-id b { font-weight: 600; }
+.p-account-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding-top: 4px; }
+.p-account-actions button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; font-size: 13px; }
+
 /* Save and cancel under the character, the only setting that waits for a button */
 .p-save { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 16px 0 4px; border-top: 1px solid var(--line); }
 .p-save button { padding: 8px 18px; font-size: 13px; }

@@ -36,7 +36,16 @@ const text = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slic
 
 export function getProfile(): Profile {
   try {
-    const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null') as Record<string, unknown> | null;
+    return sanitizeProfile(JSON.parse(localStorage.getItem(KEY) ?? 'null'));
+  } catch {
+    return DEFAULT_PROFILE;
+  }
+}
+
+// Reads a profile back from storage or from the cloud, keeping only well-formed fields.
+export function sanitizeProfile(data: unknown): Profile {
+  try {
+    const raw = data as Record<string, unknown> | null;
     if (!raw || typeof raw !== 'object') return DEFAULT_PROFILE;
     return {
       nickname: text(raw.nickname, 30),

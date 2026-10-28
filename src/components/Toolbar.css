@@ -57,6 +57,7 @@ div.more { position: relative; }
 
 /* Settings: a round icon link at the right end, the same size as the icon buttons */
 .actions .profile-link {
+  position: relative;
   display: grid;
   place-items: center;
   width: 42px;
@@ -79,4 +80,27 @@ div.more { position: relative; }
 /* Phone: finger-sized, like the other header buttons (after the base rule so it wins) */
 @media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
   .actions .profile-link { width: 44px; height: 44px; }
+}
+
+/* The sync's state on the settings link while signed in (hooks/useCloudSync.ts): a dot at the lower right, ringed in
+   the page colour so it reads over the avatar. Colours are the palette's green and orange and the danger red. */
+.sync-dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+  background: var(--muted);
+}
+.sync-dot.synced { background: #4a9d5b; }
+.sync-dot.syncing { background: #d97a1e; animation: sync-breathe 1.6s ease-in-out infinite; }
+.sync-dot.error { background: var(--danger); }
+/* .offline and .paused keep the grey */
+@keyframes sync-breathe {
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sync-dot.syncing { animation: none; }
 }

@@ -4,11 +4,16 @@
 // ("south-america") for the few broader areas, and otherwise as whatever text was typed. Names are produced
 // from the browser's own locale data, so they follow the current language.
 import { getLocale, type Locale } from './i18n';
+import { nearMatch } from './util';
+
+// Which part of the full list an option sits in; only set when there is no query, where the list has sections.
+export type OptionGroup = 'popular' | 'all' | 'regions';
 
 export type CountryOption = {
   value: string; // what gets stored on a stay
   name: string; // shown, in the current language
   sub: string; // the name in the other language
+  group?: OptionGroup;
   code: string | null; // ISO code for the flag; null where there is none
 };
 
@@ -177,13 +182,15 @@ export function searchCountries(query: string, recent: string[]): CountryOption[
     const rest = entries
       .filter((e) => !first.includes(e) && !REGIONS.includes(e))
       .sort((x, y) => nameIn(x, locale).localeCompare(nameIn(y, locale), locale === 'zh' ? 'zh-Hant-TW' : locale));
-    return [...first, ...rest, ...regions].map(option);
+    const grouped = (es: Entry[], group: OptionGroup) => es.map((e) => ({ ...option(e), group }));
+    return [...grouped(first, 'popular'), ...grouped(rest, 'all'), ...grouped(regions, 'regions')];
   }
   const rank = (e: Entry) => {
     const terms = [e.zh.toLowerCase(), e.en.toLowerCase(), e.ja.toLowerCase(), e.value, ...e.keywords];
     if (terms.some((term) => term === q)) return 0;
     if (terms.some((term) => term.startsWith(q))) return 1;
     if (terms.some((term) => term.includes(q))) return 2;
+    if (terms.some((term) => nearMatch(q, term))) return 3; // a typo away
     return -1;
   };
   return entries

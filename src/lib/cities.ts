@@ -1,4 +1,5 @@
-import { isListedCountry, normalizeCountry } from './flags';
+import { isListedCountry, normalizeCountry, type OptionGroup } from './flags';
+import { nearMatch } from './util';
 import { getLocale, type Locale } from './i18n';
 
 // A hand-picked list of cities people commonly base themselves in, keyed by ISO country code. It is a typing
@@ -79,6 +80,7 @@ const CITIES: Record<string, [string, string][]> = {
 export type CityOption = {
   value: string; // what gets stored on a stay: the English name for a listed city
   name: string; // shown, in the current language
+  group?: OptionGroup; // set across all countries with no query: the popular bases, then the rest
   sub: string; // the name in the other language
   country: string; // stored country value (ISO code); '' if unknown
 };
@@ -171,12 +173,18 @@ export function searchCities(query: string, country: string, recent: { city: str
   const options = [...used, ...pool.filter((c) => !usedEntries.has(c)).map(option)];
 
   const q = fold(query.trim());
-  if (!q) return options;
+  if (!q) {
+    if (scoped) return options;
+    // Across all countries the list has two sections: the cities used here and the popular bases, then the rest
+    const popular = new Set(popularCities());
+    return options.map((o, i) => ({ ...o, group: i < used.length || popular.has(find(o.country, o.value)!) ? 'popular' : 'all' }));
+  }
   const rank = (o: CityOption) => {
     const terms = [fold(o.name), fold(o.sub), fold(o.value)];
     if (terms.some((term) => term === q)) return 0;
     if (terms.some((term) => term && term.startsWith(q))) return 1;
     if (terms.some((term) => term && term.includes(q))) return 2;
+    if (terms.some((term) => term && nearMatch(q, term))) return 3; // a typo away
     return -1;
   };
   return options

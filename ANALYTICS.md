@@ -38,10 +38,14 @@ README 寫著「不會送出任何行程內容」。事件參數只能是：
 | `cta_click` | `location`: `nav`／`hero`／`final`／`changelog`／`cities` | 點「開始規劃」連到 app | `landing/Landing.tsx`、`changelog/Changelog.tsx`、`cities/Cities.tsx` |
 | `stay_create` | `view`: `year`／`month`；`stay_count`: 分組（含這段） | 編輯視窗儲存一段新行程 | `App.tsx` `saveEditing` |
 | `plan_activated` | — | 這個瀏覽器第一次建立行程，只送一次（`dnp-ga-activated`） | `analytics.ts` `trackActivation` |
-| `export_json` | `years`: 檔案含幾個年份；`source`: `menu`／`reminder` | 匯出 JSON | `App.tsx` `exportJson` |
+| `export_json` | `years`: 檔案含幾個年份；`source`: `menu`／`reminder`／`conflict`（選「用雲端的」之前自動匯出） | 匯出 JSON | `App.tsx` `exportJson` |
 | `import_result` | `ok`: true／false；`years`: 幾個年份 | 匯入成功、檔案無內容或解析失敗（使用者在確認視窗取消不送） | `App.tsx` `importJson` |
 | `share_open` | — | 開啟分享預覽 | `App.tsx` |
 | `share_download` | `method`: `download`／`native_share` | 下載 PNG，或系統分享完成（取消不送）；介紹頁範例的分享不送（`silent`） | `components/ShareDialog.tsx` |
+| `sign_in` | `source`: `menu`／`reminder`／`mobile`／`settings` | 按下任一個 Google 登入入口（跳去 Google 之前送；可能偶爾遺失） | `App.tsx` `startSignIn`、`profile/Profile.tsx` |
+| `sign_out` | — | 設定頁登出 | `profile/Profile.tsx` |
+| `sync_conflict` | `choice`: `cloud`／`local`／`later` | 首次登入兩邊行程不同時的選擇 | `App.tsx` `resolveConflict` |
+| `cloud_delete` | — | 設定頁確認刪除雲端資料 | `profile/Profile.tsx` |
 
 ### 第 2 階段：功能使用率（未實作）
 
@@ -115,6 +119,8 @@ README 寫著「不會送出任何行程內容」。事件參數只能是：
 - [x] `import_result`
 - [x] `share_open`
 - [x] `share_download`
+- [x] `sign_in`、`sign_out`、`sync_conflict`、`cloud_delete`（2026-10-28，雲端同步）
+- [ ] DebugView 確認 `sign_in`、`sync_conflict`（要真的登入一次）
 - [x] DebugView 確認 `share_open`（2026-10-08）
 - [x] 會換頁的 CTA 改用 `trackLink()`，等事件送出再換頁
 - [x] DebugView 確認 `cta_click`（2026-10-08）
@@ -123,6 +129,7 @@ README 寫著「不會送出任何行程內容」。事件參數只能是：
 ### GA 後台
 - [x] 資料保留改 14 個月（事件與使用者資料皆是，2026-10-08）
 - [x] 註冊第 1 階段自訂維度：CTA location（`location`）、Planner view（`view`）、Stay count（`stay_count`）、Export source（`source`）、Import ok（`ok`）、Share method（`method`）
+- [ ] 註冊雲端同步的自訂維度：Conflict choice（`choice`）；`sign_in` 的 `source` 沿用既有的 Export source 維度（同名參數）
 - [ ] 設定關鍵事件：`cta_click`、`plan_activated`、`export_json`、`share_download`。事件要先被 GA 收到（最多 24 小時）才會出現在「管理 → 事件 → 最近的事件」，到時點星號標記
 - [x] 內部流量篩選器：GA 內建的「Internal Traffic」已存在，排除 `traffic_type = internal`，目前「測試」狀態；`?internal=1` 會帶上這個值，不需要 IP 規則
 - [ ] 確認內部流量篩選正確後，把篩選器改成「有效」（你自己先在正式網址開一次 `?internal=1`）

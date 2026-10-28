@@ -1,16 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft';
 import { CheckCircle } from '@phosphor-icons/react/dist/csr/CheckCircle';
+import { GoogleLogo } from '@phosphor-icons/react/dist/csr/GoogleLogo';
+import { SignOut } from '@phosphor-icons/react/dist/csr/SignOut';
 import { House } from '@phosphor-icons/react/dist/csr/House';
 import { Megaphone } from '@phosphor-icons/react/dist/csr/Megaphone';
 import { CityCombobox, CountryCombobox } from '../components/Combobox';
 import { PillNav } from '../components/PillNav';
 import { PixelNomad } from '../components/PixelNomad';
+import { useSettingsSync } from '../hooks/useSettingsSync';
+import { track } from '../lib/analytics';
 import { CHANGELOG } from '../lib/changelog';
 import { cityFitsCountry, normalizeCity } from '../lib/cities';
 import { normalizeCountry } from '../lib/flags';
 import { LOCALES, LOCALE_NAMES, langTag, setLocale, t, useLocale } from '../lib/i18n';
+import { agoText } from '../lib/weeks';
 import { APP_URL, CHANGELOG_URL, HOME_URL } from '../lib/links';
 import { loadHolidayToggles, saveHolidayToggles, type HolidayToggles } from '../lib/prefs';
 import { BACKUP_DAYS, getProfile, saveProfile, type Profile as ProfileData } from '../lib/profile';
@@ -21,9 +26,10 @@ import { AvatarPicker } from './AvatarPicker';
 import '../components/Editor.css';
 import './Profile.css';
 
-// The profile page (/profile/): your paper-doll character, who you are, how things are shown, how often to remind about backups, and what
-// this is. Everything saves as soon as it changes, to this browser only; the planner reads it
-// on its next load. The character is the exception: it is saved with its own button.
+// The profile page (/profile/): your account, your paper-doll character, who you are, how things are shown, how
+// often to remind about backups, and what this is. Everything saves as soon as it changes, to this browser (and,
+// signed in, to the cloud a moment later); the planner reads it on its next load. The character is the
+// exception: it is saved with its own button.
 export function Profile() {
   const locale = useLocale();
   document.title = `${t('profile.title')} — ${t('app.title')}`;
@@ -37,6 +43,20 @@ export function Profile() {
   const savedAvatar = profile.avatar ?? DEFAULT_AVATAR;
   const [avatar, setAvatar] = useState(savedAvatar);
   const unsaved = !sameAvatar(avatar, savedAvatar);
+  const unsavedRef = useRef(unsaved);
+  unsavedRef.current = unsaved;
+  // Signed in: the settings row. A pull from the cloud replaces what this page shows, but never a character draft
+  // that hasn't been saved yet.
+  const sync = useSettingsSync((pulled) => {
+    setProfile(pulled);
+    if (!unsavedRef.current) setAvatar(pulled.avatar ?? DEFAULT_AVATAR);
+  });
+  useEffect(() => {
+    if (!sync.signInFailed) return;
+    alert(t('account.signInFailed'));
+    sync.clearSignInFailed();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sync.signInFailed]);
   useEffect(() => {
     if (!unsaved) return;
     const warn = (e: BeforeUnloadEvent) => e.preventDefault();
@@ -61,6 +81,7 @@ export function Profile() {
       saveProfile(next);
       return next;
     });
+    sync.push();
     flash();
   };
   const toggleHoliday = (key: keyof HolidayToggles) => {
@@ -90,6 +111,58 @@ export function Profile() {
             <CheckCircle size={14} weight="bold" /> {t('profile.saved')}
           </span>
         </div>
+
+        <Section title={t('account.title')}>
+          {sync.session ? (
+            <div className="p-account">
+              <div className="p-account-id">
+                <b>{sync.session.user.email}</b>
+                <span className="p-note">
+                  {t(`sync.${sync.status === 'off' ? 'synced' : sync.status}`)}
+                  {sync.lastSyncAt !== null && ` · ${t('sync.last', { when: agoText(sync.lastSyncAt) })}`}
+                </span>
+              </div>
+              <div className="p-account-actions">
+                <button
+                  type="button"
+                  onClick={() => {
+                    track('sign_out', {});
+                    void sync.signOut();
+                  }}
+                >
+                  <SignOut size={16} weight="bold" /> {t('account.signOut')}
+                </button>
+                <button
+                  type="button"
+                  className="danger"
+                  onClick={() => {
+                    if (!confirm(t('account.deleteConfirm'))) return;
+                    track('cloud_delete', {});
+                    void sync.deleteCloud();
+                  }}
+                >
+                  {t('account.deleteCloud')}
+                </button>
+              </div>
+              <p className="p-note">{t('account.signOutNote')}</p>
+              <p className="p-note">{t('account.deleteAccount')}</p>
+            </div>
+          ) : (
+            <div className="p-account">
+              <p className="p-about">{t('account.why')}</p>
+              <button
+                type="button"
+                className="primary p-google"
+                onClick={() => {
+                  track('sign_in', { source: 'settings' });
+                  sync.signIn();
+                }}
+              >
+                <GoogleLogo size={16} weight="bold" /> {t('account.signIn')}
+              </button>
+            </div>
+          )}
+        </Section>
 
         <Section title={t('profile.avatar')}>
           <AvatarPicker

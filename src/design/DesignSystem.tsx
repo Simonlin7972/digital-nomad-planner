@@ -6,7 +6,11 @@ import { CaretUp } from '@phosphor-icons/react/dist/csr/CaretUp';
 import { Check } from '@phosphor-icons/react/dist/csr/Check';
 import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
 import { GlobeHemisphereWest } from '@phosphor-icons/react/dist/csr/GlobeHemisphereWest';
+import { PencilSimple } from '@phosphor-icons/react/dist/csr/PencilSimple';
 import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
+import { CloudSlash } from '@phosphor-icons/react/dist/csr/CloudSlash';
+import { FloppyDisk } from '@phosphor-icons/react/dist/csr/FloppyDisk';
+import { UserCircle } from '@phosphor-icons/react/dist/csr/UserCircle';
 import { Avatar } from '../components/Avatar';
 import { Flag } from '../components/Flag';
 import { PRESETS } from '../lib/avatar';
@@ -18,6 +22,7 @@ import '../components/DatePicker.css';
 import '../components/ViewBar.css';
 import '../components/YearSelect.css';
 import '../components/Toolbar.css';
+import '../components/NoticeStrip.css';
 import '../components/YearView.css';
 import './DesignSystem.css';
 
@@ -53,6 +58,7 @@ const SECTIONS = [
   ['country', 'Country bar 國家條'],
   ['swatch', 'Swatch 色票'],
   ['dialog', 'Dialog 對話框'],
+  ['notice', 'Notice 提示條與同步點'],
   ['avatar', 'Avatar 紙娃娃'],
 ] as const;
 
@@ -211,15 +217,15 @@ export function DesignSystem() {
           </div>
         </Section>
 
-        <Section id="type" title="Typography 字體" note="字型 975HazyGo，只用 400 與 600 兩種字重（不要用 500、700）。英文副標用 Pixelify Sans，只出現在標題下那一行。">
+        <Section id="type" title="Typography 字體" note="中文字型未來熒黑 Glow Sans TC（經 emfont，載入 400、500），英文 IBM Plex Sans（Google Fonts，載入 400、600）。CSS 只寫 400 與 600 兩種字重（不要用 500、700）：中文的 600 會落到 Glow Sans 的 500，剛好跟 Plex 的 600 同一個粗細感。英文副標用 Pixelify Sans，只出現在標題下那一行。">
           <div className="ds-faces">
             <div className="ds-face">
               <span className="ds-face-sample">今天不在家 Aa 123</span>
-              <code>975HazyGo 400</code>
+              <code>400 · Plex 400 / Glow 400</code>
             </div>
             <div className="ds-face">
               <span className="ds-face-sample" style={{ fontWeight: 600 }}>今天不在家 Aa 123</span>
-              <code>975HazyGo 600</code>
+              <code>600 · Plex 600 / Glow 500</code>
             </div>
             <div className="ds-face">
               <span className="ds-face-sample tagline-face">A Digital Nomad Planner</span>
@@ -423,12 +429,12 @@ export function DesignSystem() {
                 <span className="field-icon"><GlobeHemisphereWest size={16} weight="bold" /></span>
                 <input className="is-focus" defaultValue="泰" aria-label="國家" />
                 <ul className="combo-list ds-static" role="listbox">
-                  <li role="option" aria-selected="true" className="active">泰國<small>Active（鍵盤或滑鼠所在）</small></li>
+                  <li className="group" role="presentation">熱門（分段小標 .group，只在沒打字的整份清單）</li>
+                  <li role="option" aria-selected="true" className="active"><mark>泰</mark>國<small>Active（鍵盤或滑鼠所在）；符合的字加粗（mark）</small></li>
                   <li role="option" aria-selected="false">泰國以外的地方<small>Default</small></li>
-                  <li className="none">沒有符合的國家（None）</li>
+                  <li role="option" aria-selected="false" className="typed"><span className="combo-icon"><PencilSimple size={16} weight="bold" /></span>使用「泰」<small>找不到時的唯一一列：照輸入儲存</small></li>
                 </ul>
               </div>
-              <p className="combo-hint">提示文字：.combo-hint，12px muted</p>
             </div>
             <h3>Combobox 清單兩端漸層</h3>
             <p className="ds-note">清單還有內容在下面時加上 .more、往下捲過之後加上 .above：最後一個 li.combo-more 與第一個 li.combo-less 各蓋在那一端的幾列上，40px 由邊緣往內 surface → 透明的漸層，sticky 在捲動框的那一邊、不佔空間，到底或回到頂就淡出；元件依捲動位置自己加減這兩個 class。滑鼠移到漸層範圍時加 .near-bottom / .near-top，中間的 22px 圓形 chevron 從 0.6 倍放大、從邊緣浮出；指著它清單會自己往那邊捲，按一下跳一頁。</p>
@@ -520,6 +526,38 @@ export function DesignSystem() {
               <span className="spacer" />
               <button type="button">取消</button>
               <button type="button" className="primary">儲存</button>
+            </div>
+          </div>
+        </Section>
+
+        <Section id="notice" title="Notice 提示條與同步點" note="頁首下方的提示條（.notice-strip）：備份提醒與「同步暫停」共用，一個圖示、一段話（粗體開頭）、幾顆按鈕，收起時整條往上收合（.reminder-slot）。同步狀態點（.sync-dot）掛在設定連結右下角，只在登入後出現：綠＝已同步、琥珀（呼吸）＝同步中、灰＝離線或暫停、紅＝失敗。">
+          <div className="ds-notices">
+            <div className="notice-strip" role="status">
+              <FloppyDisk size={20} weight="bold" />
+              <p>
+                <b>上次備份是 9 天前，之後行程有變動。</b>資料只存在這個瀏覽器，清除瀏覽器資料就會不見，建議匯出一份 JSON。
+              </p>
+              <button className="primary">匯出備份</button>
+              <button>登入同步</button>
+              <button>稍後提醒</button>
+            </div>
+            <div className="notice-strip" role="status">
+              <CloudSlash size={20} weight="bold" />
+              <p>
+                <b>雲端和這台的行程不同，還沒選要用哪一份。</b>選好之前不會同步，這台照常可以用。
+              </p>
+              <button className="primary">選擇</button>
+            </div>
+            <div className="ds-dots actions">
+              {(['synced', 'syncing', 'offline', 'error'] as const).map((state) => (
+                <span key={state} className="ds-dot">
+                  <a className="profile-link" href="#notice" aria-label={state}>
+                    <UserCircle size={20} weight="bold" />
+                    <span className={`sync-dot ${state}`} aria-hidden="true" />
+                  </a>
+                  <small>{state}</small>
+                </span>
+              ))}
             </div>
           </div>
         </Section>

@@ -251,3 +251,13 @@ export function currentWeekIndex(now = new Date()): number | null {
   const i = WEEKS.findIndex((w) => today >= w.start && today < addDays(w.start, 7));
   return i === -1 ? null : i;
 }
+
+// How long ago something happened, in words: "just now", "5 minutes ago", "3 hours ago", "2 days ago".
+export function agoText(at: number, now = Date.now()): string {
+  const minutes = Math.max(0, Math.round((now - at) / 60_000));
+  if (minutes < 1) return t('time.justNow');
+  if (minutes < 60) return t('time.minutesAgo', { n: minutes });
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return t('time.hoursAgo', { n: hours });
+  return t('time.daysAgo', { n: Math.round(hours / 24) });
+}

@@ -7,10 +7,39 @@
   people using the planner, not for developers: what they can now do or what changed for them.
 -->
 
+## 2026-10-28
+
+- 可以用 Google 登入了：登入後行程和設定會多存一份在雲端，手機和電腦看到同一份；不登入一切照舊，資料只在你的瀏覽器。入口在 ⋯ 選單、備份提醒條、手機的空白頁，以及個人檔案與設定頁新的「帳號」區
+  EN: You can now sign in with Google: signed in, your plan and settings are also kept in the cloud so your phone and computer see the same one; signed out, nothing changes and your data stays in your browser. Find it in the ⋯ menu, on the backup reminder, on the phone's empty page, and in the new "Account" section of Profile & settings
+- 登入後，設定頁右上角頭像多一個小點顯示同步狀態：綠色已同步、琥珀色同步中、灰色離線或暫停、紅色失敗
+  EN: Signed in, the settings link in the header carries a small dot for the sync's state: green in step, amber syncing, grey offline or paused, red failed
+- 第一次在某台裝置登入時，若雲端和這台都有行程而且不同，會請你選一份留下；選雲端的會先把這台的匯出成 JSON 檔
+  EN: The first sign-in on a device that finds a different plan on each side asks which to keep; choosing the cloud's first exports this device's plan as a JSON file
+- 設定頁可以登出（只登出這台，資料留著）或刪除雲端資料（刪掉雲端的一切，並把所有裝置登出）
+  EN: The settings page can sign out (this device only; its data stays) or delete the cloud data (everything in the cloud goes, and every device is signed out)
+
 ## 2026-10-24
 
+- 全站換字型：中文改用未來熒黑，英文改用 IBM Plex Sans
+  EN: New typefaces across the site: Glow Sans TC for Chinese and IBM Plex Sans for Latin
 - 還沒選國家時打開城市清單，熱門的遊牧城市（清邁、曼谷、里斯本、倉古⋯⋯）排在最前面
   EN: With no country chosen, the city list now opens with the popular nomad bases (Chiang Mai, Bangkok, Lisbon, Canggu…) at the top
+- 國家和城市的搜尋清單分段了：沒打字時先看到「熱門」（用過的和常用的），再來「全部」，國家最後還有「區域」
+  EN: The country and city lists now come in sections: "Popular" (used here and common ones) first, then "All", and "Regions" at the end of the country list
+- 搜尋時符合的字會加粗；打錯一個字母也找得到，例如 tailand 或 bankok
+  EN: The letters you typed are bold in the results, and a one-letter typo still finds the name, such as tailand or bankok
+- 找不到符合的時候，清單只剩一列「使用「你打的字」」，點它或按 Enter 就照打的存，跟選清單上的一樣順
+  EN: When nothing matches, the list shows one row, "Use ‘what you typed’"; click it or press Enter and it is saved as typed, the same way as picking a name
+- 滾輪捲清單時，游標底下經過的選項不會再被打亮；只有真的移動滑鼠才會
+  EN: Scrolling a list no longer highlights whatever passes under a resting pointer; only moving the mouse does
+- 區域選項（亞洲、東南亞⋯⋯）在旗子的位置畫上地球，不再空著
+  EN: Region options (Asia, Southeast Asia…) now show a globe where a flag would be, instead of an empty slot
+- 國家欄打了清單外的名字時，欄位下方不再多一行「不在國家清單內」的提示
+  EN: Typing a country that isn't on the list no longer adds a note under the field
+- 在很長的國家、城市清單上移動滑鼠更順，不會一卡一卡
+  EN: Moving the pointer over the long country and city lists is smoother, without stutter
+- 指著清單兩端的小箭頭自動捲動時，速度在各種螢幕上都一樣，高更新率的螢幕不會捲得特別快
+  EN: The lists roll at the same speed on every screen when you rest on the arrow at either end; high refresh-rate screens no longer roll faster
 
 ## 2026-10-23
 

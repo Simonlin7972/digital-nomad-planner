@@ -3,6 +3,8 @@ import { BackupReminder } from './components/BackupReminder';
 import { AllMonths, MONTH_INDEXES } from './components/AllMonths';
 import { MobileItinerary } from './components/MobileItinerary';
 import { ShareDialog } from './components/ShareDialog';
+import { SyncConflictDialog } from './components/SyncConflictDialog';
+import { SyncPaused } from './components/SyncPaused';
 import { TransferDialog } from './components/TransferDialog';
 import { ReportDialog } from './components/ReportDialog';
 import { Editor, type Editing, type StayDetails } from './components/Editor';
@@ -21,6 +23,7 @@ import { Toolbar } from './components/Toolbar';
 import { ViewBar } from './components/ViewBar';
 import YearView from './components/YearView';
 import { useBackupReminder } from './hooks/useBackupReminder';
+import { useCloudSync, type ConflictChoice } from './hooks/useCloudSync';
 import { getProfile } from './lib/profile';
 import { markYearBackedUp } from './lib/backup';
 import { useCoords } from './hooks/useCoords';
@@ -99,13 +102,18 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
   // What the neighbouring years' plans take up at this timeline's ends. They aren't edited while this year is on
   // screen, except by an import, which also changes this year's stays or switches year; so reading them again
   // whenever the stays change keeps this current. Kept where the position logic reads it, before the views run.
+  // `cloudRev` counts the times the cloud sync wrote another year or the profile, which nothing else here sees.
+  const [cloudRev, setCloudRev] = useState(0);
   const edges = useMemo(() => {
     const next = computeEdges();
     setEdges(next);
     return next;
-  }, [stays]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stays, cloudRev]);
   const ghosts = edges.ghosts;
   const backup = useBackupReminder(stays);
+  const staysRef = useRef(stays);
+  staysRef.current = stays;
   // The map library loads when the page is scrolled near the map, not with the page.
   const [mapRef, mapNear] = useNearView();
 
@@ -144,6 +152,47 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
   const undoPlan = () => withTransition(undo);
   const redoPlan = () => withTransition(redo);
 
+  // Signed in, the plan and the settings are also kept in the cloud (hooks/useCloudSync.ts). What comes down is
+  // applied like an import: this year through setStays (so it can be undone), other years straight to storage.
+  const sync = useCloudSync({
+    stays,
+    readOnly: narrow,
+    onPull: (plans) => {
+      let others = false;
+      for (const [year, next] of plans) {
+        if (year === YEAR) changeStays(next);
+        else {
+          saveYearPlan(year, next);
+          others = true;
+        }
+      }
+      if (others) setCloudRev((r) => r + 1);
+    },
+    onPushed: () => {
+      // A copy in the cloud is a backup.
+      backup.markBackedUp(staysRef.current);
+      const now = Date.now();
+      for (const year of YEARS) if (year !== YEAR) markYearBackedUp(year, loadYearPlan(year), now);
+    },
+    onProfilePulled: () => setCloudRev((r) => r + 1),
+    onExportFirst: () => exportJson('conflict'),
+  });
+  const signedIn = Boolean(sync.session);
+  const startSignIn = (source: 'menu' | 'reminder' | 'mobile') => {
+    track('sign_in', { source });
+    sync.signIn();
+  };
+  const resolveConflict = (choice: ConflictChoice) => {
+    track('sync_conflict', { choice });
+    void sync.resolve(choice);
+  };
+  useEffect(() => {
+    if (!sync.signInFailed) return;
+    alert(t('account.signInFailed'));
+    sync.clearSignInFailed();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sync.signInFailed]);
+
   // From the list: scroll to the stay on the timeline (or its month, in the month view) and ring it.
   function locate(s: Stay) {
     if (view.mode === 'month' && !view.all) {
@@ -162,7 +211,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
     document.title = `${t('app.title')} — ${t('app.tagline')}`;
   }, [locale]);
 
-  const busy = Boolean(dragging || editing || helpOpen || shareOpen || transferOpen || reportOpen);
+  const busy = Boolean(dragging || editing || helpOpen || shareOpen || transferOpen || reportOpen || sync.conflict);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey) || e.altKey || busy) return;
@@ -204,7 +253,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
   }
 
   // Export and import cover every year in one file, so one backup is enough.
-  function exportJson(source: 'menu' | 'reminder') {
+  function exportJson(source: 'menu' | 'reminder' | 'conflict') {
     const file = serializeAll(stays);
     track('export_json', { years: Object.keys(file.years).length, source });
     download(new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' }), 'json', false);
@@ -321,6 +370,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
           <Tagline />
         </div>
         <Toolbar
+          key={cloudRev}
           readOnly={narrow}
           canUndo={canUndo}
           canRedo={canRedo}
@@ -337,16 +387,24 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
           onTransfer={() => setTransferOpen(true)}
           onReport={() => setReportOpen(true)}
           onImport={(file) => void importJson(file)}
+          signedIn={signedIn}
+          syncStatus={sync.status}
+          onSignIn={() => startSignIn('menu')}
         />
       </PillNav>
 
       <Presence show={backup.remind} className="reminder-slot">
-        {backup.remind && <BackupReminder daysSince={backup.daysSince} onExport={() => exportJson('reminder')} onSnooze={backup.snooze} />}
+        {backup.remind && (
+          <BackupReminder daysSince={backup.daysSince} onExport={() => exportJson('reminder')} onSnooze={backup.snooze} onSignIn={signedIn ? undefined : () => startSignIn('reminder')} />
+        )}
+      </Presence>
+      <Presence show={sync.paused && !sync.conflict} className="reminder-slot">
+        {sync.paused && !sync.conflict && <SyncPaused onChoose={sync.resume} />}
       </Presence>
 
       {narrow ? (
         <>
-          <MobileItinerary stays={stays} />
+          <MobileItinerary stays={stays} onSignIn={signedIn ? undefined : () => startSignIn('mobile')} />
           {/* With nothing planned, all-zero totals and an empty map are just more to scroll past. */}
           {stays.length > 0 && (
             <section className="panels">
@@ -487,6 +545,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
       </Presence>
       <Presence show={transferOpen}>{transferOpen && <TransferDialog stays={stays} onClose={() => setTransferOpen(false)} />}</Presence>
       <Presence show={reportOpen}>{reportOpen && <ReportDialog onClose={() => setReportOpen(false)} />}</Presence>
+      <Presence show={Boolean(sync.conflict)}>{sync.conflict && <SyncConflictDialog years={sync.conflict} onChoose={resolveConflict} />}</Presence>
       {dropping && (
         <div className="drop-overlay" aria-hidden="true">
           <p>{t('import.drop')}</p>

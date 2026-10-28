@@ -1,4 +1,4 @@
-.backup-reminder {
+.notice-strip {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -21,7 +21,7 @@
   transition: grid-template-rows var(--dur-exit) ease-in, margin-bottom var(--dur-exit) ease-in, opacity var(--dur-exit) ease-in;
 }
 .reminder-slot.leaving { grid-template-rows: 0fr; margin-bottom: 12px; opacity: 0; }
-.backup-reminder svg { flex: none; }
-.backup-reminder p { flex: 1 1 240px; margin: 0; color: var(--muted); line-height: 1.5; }
-.backup-reminder b { color: var(--text); font-weight: 600; margin-right: 6px; }
-.backup-reminder button { padding: 8px 14px; }
+.notice-strip svg { flex: none; }
+.notice-strip p { flex: 1 1 240px; margin: 0; color: var(--muted); line-height: 1.5; }
+.notice-strip b { color: var(--text); font-weight: 600; margin-right: 6px; }
+.notice-strip button { padding: 8px 14px; }

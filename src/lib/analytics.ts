@@ -20,10 +20,15 @@ type Events = {
   cta_click: { location: 'nav' | 'hero' | 'final' | 'changelog' | 'cities' };
   stay_create: { view: 'year' | 'month'; stay_count: CountBucket };
   plan_activated: Record<string, never>;
-  export_json: { years: number; source: 'menu' | 'reminder' };
+  export_json: { years: number; source: 'menu' | 'reminder' | 'conflict' };
   import_result: { ok: boolean; years: number };
   share_open: Record<string, never>;
   share_download: { method: 'download' | 'native_share' };
+  // Cloud sync: which entry started a sign-in, and how a first sign-in's two copies were settled. Never the plan.
+  sign_in: { source: 'menu' | 'reminder' | 'mobile' | 'settings' };
+  sign_out: Record<string, never>;
+  sync_conflict: { choice: 'cloud' | 'local' | 'later' };
+  cloud_delete: Record<string, never>;
 };
 
 export function bucket(n: number): CountBucket {

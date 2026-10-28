@@ -2,6 +2,7 @@ import { Airplane } from '@phosphor-icons/react/dist/csr/Airplane';
 import { CalendarPlus } from '@phosphor-icons/react/dist/csr/CalendarPlus';
 import { Check } from '@phosphor-icons/react/dist/csr/Check';
 import { Copy } from '@phosphor-icons/react/dist/csr/Copy';
+import { GoogleLogo } from '@phosphor-icons/react/dist/csr/GoogleLogo';
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin';
 import { Ticket as TicketIcon } from '@phosphor-icons/react/dist/csr/Ticket';
 import { Warning } from '@phosphor-icons/react/dist/csr/Warning';
@@ -27,7 +28,9 @@ type Entry = { year: number; stay: Stay; start: number; end: number };
 // full (flight details included, since that is what you look up on the road).
 // `isolated` (the landing page's sample plan): only the stays given, never the visitor's other years, and a year
 // picker that shows the year without switching the planner to it.
-export function MobileItinerary({ stays, isolated = false }: { stays: Stay[]; isolated?: boolean }) {
+// `onSignIn` (signed out, not on the landing page): the empty state offers Google sign-in as the shorter way to
+// see a plan made on a computer.
+export function MobileItinerary({ stays, isolated = false, onSignIn }: { stays: Stay[]; isolated?: boolean; onSignIn?: () => void }) {
   useLocale();
   const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
   const schengen = useMemo(() => checkSchengen(stays), [stays]);
@@ -109,7 +112,17 @@ export function MobileItinerary({ stays, isolated = false }: { stays: Stay[]; is
           {isolated ? <YearSelect value={YEAR} onChange={() => {}} /> : <YearSelect />}
         </div>
         {sorted.length === 0 ? (
-          <p className="empty">{t('mobile.empty')}</p>
+          <>
+            <p className="empty">
+              {t('mobile.empty')}
+              {onSignIn && ` ${t('mobile.signIn')}`}
+            </p>
+            {onSignIn && (
+              <button type="button" className="primary mobile-signin" onClick={onSignIn}>
+                <GoogleLogo size={16} weight="bold" /> {t('account.signIn')}
+              </button>
+            )}
+          </>
         ) : (
           <ol className="mstays">
             {past.length > 0 && (
