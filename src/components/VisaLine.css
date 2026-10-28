@@ -1,0 +1,6 @@
+/* The visa line under a place: the rule for the profile's passport, an overstay in red, and where the data is from */
+.visa-line { display: flex; flex-direction: column; gap: 2px; font-size: 13px; line-height: 1.5; }
+.visa-line .with-icon { display: inline-flex; align-items: center; gap: 6px; }
+.visa-line .with-icon svg { flex: none; }
+.visa-line .visa-over { color: var(--danger); font-weight: 600; }
+.visa-line small { font-size: 11px; color: var(--muted); }

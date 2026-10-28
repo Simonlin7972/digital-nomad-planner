@@ -11,6 +11,7 @@ import type { Holiday, HolidaySet } from '../lib/holidays';
 import { daysText, t, useLocale } from '../lib/i18n';
 import { type Ghost, type Stay, colorOf, countryOf, getEdges, insertStay, isLocked, placeName, pushStays, reorderStays, travelDays } from '../lib/storage';
 import { seasonWarning } from '../lib/seasons';
+import { visaOverstays } from '../lib/visa';
 import { clamp } from '../lib/util';
 import {
   MONTHS,
@@ -351,6 +352,8 @@ export default function YearView(props: Props) {
   // The ghost is still drawn when there is no room for it, flagged so it reads as "can't drop here".
   const copyBlocked = Boolean(ghost && !copyPreview);
   const activeId = ghost ? COPY_ID : drag && drag.kind !== 'select' && drag.moved ? drag.id : null;
+  // Stays that outlast the visa-free days for the profile's passport (see lib/visa.ts), by the plan as it is.
+  const visaOver = visaOverstays(stays);
   const visible = ghost
     ? (copyPreview ?? [...stays, ghost])
     : drag?.kind === 'move'
@@ -526,7 +529,9 @@ export default function YearView(props: Props) {
                   <span className="label">
                     <strong>
                       {locked && <LockSimple size={12} weight="bold" aria-label={t('stay.locked')} />}
-                      {seasonWarning(s) && <Warning size={12} weight="bold" aria-label={t('season.warnShort')} />}
+                      {(seasonWarning(s) || visaOver.has(s.id)) && (
+                        <Warning size={12} weight="bold" aria-label={visaOver.has(s.id) ? t('visa.warnShort') : t('season.warnShort')} />
+                      )}
                       {placeName(s)}
                     </strong>
                     <small>

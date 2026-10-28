@@ -13,6 +13,8 @@ import { download } from '../lib/files';
 import { flightIcs } from '../lib/ics';
 import { cityOf, colorOf, countryOf, getEdges, loadYearPlan, placeName, travelDays, type Stay } from '../lib/storage';
 import { noteText, seasonWarning } from '../lib/seasons';
+import { visaOverstays } from '../lib/visa';
+import { VisaLine } from './VisaLine';
 import { checkSchengen, gapsOf } from '../lib/stayRules';
 import { TOTAL_DAYS, YEAR, YEARS, dateOfDay, dayLabel, daysOf, inYear, longRangeLabel, setYear, todayIndex, weeksLabel } from '../lib/weeks';
 import { Flag } from './Flag';
@@ -34,6 +36,7 @@ export function MobileItinerary({ stays, isolated = false, onSignIn }: { stays: 
   useLocale();
   const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
   const schengen = useMemo(() => checkSchengen(stays), [stays]);
+  const visaOver = visaOverstays(stays);
   const arriving = travelDays(stays).arriving;
   const today = todayIndex();
   const [showPast, setShowPast] = useState(false);
@@ -192,6 +195,7 @@ export function MobileItinerary({ stays, isolated = false, onSignIn }: { stays: 
                       {t('stays.schengenOver', { n: over })}
                     </p>
                   )}
+                  {s.country && <VisaLine country={s.country} over={visaOver.get(s.id)} />}
                   {s.ticket && <Ticket stay={s} />}
                   {s.note && <p className="note">{s.note}</p>}
                 </li>

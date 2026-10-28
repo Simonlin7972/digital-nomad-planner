@@ -9,6 +9,7 @@ import { daysText, t, useLocale } from '../lib/i18n';
 import { transitionName, withTransition } from '../lib/motion';
 import { cityOf, colorOf, countryOf, overlaps, placeFull, travelDays, type Stay } from '../lib/storage';
 import { noteText, seasonWarning } from '../lib/seasons';
+import { visaOverstays } from '../lib/visa';
 import { checkSchengen, gapsOf } from '../lib/stayRules';
 import { TOTAL_DAYS, dayLabel, daysOf, longRangeLabel, monthName, monthRange, weeksLabel, type DayRange } from '../lib/weeks';
 import { Flag } from './Flag';
@@ -45,6 +46,7 @@ export function StayList({ stays, month, onEdit, onLocate, onCreate, ticketCardI
   const sorted = [...stays].sort((a, b) => a.startDay - b.startDay);
   const listed = range ? sorted.filter((s) => overlaps(s, range)) : sorted;
   const schengen = useMemo(() => checkSchengen(stays), [stays]);
+  const visaOver = visaOverstays(stays);
   // Stays that begin on a travel day shared with the one before
   const arriving = travelDays(stays).arriving;
   // Gaps only make sense around stays; an empty plan gets the empty message instead.
@@ -110,6 +112,7 @@ export function StayList({ stays, month, onEdit, onLocate, onCreate, ticketCardI
             }
             const s = row.stay;
             const over = schengen.overBy.get(s.id);
+            const visa = visaOver.get(s.id);
             const season = seasonWarning(s);
             const seasonText = season?.notes.map(noteText).join(t('list'));
             return (
@@ -149,6 +152,16 @@ export function StayList({ stays, month, onEdit, onLocate, onCreate, ticketCardI
                     role="img"
                     aria-label={t('stays.schengenOver', { n: over })}
                     title={t('stays.schengenOver', { n: over })}
+                  >
+                    <Warning size={18} weight="bold" />
+                  </span>
+                )}
+                {visa && (
+                  <span
+                    className="warn"
+                    role="img"
+                    aria-label={t('visa.over', { length: visa.length, n: visa.allowed })}
+                    title={t('visa.over', { length: visa.length, n: visa.allowed })}
                   >
                     <Warning size={18} weight="bold" />
                   </span>

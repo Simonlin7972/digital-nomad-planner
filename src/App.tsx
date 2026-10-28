@@ -35,6 +35,7 @@ import { bucket, track, trackActivation } from './lib/analytics';
 import { download } from './lib/files';
 import { availableHolidaySets, plannedHolidayCountries, type Holiday, type HolidaySet } from './lib/holidays';
 import { loadWorldHolidays, subscribeWorldHolidays, worldHolidaysReady } from './lib/worldHolidays';
+import { loadVisaData, subscribeVisa, visaOverstays, visaReady } from './lib/visa';
 import { langTag, t, useLocale } from './lib/i18n';
 import { loadHolidayToggles, loadView, saveHolidayToggles, saveView } from './lib/prefs';
 import { computeEdges, load, pushStays, save, setEdges, type ColorKey, type Stay, loadYearPlan, saveYearPlan, sanitizeAll, serializeAll, splitStay } from './lib/storage';
@@ -115,6 +116,13 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
   // Holidays: the hand-written sets, plus one per other country in the plan (and the neighbouring years' stays on
   // this timeline), from a library that is loaded only once such a country turns up.
   const worldReady = useSyncExternalStore(subscribeWorldHolidays, worldHolidaysReady);
+  // Visa rules need a passport from the settings page; their data loads only then. Reading it here re-renders the
+  // page (and every view that shows a visa line or warning) when it arrives.
+  const passport = getProfile().passport;
+  useSyncExternalStore(subscribeVisa, visaReady);
+  useEffect(() => {
+    if (passport) loadVisaData();
+  }, [passport]);
   const needsWorld = plannedHolidayCountries([...stays, ...ghosts]).length > 0;
   useEffect(() => {
     if (needsWorld) loadWorldHolidays();
@@ -543,7 +551,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
 
       {/* Cards and dialogs leave with a short fade: Presence keeps each mounted for the exit (hooks/usePresence.ts) */}
       <Presence show={Boolean(hoveredStay && stayCard)}>
-        {hoveredStay && stayCard && <StayCard stay={hoveredStay} x={stayCard.x} y={stayCard.y} />}
+        {hoveredStay && stayCard && <StayCard stay={hoveredStay} over={visaOverstays(stays).get(hoveredStay.id)} x={stayCard.x} y={stayCard.y} />}
       </Presence>
       <Presence show={Boolean(ticketStay && ticketCard)}>
         {ticketStay && ticketCard && <TicketCard stay={ticketStay} x={ticketCard.x} y={ticketCard.y} />}

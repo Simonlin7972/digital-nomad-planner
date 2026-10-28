@@ -1,3 +1,10 @@
+/* Beside the itinerary on a computer: capped, so a long rules line wraps instead of widening the card and pushing
+   the itinerary onto the next row. On a phone the panels stack and it takes the full width. */
+.panel.summary { max-width: 400px; }
+@media (max-width: 720px), (pointer: coarse) and (max-height: 500px) {
+  .panel.summary { max-width: none; }
+}
+
 .stat { line-height: 1.9; margin: 0 0 16px; padding-bottom: 16px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--muted); }
 .stat b { color: var(--text); font-size: 18px; font-weight: 600; }
 

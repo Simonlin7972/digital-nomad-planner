@@ -10,6 +10,8 @@ import { dayLabel, dayOfIso, dayOfIsoAny, daysOf, isoOfDay, rangeLabel, weeksLab
 import { CityCombobox, CountryCombobox, AirlineCombobox, FlightNoCombobox } from './Combobox';
 import { DatePicker } from './DatePicker';
 import { SeasonStrip } from './SeasonStrip';
+import { VisaLine } from './VisaLine';
+import { visaOverstays } from '../lib/visa';
 import './Dialog.css';
 import './Editor.css';
 
@@ -99,6 +101,11 @@ export function Editor(props: {
   }, [onClose]);
 
   const dates: DayRange = { startDay, endDay };
+  // The visa rule for the place, and whether this stay, with any it runs straight on from or into in the same
+  // country, outlasts the visa-free days. `others` holds the neighbouring years' stays too; visaOverstays adds them.
+  const visaOver = place.country
+    ? visaOverstays([...others.filter((o) => !('year' in o)), { id: '__editing', ...place, ...dates }]).get('__editing')
+    : undefined;
   const clash = others.find((o) => clashes(o, dates));
   const range = clash ? null : dates;
   // Neighbours this stay shares a travel day with: the one it arrives from on its first day, the one it leaves for
@@ -198,6 +205,7 @@ export function Editor(props: {
             </p>
           )}
           <SeasonStrip place={place} range={range} />
+          {place.country && <VisaLine country={place.country} over={visaOver} source />}
           <label>
             {t('editor.companions')}
             <input

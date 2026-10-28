@@ -74,6 +74,7 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 
 - **Summary**: weeks planned and free, countries and cities visited, an estimate of flights and hours in the air, and weeks and days per country and city
 - **Days of stay**: the summary works out the most days spent in the Schengen area within any 180 days (the limit is 90; when exceeded it says from which date), and the days planned in your tax-residence country that year (Taiwan unless changed in settings; 183 days is the usual tax-residency line). The Schengen count looks back into the previous year's plan; unplanned days don't count
+- **Visas**: with a passport set on the settings page, each destination shows what entry takes on that passport (visa-free for how many days, visa on arrival, an ETA / e-visa / visa needed first) in the editor, the stay's hover card and the phone cards; back-to-back stays in one country that run past the visa-free days get a warning on the timeline and in the itinerary; the summary lists the countries that need something arranged first. Schengen countries are left to the 90/180 count. The data is the open-source passport-index-data (2026-02-17), loaded only once a passport is set (about 14 kB); official rules take precedence. With no passport set nothing shows
 - **Itinerary**: one line per stay — dates, flag and country, city, weeks (days), companions, note; filter by Q1–Q4; stays with a flight show a ticket icon; stays that overrun the Schengen limit show a warning icon
 - **Seasons**: about 71 popular nomad bases (Chiang Mai, Bali, Lisbon, Mexico City…) carry a best / fine / avoid rating for each month, with reasons. The editor has a "When to go" button that opens the twelve months and reasons (it flags a poor season even when closed); stays that land in months to avoid (Chiang Mai's burning season in March–April, Dubai's summer) get a warning on the block, in the itinerary and on the hover card
 - **Free stretches**: unplanned days between stays are listed in the itinerary too; press `+` to add a stay in that gap
@@ -313,6 +314,7 @@ scripts/subset-tagline-font.mjs  Cuts the characters of the Chinese tagline out 
 scripts/record-picker-demo.mjs   Records the country / city picker demo video (1080×1350, Instagram 4:5, no captions) to docs/picker-demo-4x5.mp4: `npm run record:picker`. Needs Chrome and ffmpeg, no dev server; takes about 5 minutes
 src/assets/              The subset tagline font file
 scripts/fetch-airline-logos.mjs  Downloads a logo for every airline in airlines.ts; rerun after adding airlines
+scripts/build-visa-data.mjs  Rebuilds src/data/visa.json from passport-index-data; takes the dataset's update date
 docs/overview.png       Sample image for the README (downloaded from the app's Share dialog)
 docs/demo-*.gif         Feature demos for the README (English interface, sample data)
 src/
@@ -392,6 +394,7 @@ src/
     airlines.ts         Built-in list of common airlines (code, Chinese and English names, home country) and search
     holidays.ts         Taiwan's and Australia's 2026 and 2027 holidays, and the sets that can be switched on
     worldHolidays.ts    Other countries' public holidays (date-holidays, loaded lazily)
+    visa.ts             Entry rules by passport and destination, and whether a run of stays outlasts the visa-free days (src/data/visa.json, loaded lazily)
     geocode.ts          Nominatim lookups, rate limiting, cache
     exportPng.ts        Draws the PNG on a canvas (landscape and portrait)
     files.ts            File names and download
@@ -458,6 +461,7 @@ Knowing these before reading the code will save time.
 
 ## Known limits
 
+- **The visa data is a snapshot** (2026-02-17) and rules change, so check the official sources; only a single continuous visit is checked, not "N days in any 180" rules outside Schengen; the only special document added by hand is the permit Taiwanese passports need for China; there is one passport, so dual nationals can't compare
 - **Settings aren't exported or sent to other devices**: set them again in another browser or on another device, unless you sign in (then they sync)
 - **Cloud sync is one person on several devices**: two devices changing the same year at once means the later change wins, with no merging; only a first sign-in that finds two different plans asks
 - **Sign-in is Google only**, and Google's consent screen shows the developer's Google Cloud project name, not this site's
@@ -498,7 +502,7 @@ Not scheduled; discussion welcome.
 - More languages
 - A real city database with search, instead of a short list plus free text
 - Season data for more cities, and a season band on the timeline
-- Visa day rules for other countries (only Schengen 90/180 so far)
+- Visas, part two: long-stay options (digital nomad visas and the like) for popular countries; "N days in any 180" rules outside Schengen
 - Dragging whole stays in the month view
 - Several flights per stay, accommodation, budget
 - Account deletion
@@ -525,6 +529,7 @@ The full product spec and decision history are in [MVP.md](MVP.md) (Chinese).
 | [DotGothic16](https://fonts.google.com/specimen/DotGothic16) (via Google Fonts) | Japanese tagline typeface | OFL-1.1 |
 | [Cubic 11 (俐方體 11 號)](https://github.com/ACh-K/Cubic-11) | Chinese tagline typeface (only the tagline's characters, in `src/assets/`) | OFL-1.1 |
 | [uqr](https://github.com/unjs/uqr) | QR code generation | MIT |
+| [passport-index-data](https://github.com/imorte/passport-index-data) | Entry rules for each destination by passport (converted to `src/data/visa.json`, bundled with the site, loaded once a passport is set, nothing fetched elsewhere) | MIT |
 | [date-holidays](https://github.com/commenthol/date-holidays) | Public holidays for the other countries in the plan (bundled with the site, loaded when needed, nothing fetched elsewhere) | Code ISC; holiday data CC-BY-3.0 |
 | [Supabase](https://supabase.com/) ([supabase-js](https://github.com/supabase/supabase-js)) | Google sign-in and cloud sync (optional) | Service under its terms; supabase-js MIT |
 

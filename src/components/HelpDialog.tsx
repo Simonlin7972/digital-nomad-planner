@@ -85,6 +85,9 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         <>
           摘要會算<b>申根 90/180 天</b>與<b>台灣 183 天</b>；申根超過上限的行程，列表上會出現警示圖示。只算排進時間軸的日子，實際規定以官方為準。
         </>,
+        <>
+          在<b>設定</b>頁填了<b>護照</b>，每個目的地會顯示入境條件（免簽幾天、落地簽、需事先申請簽證等），同一國連續待太久會出現警示，摘要也會列出要事先辦簽證的國家。資料是一份快照，出發前請再確認官方規定。
+        </>,
       ],
     },
     {
@@ -225,6 +228,9 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         <>
           The summary counts <b>Schengen days (90 in 180)</b> and <b>days in Taiwan (183)</b>; stays that break the Schengen limit get a
           warning in the itinerary. Only planned days are counted, and official rules always take precedence.
+        </>,
+        <>
+          Set your <b>passport</b> on the <b>Settings</b> page and each destination shows what entry takes (visa-free for how many days, visa on arrival, a visa to arrange first), a run of stays in one country that lasts too long gets a warning, and the summary lists the countries needing a visa beforehand. The data is a snapshot, so check the official rules before you go.
         </>,
       ],
     },
@@ -368,6 +374,9 @@ const GUIDE: Record<Locale, (k: Keys) => Section[]> = {
         </>,
         <>
           まとめでは<b>シェンゲン 90/180 日</b>と<b>台湾 183 日</b>を数えます。シェンゲンの上限を超える滞在にはリストに注意アイコンが付きます。数えるのはタイムラインに入れた日だけで、正式な規則は各国の公式情報が優先です。
+        </>,
+        <>
+          <b>設定</b>ページで<b>パスポート</b>を入れると、行き先ごとに入国条件（ビザなしで何日、アライバルビザ、事前のビザ申請が必要など）が表示され、同じ国に長くいすぎると注意が出て、まとめには事前にビザが必要な国が並びます。データは一時点のものなので、出発前に公式情報を確認してください。
         </>,
       ],
     },

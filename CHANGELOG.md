@@ -7,8 +7,15 @@
   people using the planner, not for developers: what they can now do or what changed for them.
 -->
 
+## 2026-10-29
+
+- 摘要卡有了最大寬度：簽證那行很長時改成換行，行程列表不會再被擠到下面
+  EN: The summary card has a maximum width, so a long visa line wraps instead of pushing the itinerary below it
+
 ## 2026-10-28
 
+- 在設定頁填了護照，就能看到每個目的地的簽證條件：免簽可以待幾天、落地簽或要先申請簽證；同一國連續待超過免簽天數會出現警示，摘要也會列出要事先辦簽證的國家
+  EN: Set your passport in settings to see each destination's entry rules: how long you can stay visa-free, visa on arrival, or a visa to arrange first; a run of stays that outlasts the visa-free days gets a warning, and the summary lists the countries needing a visa beforehand
 - 還沒有任何改動時，工具列不再顯示復原、重做按鈕；改了行程才會出現
   EN: Undo and redo stay out of the toolbar until you have changed something
 - 國定假日選單會自動列出行程裡每個國家的假日，例如泰國、越南、日本，打開開關就疊在時間軸和月曆上；任何年份都有

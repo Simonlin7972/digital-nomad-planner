@@ -72,6 +72,7 @@
 
 - **摘要**：已安排／未安排週數、去了幾個國家與城市、估計航段數與飛行時數、依國家分組的停留週數與天數
 - **停留天數**：摘要裡算出申根區任 180 天內最多待幾天（上限 90，超過會標出從哪天開始），以及當年排在稅務居住地幾天（預設台灣，可在設定頁改；183 天是多數國家的稅務居住者門檻）。申根會往前看上一年的行程；未安排的日子不算
+- **簽證**：在設定頁填了護照後，每個目的地顯示這本護照的入境條件（免簽幾天、落地簽、需事先申請 ETA／電子簽／簽證等），出現在編輯視窗、行程資訊卡和手機卡片；同一國連續停留超過免簽天數時，時間軸與行程列表出現警示；摘要列出需要事先辦理的國家。申根國只看 90/180 的合計計算。資料來自開源的 passport-index-data（2026-02-17），只在填了護照時才載入（約 14 kB），實際規定以官方為準。沒填護照就完全不顯示
 - **行程列表**：一段行程一列——日期、國旗與國家、城市、週數（天數）、跟誰去、備註；可依 Q1–Q4 篩選；有機票的行程顯示票券圖示；申根超待的行程顯示警示圖示
 - **季節**：約 71 個熱門遊牧城市（清邁、峇里島、里斯本、墨西哥城……）內建 12 個月的推薦／普通／避開與原因。編輯視窗有「適合的季節」按鈕，展開看 12 個月與原因（季節不佳時按鈕上直接標示）；排到該避開的月份（例如清邁 3–4 月燒山季、杜拜盛夏）時，色塊、列表與資訊卡會示警
 - **空檔**：行程之間還沒排的日子也列在行程列表裡，按 `+` 直接在那段空檔新增行程
@@ -307,6 +308,7 @@ public/sw.js            離線用的 service worker（保存載入過的檔案�
 public/og.png           分享連結時的預覽圖（1200×630，三語標示）
 public/airlines/        航空公司 logo（<代號>.png），由 scripts/fetch-airline-logos.mjs 一次性下載
 scripts/fetch-airline-logos.mjs  下載 airlines.ts 裡每家航空的 logo；新增航空公司後重跑
+scripts/build-visa-data.mjs  從 passport-index-data 重建 src/data/visa.json；參數是該資料集的更新日期
 scripts/subset-tagline-font.mjs  從俐方體 11 號切出中文副標用到的字；改了中文副標後重跑
 scripts/record-picker-demo.mjs   錄國家／城市選單的示範影片（1080×1350，IG 4:5，無字幕）到 docs/picker-demo-4x5.mp4：`npm run record:picker`。需要 Chrome 和 ffmpeg，不用開 dev server，約 5 分鐘
 src/assets/              切好的副標字型檔
@@ -389,6 +391,7 @@ src/
     airlines.ts         內建常見航空公司清單（代號、中英文名、母國）與搜尋
     holidays.ts         台灣、澳洲 2026、2027 國定假日資料，以及可開關的假日組合
     worldHolidays.ts    其他國家的國定假日（延遲載入 date-holidays）
+    visa.ts             依護照查目的地入境條件、連續停留是否超過免簽天數（延遲載入 src/data/visa.json）
     geocode.ts          Nominatim 查詢、限速、快取
     exportPng.ts        用 canvas 繪製 PNG（橫式與直式）
     files.ts            檔名與下載
@@ -454,6 +457,7 @@ CLAUDE.md               給 Claude Code 的專案須知
 
 ## 已知限制
 
+- **簽證資料是一份快照**（2026-02-17），規則常變，以官方為準；只檢查單次連續停留，不懂申根以外「每 180 天最多幾天」的累計規則；特殊證件只手動補了台灣護照去中國要台胞證；只有一本護照，雙重國籍無法比較
 - **設定不會跟著匯出或傳到其他裝置**：換瀏覽器或裝置要重新設定一次，除非有登入（登入後跟著同步）
 - **雲端同步是單人多裝置**：兩台同時改同一年時後改的贏，不合併；只有第一次登入兩邊都有且不同時才問
 - **登入只有 Google**；Google 的同意畫面顯示的是開發者的 Google Cloud 專案名稱，不是這個網站的
@@ -494,7 +498,7 @@ CLAUDE.md               給 Claude Code 的專案須知
 - 更多語言
 - 城市資料庫與搜尋，取代純文字輸入
 - 季節資料擴充到更多城市，以及時間軸上的季節色帶
-- 其他國家的簽證天數規則（目前只有申根 90/180）
+- 簽證第二階段：熱門國家的長住選項（數位遊牧簽證等）；申根以外「每 180 天最多幾天」的累計規則
 - 月檢視支援整條拖曳
 - 一段行程多張機票、住宿與預算
 - 刪除帳號
@@ -521,6 +525,7 @@ CLAUDE.md               給 Claude Code 的專案須知
 | [DotGothic16](https://fonts.google.com/specimen/DotGothic16)（經 Google Fonts） | 日文副標字體 | OFL-1.1 |
 | [俐方體 11 號 Cubic 11](https://github.com/ACh-K/Cubic-11) | 繁中副標字體（只含副標用到的字，`src/assets/`） | OFL-1.1 |
 | [uqr](https://github.com/unjs/uqr) | 產生 QR code | MIT |
+| [passport-index-data](https://github.com/imorte/passport-index-data) | 依護照查各目的地的入境條件（轉成 `src/data/visa.json` 打包在網站裡，填了護照才載入，不連外） | MIT |
 | [date-holidays](https://github.com/commenthol/date-holidays) | 行程中其他國家的國定假日（打包在網站裡，需要時才載入，不連外） | 程式 ISC；假日資料 CC-BY-3.0 |
 | [Supabase](https://supabase.com/)（[supabase-js](https://github.com/supabase/supabase-js)） | Google 登入與雲端同步（選用） | 服務依其條款；supabase-js MIT |
 

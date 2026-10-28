@@ -8,6 +8,8 @@ import { departureLabel, placeFull, ticketLines, type Stay } from '../lib/storag
 import { clamp } from '../lib/util';
 import { daysOf, longRangeLabel, weeksLabel } from '../lib/weeks';
 import { Flag } from './Flag';
+import { VisaLine } from './VisaLine';
+import type { Overstay } from '../lib/visa';
 import './HoverCards.css';
 
 // Where a card hangs from: the horizontal centre and bottom edge of whatever is hovered, in viewport pixels.
@@ -23,7 +25,7 @@ function Card({ x, y, children }: Anchor & { children: ReactNode }) {
   );
 }
 
-export function StayCard({ stay, ...anchor }: Anchor & { stay: Stay }) {
+export function StayCard({ stay, over, ...anchor }: Anchor & { stay: Stay; over?: Overstay }) {
   return (
     <Card {...anchor}>
       <strong className="place">
@@ -46,6 +48,7 @@ export function StayCard({ stay, ...anchor }: Anchor & { stay: Stay }) {
       )}
       {stay.note && <span className="note">{stay.note}</span>}
       <SeasonWarning stay={stay} />
+      {stay.country && <VisaLine country={stay.country} over={over} />}
     </Card>
   );
 }

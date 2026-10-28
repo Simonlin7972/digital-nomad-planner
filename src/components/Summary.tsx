@@ -11,6 +11,7 @@ import { daysText, t, tr, useLocale } from '../lib/i18n';
 import { getEdges, type Stay } from '../lib/storage';
 import { getProfile } from '../lib/profile';
 import { checkSchengen, residenceDays } from '../lib/stayRules';
+import { needsArranging, visaFor, visaText, visaUpdated } from '../lib/visa';
 import { TOTAL_DAYS, YEAR, dateOfDay, daysCovered, daysOnTimeline, fullDate, weeksLabel } from '../lib/weeks';
 import { Flag } from './Flag';
 import './Summary.css';
@@ -47,6 +48,11 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
   const flights = useMemo(() => flightStats(stays, coords, home), [stays, coords, home?.country, home?.city]);
   const schengen = useMemo(() => checkSchengen(stays), [stays]);
   const residence = profile.taxResidence;
+  // Countries in this year's plan that need something arranged before going, for the profile's passport.
+  const arrange = [...new Set(stays.map((s) => s.country))].flatMap((country) => {
+    const visa = visaFor(country);
+    return visa && needsArranging(visa) ? [`${countryLabel(country)}${t('paren', { x: visaText(visa, country) })}`] : [];
+  });
   const residenceName = countryLabel(residence);
   // The figures roll to their new values when the plan changes, so a change reads as a change (hooks/useTween.ts).
   const plannedDays = Math.round(useTween(daysCovered(counted)));
@@ -58,7 +64,7 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
   const twDays = Math.round(useTween(residenceDays(stays, residence)));
 
   return (
-    <div className="panel">
+    <div className="panel summary">
       <h2>{t('summary.title')}</h2>
       <p className="stat">
         {tr('summary.time', { planned: <b>{weeksLabel(plannedDays)}</b>, free: <b>{weeksLabel(TOTAL_DAYS - plannedDays)}</b> })}
@@ -70,8 +76,13 @@ export function Summary({ stays, coords }: { stays: Stay[]; coords: Coords }) {
           {flights.unknown > 0 && t('summary.flightsSkipped', { n: flights.unknown })}
         </Hint>
       </p>
-      {(schengen.days > 0 || twDays > 0) && (
+      {(schengen.days > 0 || twDays > 0 || arrange.length > 0) && (
         <ul className="rules">
+          {arrange.length > 0 && (
+            <li>
+              <Hint text={t('visa.source', { date: visaUpdated() })}>{t('visa.arrange', { list: arrange.join(t('list')) })}</Hint>
+            </li>
+          )}
           {schengen.days > 0 && (
             <li className={schengen.firstOver === null ? undefined : 'over'}>
               <Hint text={t('rules.schengenHint', { start: fullDate(dateOfDay(0)) })}>{tr('rules.schengen', { peak: <b>{peak}</b> })}</Hint>
