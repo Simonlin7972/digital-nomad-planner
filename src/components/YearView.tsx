@@ -433,11 +433,18 @@ export default function YearView(props: Props) {
           </div>
           {holidaySets.map((set) => (
             <div key={set.key} className="lane" style={{ '--c': set.color } as CSSProperties} aria-label={set.label}>
-              {set.holidays.map((d) => (
+              {set.holidays.map((d, i) => (
                 <div
                   key={`${d.name}-${d.startDay}`}
                   className="holiday"
-                  style={{ left: `${(d.startDay / TOTAL_DAYS) * 100}%`, width: `${(daysOf(d) / TOTAL_DAYS) * 100}%` }}
+                  style={
+                    {
+                      left: `${(d.startDay / TOTAL_DAYS) * 100}%`,
+                      width: `${(daysOf(d) / TOTAL_DAYS) * 100}%`,
+                      // The label may run on past the bar, but stops short of the next holiday's (a share of this bar's width).
+                      '--room': `${(((set.holidays[i + 1]?.startDay ?? TOTAL_DAYS + 30) - d.startDay) / daysOf(d)) * 100}%`,
+                    } as CSSProperties
+                  }
                   onMouseEnter={(e) => {
                     // Anchor to the visible label, which can extend past a one-day bar.
                     const r = (e.currentTarget.firstElementChild ?? e.currentTarget).getBoundingClientRect();

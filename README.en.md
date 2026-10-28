@@ -80,7 +80,7 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 - **Map**: every place in visit order, joined into a route
 - **Year**: the drop-down beside the view tabs switches between 2025, 2026, 2027 and 2028; each year keeps its own plan. Dragging the month row past December (or January) and letting go moves to the next (or previous) year. A stay can cross into the next year: it is kept in the year it starts in and its end date can fall in the next year (chosen in the editor), shown with "2028 →" at the end of the timeline; the next year's timeline opens with a faded, striped copy marked "From 2027", which takes you back to that year when clicked, and the two years' stays never overlap
 - **Travel days**: the day you leave one place and arrive in the next can belong to both stays: start the next stay on the day the last one ends, or drag a stay's end onto its neighbour's first (or last) day. The calendar splits that day in half with a small plane between the two bars, and the timeline blocks meet in the middle of it (with no plane); the list, the phone cards and the editor mark it "Travel day". Two stays can share only that one day (and each must be longer than it). Schengen and tax-residence counts include it for both places; totals count it once
-- **Public holidays**: toggle Taiwan's and Australia's 2026 and 2027 holidays, drawn over the timeline and calendar (no holiday data for 2028 yet)
+- **Public holidays**: the "Holidays" button in the view bar opens a menu with a switch per set, drawn over the timeline and calendar; dots on the button show which sets are on. Taiwan and Australia are always there (hand-compiled for 2026 and 2027); every other country in the plan gets its own "… holidays" row, off by default, in the colour of that country's first stay, for any year. Those come from the open-source date-holidays package, loaded the first time one is needed (about 240 kB), public holidays only, named in English except for Taiwan and Japan
 
 ![Summary, itinerary and the route on the map](docs/demo-map.gif)
 
@@ -89,7 +89,7 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 - **Google sign-in and cloud sync (optional)**: signed in, your plan and settings are also kept in the cloud so your phone and computer see the same one; a change goes up 1.5 s later, and the cloud is read again on load, on returning to the tab and when another device writes. Signed out, nothing changes. Find it in the `⋯` menu, on the backup reminder, on the phone's empty page and in the settings page's "Account" section. The first sign-in on a device that finds a different plan on each side asks which to keep (choosing the cloud's first exports this device's plan as JSON). The settings page can sign out (this device only; its data stays) or delete the cloud data (and sign out every device)
 - A built-in "How to use" guide in sections that open and close: gestures, where data lives, backup and transfer
 - Traditional Chinese, English and Japanese interface, chosen on the settings page (the landing, cities and changelog pages can switch it from their headers too); defaults to the browser's language and remembers your choice
-- A compact toolbar: undo and redo are icons; export, import and Share live in the `⋯` menu, with "How to use", "About this app" (opens the landing page in a new tab) and "Report a problem or suggest" (a title, a description, up to 3 screenshots and an optional email, sent straight to the developer) below a divider
+- A compact toolbar: undo and redo are icons, shown only once there is a change to undo or redo; export, import and Share live in the `⋯` menu, with "How to use", "About this app" (opens the landing page in a new tab) and "Report a problem or suggest" (a title, a description, up to 3 screenshots and an optional email, sent straight to the developer) below a divider
 - A footer at the bottom of the page: where the data lives, the licence, and links home, to the cities page and to the changelog
 - A changelog page (/changelog/): new features and changes in every release, newest day first, in the interface language (English when the interface is Japanese). It is built from `CHANGELOG.md` at the repository root, so updating that file and pushing publishes it
 - A "Ten cities for digital nomads" page (/cities/, linked from the landing page's nav and footer and the planner's footer): Chiang Mai, Lisbon, Bangkok, Canggu, Da Nang, Kuala Lumpur, Taipei, Tokyo, Tbilisi and Mexico City. Ten cards on top (a one-line take, one-bedroom rent, monthly cost for one, fixed broadband, a twelve-month best-months strip and a visa line), then an article per city below (upsides, downsides, 300–500 characters, the visa line and sources), each card linking to its anchor (such as `/cities/#lisbon`), written separately in all three languages. The data is hand-compiled in `src/lib/nomadCities.ts`, nothing is scraped, and every city lists where its numbers came from; figures are rough (US dollars a month, checked in October 2026) and visa lines assume a Taiwan passport; best months come straight from the season data. The page reads neither the plan nor the settings
@@ -328,7 +328,8 @@ src/
   components/           UI components, each with its stylesheet (.css) beside it
     Toolbar             Header actions and the ⋯ menu (export, import, send to another device, share, how to use, about, report a problem)
     Footer              Page footer: where data lives, licence, links home, to the cities page and to the changelog
-    ViewBar             Year/month switch, holiday toggles, zoom
+    ViewBar             Year/month switch, holiday menu, zoom
+    HolidayMenu         Holidays button and its menu (a switch per set)
     YearView            The year timeline, including drag, resize and copy handling
     MonthView           The month calendar
     AllMonths           The month view's "All months": twelve stacked months and the back-to-top button
@@ -389,7 +390,8 @@ src/
     flags.ts            Country list, search, name → ISO code
     cities.ts           Built-in city list (Chinese and English) and search
     airlines.ts         Built-in list of common airlines (code, Chinese and English names, home country) and search
-    holidays.ts         2026 and 2027 public holiday data
+    holidays.ts         Taiwan's and Australia's 2026 and 2027 holidays, and the sets that can be switched on
+    worldHolidays.ts    Other countries' public holidays (date-holidays, loaded lazily)
     geocode.ts          Nominatim lookups, rate limiting, cache
     exportPng.ts        Draws the PNG on a canvas (landscape and portrait)
     files.ts            File names and download
@@ -461,7 +463,7 @@ Knowing these before reading the code will save time.
 - **Sign-in is Google only**, and Google's consent screen shows the developer's Google Cloud project name, not this site's
 - **Deleting the account itself needs the developer**: the settings page can only delete the cloud data and sign out
 
-- **Only 2025, 2026, 2027 and 2028** (`YEARS` in `lib/weeks.ts`); holiday data exists for 2026 and 2027 only; switching year clears the undo history
+- **Only 2025, 2026, 2027 and 2028** (`YEARS` in `lib/weeks.ts`); the hand-compiled Taiwan and Australia holidays cover 2026 and 2027 only (other years and countries come from date-holidays and are only as accurate as it is; Vietnam's Tết, for one, gets two days); switching year clears the undo history
 - **Three interface languages**, Traditional Chinese, English and Japanese; the product spec (`MVP.md`) is in Chinese only
 - **Japanese has no city names, season notes or changelog of its own**; those three show in English under the Japanese interface
 - **What you type isn't translated**: unlisted countries and cities, notes and companions show as typed in every language
@@ -523,6 +525,7 @@ The full product spec and decision history are in [MVP.md](MVP.md) (Chinese).
 | [DotGothic16](https://fonts.google.com/specimen/DotGothic16) (via Google Fonts) | Japanese tagline typeface | OFL-1.1 |
 | [Cubic 11 (俐方體 11 號)](https://github.com/ACh-K/Cubic-11) | Chinese tagline typeface (only the tagline's characters, in `src/assets/`) | OFL-1.1 |
 | [uqr](https://github.com/unjs/uqr) | QR code generation | MIT |
+| [date-holidays](https://github.com/commenthol/date-holidays) | Public holidays for the other countries in the plan (bundled with the site, loaded when needed, nothing fetched elsewhere) | Code ISC; holiday data CC-BY-3.0 |
 | [Supabase](https://supabase.com/) ([supabase-js](https://github.com/supabase/supabase-js)) | Google sign-in and cloud sync (optional) | Service under its terms; supabase-js MIT |
 
 The 2026 and 2027 holiday data was compiled by hand. Taiwan's holidays follow press reports of the government's 2026 and 2027 office calendars (for 2027, the Dragon Boat Festival, Mid-Autumn Festival and Teachers' Day are single days worked out from the calendar). Australia lists national holidays only. None of the dates were checked one by one against the original official notices, so treat the official sources as authoritative.

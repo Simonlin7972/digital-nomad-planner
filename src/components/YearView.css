@@ -78,11 +78,15 @@
   font-weight: 600;
   color: var(--c);
   white-space: nowrap;
+  /* Long names (the holidays from the library are full English names) are cut off before the next holiday */
+  max-width: calc(var(--room, 100vw) - 4px);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .holiday { cursor: default; }
 .holiday::before { content: ''; position: absolute; inset: -2px 0 -14px; } /* easier hover target */
 .holiday:hover { z-index: 1; }
-.holiday:hover span { background: var(--surface); box-shadow: 0 0 0 2px var(--surface); }
+.holiday:hover span { max-width: none; background: var(--surface); box-shadow: 0 0 0 2px var(--surface); }
 .lane:last-of-type { margin-bottom: 4px; }
 
 .track {

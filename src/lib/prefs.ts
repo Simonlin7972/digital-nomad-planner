@@ -4,6 +4,7 @@ import type { HolidaySet } from './holidays';
 
 // all: in the month view, show every month stacked instead of one at a time
 export type View = { mode: 'year' | 'month'; month: number; all: boolean };
+// Which holiday sets are on, by country code. A set not listed is off, so a country new to the plan starts off.
 export type HolidayToggles = Record<HolidaySet['key'], boolean>;
 
 export const ZOOM_MIN = 1;
@@ -38,8 +39,9 @@ export function loadView(): View {
 export const saveView = (view: View) => write(VIEW_KEY, view);
 
 export function loadHolidayToggles(): HolidayToggles {
-  const saved = read(HOLIDAYS_KEY) as Partial<HolidayToggles> | null;
-  return { tw: saved?.tw === true, au: saved?.au === true };
+  const saved = read(HOLIDAYS_KEY);
+  if (!saved || typeof saved !== 'object') return {};
+  return Object.fromEntries(Object.entries(saved).filter(([, on]) => on === true));
 }
 export const saveHolidayToggles = (toggles: HolidayToggles) => write(HOLIDAYS_KEY, toggles);
 

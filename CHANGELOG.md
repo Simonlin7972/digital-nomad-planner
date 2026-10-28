@@ -9,6 +9,12 @@
 
 ## 2026-10-28
 
+- 還沒有任何改動時，工具列不再顯示復原、重做按鈕；改了行程才會出現
+  EN: Undo and redo stay out of the toolbar until you have changed something
+- 國定假日選單會自動列出行程裡每個國家的假日，例如泰國、越南、日本，打開開關就疊在時間軸和月曆上；任何年份都有
+  EN: The Holidays menu now lists the public holidays of every country in your plan, such as Thailand, Vietnam or Japan; switch one on to see them on the timeline and calendar, in any year
+- 國定假日的兩個開關收成一個「國定假日」按鈕，點開後在選單裡切換台灣、澳洲假日；按鈕上的小圓點顯示開了哪幾組
+  EN: The two holiday switches are now one "Holidays" button that opens a menu with a switch for Taiwan and Australia; dots on the button show which are on
 - 可以用 Google 登入了：登入後行程和設定會多存一份在雲端，手機和電腦看到同一份；不登入一切照舊，資料只在你的瀏覽器。入口在 ⋯ 選單、備份提醒條、手機的空白頁，以及個人檔案與設定頁新的「帳號」區
   EN: You can now sign in with Google: signed in, your plan and settings are also kept in the cloud so your phone and computer see the same one; signed out, nothing changes and your data stays in your browser. Find it in the ⋯ menu, on the backup reminder, on the phone's empty page, and in the new "Account" section of Profile & settings
 - 登入後，設定頁右上角頭像多一個小點顯示同步狀態：綠色已同步、琥珀色同步中、灰色離線或暫停、紅色失敗

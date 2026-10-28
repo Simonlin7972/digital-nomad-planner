@@ -2,6 +2,9 @@
 .actions button { display: inline-flex; align-items: center; gap: 6px; padding-left: 14px; }
 /* Icon-only buttons (undo, redo, ⋯): round, the same height as the labelled ones */
 .actions button.icon { width: 42px; height: 42px; padding: 0; justify-content: center; }
+/* Undo and redo, shown only while there is a change to undo or redo; they grow in from the menu beside them */
+.actions .history { display: flex; gap: 8px; transform-origin: right center; animation: pop-in var(--dur-base) var(--ease-out); }
+.actions .history.leaving { animation: pop-out var(--dur-exit) ease-in forwards; pointer-events: none; }
 
 /* ⋯ menu: file actions in a small drop-down under the button, aligned to its right edge */
 /* div, not just .more: a combobox list takes a .more class too (more rows below) and must stay absolute */

@@ -1,8 +1,12 @@
-import { getLocale } from './i18n';
+import { countryLabel } from './flags';
+import { getLocale, t } from './i18n';
+import { colorOf, type Stay } from './storage';
+import { worldHolidays } from './worldHolidays';
 import { TOTAL_DAYS, YEAR, dayOfIso, type DayRange } from './weeks';
 
 export type Holiday = DayRange & { name: string; short: string; note?: string };
-export type HolidaySet = { key: 'tw' | 'au'; label: string; color: string; holidays: Holiday[] };
+// `key` is the country code: 'tw' and 'au' for the hand-written sets below, any other for the ones from worldHolidays.
+export type HolidaySet = { key: string; label: string; color: string; holidays: Holiday[] };
 
 type Text = { zh: string; en: string; ja: string };
 type Source = { short: Text; name: Text; start: string; end: string; note?: Text };
@@ -173,4 +177,25 @@ export function holidaySets(): HolidaySet[] {
       return range ? [{ short: d.short[locale], name: d.name[locale], note: d.note?.[locale], ...range }] : [];
     }),
   }));
+}
+
+// The countries in the plan whose holidays come from worldHolidays: listed ISO codes, in the order they first
+// appear, less those the hand-written sets cover this year.
+export function plannedHolidayCountries(stays: Stay[]): string[] {
+  const covered = new Set(holidaySets().map((set) => set.key));
+  const codes = [...stays].sort((a, b) => a.startDay - b.startDay).map((s) => s.country);
+  return [...new Set(codes)].filter((code) => /^[a-z]{2}$/.test(code) && !covered.has(code));
+}
+
+// Every holiday set that can be switched on for this plan: the hand-written ones, then one per country in the plan
+// that worldHolidays knows, in the colour of that country's first stay. Countries it hasn't loaded yet, or doesn't
+// know, are left out.
+export function availableHolidaySets(stays: Stay[]): HolidaySet[] {
+  const extra = plannedHolidayCountries(stays).flatMap((code): HolidaySet[] => {
+    const holidays = worldHolidays(code);
+    if (!holidays?.length) return [];
+    const first = [...stays].sort((a, b) => a.startDay - b.startDay).find((s) => s.country === code)!;
+    return [{ key: code, label: t('holidays.country', { country: countryLabel(code) }), color: colorOf(first), holidays }];
+  });
+  return [...holidaySets(), ...extra];
 }

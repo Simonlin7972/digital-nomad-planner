@@ -53,17 +53,19 @@ export function Toolbar({ readOnly, canUndo, canRedo, hasStays, canExport, onHel
   const redoLabel = t('toolbar.shortcut', { action: t('toolbar.redo'), keys: `${MOD}⇧Z` });
   const syncText = signedIn && syncStatus !== 'off' ? t(`sync.${syncStatus === 'paused' ? 'pausedShort' : syncStatus}`) : null;
   const profileLabel = syncText ? `${t('profile.open')} · ${syncText}` : t('profile.open');
+  // Undo and redo show only once there is something to undo or redo, and fade away when there isn't.
+  const history = usePresence(!readOnly && (canUndo || canRedo));
   return (
     <div className="actions">
-      {!readOnly && (
-        <>
+      {history.shown && (
+        <span className={`history${history.leaving ? ' leaving' : ''}`}>
           <button className="icon" onClick={onUndo} disabled={!canUndo} aria-label={undoLabel} title={undoLabel}>
             <ArrowCounterClockwise size={16} weight="bold" />
           </button>
           <button className="icon" onClick={onRedo} disabled={!canRedo} aria-label={redoLabel} title={redoLabel}>
             <ArrowClockwise size={16} weight="bold" />
           </button>
-        </>
+        </span>
       )}
       <MoreMenu
         items={[

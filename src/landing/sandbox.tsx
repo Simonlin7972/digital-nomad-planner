@@ -9,6 +9,7 @@ import { ArrowCounterClockwise } from '@phosphor-icons/react/dist/csr/ArrowCount
 import { Editor, type Editing, type StayDetails } from '../components/Editor';
 import { StayCard, TicketCard, HolidayCard, type Anchor } from '../components/HoverCards';
 import { Presence } from '../components/Presence';
+import { HolidayMenu } from '../components/HolidayMenu';
 import { YearSelect } from '../components/YearSelect';
 import { ShareDialog } from '../components/ShareDialog';
 import { holidaySets as allHolidaySets, type Holiday, type HolidaySet } from '../lib/holidays';
@@ -254,21 +255,7 @@ export function SandboxBar({ mode, onMode }: { mode: 'year' | 'month'; onMode: (
           ))}
         </div>
       </div>
-      <div className="toggles">
-        {allHolidaySets().map((set) => (
-          <button
-            key={set.key}
-            role="switch"
-            aria-checked={sb.holidayOn[set.key]}
-            className="toggle"
-            style={{ '--c': set.color } as CSSProperties}
-            onClick={() => sb.toggleHoliday(set.key)}
-          >
-            <span className="knob" />
-            {set.label}
-          </button>
-        ))}
-      </div>
+      <HolidayMenu sets={allHolidaySets()} on={sb.holidayOn} onToggle={sb.toggleHoliday} />
       {mode === 'year' && (
         <div className="zoombar">
           <button onClick={() => sb.zoom.stepTo(z - ZOOM_STEP)} disabled={z <= ZOOM_MIN} aria-label={t('zoom.out')}>

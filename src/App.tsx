@@ -33,7 +33,8 @@ import { useNearView } from './hooks/useNearView';
 import { useZoom } from './hooks/useZoom';
 import { bucket, track, trackActivation } from './lib/analytics';
 import { download } from './lib/files';
-import { holidaySets as allHolidaySets, type Holiday, type HolidaySet } from './lib/holidays';
+import { availableHolidaySets, plannedHolidayCountries, type Holiday, type HolidaySet } from './lib/holidays';
+import { loadWorldHolidays, subscribeWorldHolidays, worldHolidaysReady } from './lib/worldHolidays';
 import { langTag, t, useLocale } from './lib/i18n';
 import { loadHolidayToggles, loadView, saveHolidayToggles, saveView } from './lib/prefs';
 import { computeEdges, load, pushStays, save, setEdges, type ColorKey, type Stay, loadYearPlan, saveYearPlan, sanitizeAll, serializeAll, splitStay } from './lib/storage';
@@ -111,6 +112,15 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stays, cloudRev]);
   const ghosts = edges.ghosts;
+  // Holidays: the hand-written sets, plus one per other country in the plan (and the neighbouring years' stays on
+  // this timeline), from a library that is loaded only once such a country turns up.
+  const worldReady = useSyncExternalStore(subscribeWorldHolidays, worldHolidaysReady);
+  const needsWorld = plannedHolidayCountries([...stays, ...ghosts]).length > 0;
+  useEffect(() => {
+    if (needsWorld) loadWorldHolidays();
+  }, [needsWorld]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- worldReady and locale change what the sets hold
+  const holidayChoices = useMemo(() => availableHolidaySets([...stays, ...ghosts]), [stays, ghosts, worldReady, locale]);
   const backup = useBackupReminder(stays);
   const staysRef = useRef(stays);
   staysRef.current = stays;
@@ -351,7 +361,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
 
   // The years either side of this one that can be pulled through to on the timeline.
   const neighbour = (dir: 1 | -1) => ((YEARS as readonly number[]).includes(YEAR + dir) ? YEAR + dir : null);
-  const holidaySets = allHolidaySets().filter((set) => holidayOn[set.key]);
+  const holidaySets = holidayChoices.filter((set) => holidayOn[set.key]);
   const pending = editing && !editing.id ? editing : null;
   // No card mid-drag or behind the editor; it would only get in the way.
   const hoveredStay = stayCard && !dragging && !editing ? [...stays, ...ghosts].find((s) => s.id === stayCard.id) : undefined;
@@ -419,6 +429,7 @@ function Planner({ entered }: { entered: -1 | 0 | 1 }) {
             onMode={(mode) => setView((v) => ({ ...v, mode }))}
             all={view.all}
             onAll={(all) => setView((v) => ({ ...v, all }))}
+            holidays={holidayChoices}
             holidayOn={holidayOn}
             onToggleHoliday={(key) => setHolidayOn((prev) => ({ ...prev, [key]: !prev[key] }))}
             zoom={zoom.zoom}

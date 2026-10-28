@@ -225,15 +225,22 @@ export async function renderPng(stays: Stay[], { holidaySets = [] }: PngOptions 
   const dayX = (day: number) => PAD + (day / TOTAL_DAYS) * trackW;
   holidaySets.forEach((set, i) => {
     const y = lanesY + i * LANE_H;
-    for (const h of set.holidays) {
+    set.holidays.forEach((h, j) => {
       const x = dayX(h.startDay);
       ctx.fillStyle = set.color;
       ctx.beginPath();
       ctx.roundRect(x, y + 2, Math.max(4, dayX(h.endDay + 1) - x), 5, 3);
       ctx.fill();
       ctx.font = `600 10px ${FONT}`;
-      ctx.fillText(h.short, x, y + 18);
-    }
+      // As on the timeline, a long name is cut off before the next holiday's label.
+      const room = dayX(set.holidays[j + 1]?.startDay ?? TOTAL_DAYS + 30) - x - 4;
+      let label = h.short;
+      if (ctx.measureText(label).width > room) {
+        while (label && ctx.measureText(`${label}…`).width > room) label = label.slice(0, -1);
+        label = label ? `${label}…` : '';
+      }
+      ctx.fillText(label, x, y + 18);
+    });
   });
 
   // Stays, with a ticket mark in the corner when a flight is booked. Two stays sharing a travel day meet in it.

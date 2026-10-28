@@ -1,9 +1,10 @@
 import type { CSSProperties } from 'react';
 import { Minus } from '@phosphor-icons/react/dist/csr/Minus';
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus';
-import { holidaySets } from '../lib/holidays';
 import { t, useLocale } from '../lib/i18n';
+import type { HolidaySet } from '../lib/holidays';
 import { ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, type HolidayToggles, type View } from '../lib/prefs';
+import { HolidayMenu } from './HolidayMenu';
 import { YearSelect } from './YearSelect';
 import './ViewBar.css';
 
@@ -12,14 +13,15 @@ type Props = {
   onMode: (mode: View['mode']) => void;
   all: boolean; // month view: every month at once
   onAll: (all: boolean) => void;
+  holidays: HolidaySet[]; // every set that can be switched on
   holidayOn: HolidayToggles;
-  onToggleHoliday: (key: keyof HolidayToggles) => void;
+  onToggleHoliday: (key: string) => void;
   zoom: number;
   onZoom: (next: number) => void;
 };
 
-// Controls above the calendar: year/month switch, holiday toggles and (in the year view) the zoom.
-export function ViewBar({ mode, onMode, all, onAll, holidayOn, onToggleHoliday, zoom, onZoom }: Props) {
+// Controls above the calendar: year/month switch, the holiday menu and (in the year view) the zoom.
+export function ViewBar({ mode, onMode, all, onAll, holidays, holidayOn, onToggleHoliday, zoom, onZoom }: Props) {
   useLocale();
   return (
     <div className="timeline-bar">
@@ -41,21 +43,7 @@ export function ViewBar({ mode, onMode, all, onAll, holidayOn, onToggleHoliday, 
           </button>
         )}
       </div>
-      <div className="toggles">
-        {holidaySets().map((set) => (
-          <button
-            key={set.key}
-            role="switch"
-            aria-checked={holidayOn[set.key]}
-            className="toggle"
-            style={{ '--c': set.color } as CSSProperties}
-            onClick={() => onToggleHoliday(set.key)}
-          >
-            <span className="knob" />
-            {set.label}
-          </button>
-        ))}
-      </div>
+      <HolidayMenu sets={holidays} on={holidayOn} onToggle={onToggleHoliday} />
       {mode === 'year' && (
         <div className="zoombar">
           <button onClick={() => onZoom(zoom - ZOOM_STEP)} disabled={zoom <= ZOOM_MIN} aria-label={t('zoom.out')} title={t('zoom.out')}>

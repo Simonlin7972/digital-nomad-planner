@@ -1,0 +1,23 @@
+/* Holiday sets: a pill like the year picker's, opening the same kind of menu with a switch on each row */
+.holiday-select { position: relative; }
+.holiday-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 33px;
+  padding: 0 12px 0 12px;
+  font-size: 13px;
+  font-weight: 400;
+}
+.holiday-button svg { color: var(--muted); }
+.holiday-button .caret { transition: transform 0.15s; }
+.holiday-button[aria-expanded='true'] .caret { transform: rotate(180deg); }
+.holiday-button[aria-expanded='true'] { outline: 2px solid var(--text); outline-offset: -1px; border-color: transparent; }
+/* One dot per set that is switched on, in its colour */
+.holiday-dots { display: inline-flex; gap: 3px; }
+.holiday-dots span { width: 8px; height: 8px; border-radius: 50%; }
+
+/* Hangs from the pill's right edge, since the pill sits at the right of the bar */
+.holiday-menu { left: auto; right: 0; min-width: 220px; transform-origin: top right; }
+.holiday-menu .switch-row { gap: 16px; }
+.holiday-menu .switch-row[aria-checked='true'] { font-weight: 400; }

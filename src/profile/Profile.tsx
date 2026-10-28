@@ -229,7 +229,7 @@ export function Profile() {
           <Row label={t('profile.holidays')}>
             <div className="p-toggles">
               {(['tw', 'au'] as const).map((key) => (
-                <button key={key} type="button" role="switch" aria-checked={holidays[key]} className="toggle" style={{ '--c': 'var(--text)' } as CSSProperties} onClick={() => toggleHoliday(key)}>
+                <button key={key} type="button" role="switch" aria-checked={Boolean(holidays[key])} className="toggle" style={{ '--c': 'var(--text)' } as CSSProperties} onClick={() => toggleHoliday(key)}>
                   <span className="knob" />
                   {t(key === 'tw' ? 'profile.holidayTw' : 'profile.holidayAu')}
                 </button>
