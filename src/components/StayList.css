@@ -3,6 +3,10 @@
 .pills { display: flex; gap: 6px; flex-wrap: wrap; }
 .pills button { padding: 6px 14px; font-size: 13px; font-weight: 400; }
 .pills button[aria-pressed='true'] { background: var(--text); border-color: var(--text); color: #fff; }
+/* The chosen chip hovers like a primary button; the base hover's light grey would hide its white label */
+@media (hover: hover) {
+  .pills button[aria-pressed='true']:hover:not(:disabled) { background: #000; border-color: #000; outline-color: #000; }
+}
 
 .stays li {
   display: flex;
