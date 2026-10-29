@@ -26,8 +26,11 @@
 .ap-tabs button { flex: 1 0 auto; padding: 6px 8px; border: 0; --hover-ring: none; background: none; font-size: 13px; color: var(--muted); }
 .ap-tabs button[aria-selected='true'] { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgb(0 0 0 / 0.12); }
 .ap-tabs button:focus-visible { outline-offset: -2px; }
+/* Same hover as the year / month switch: an unselected tab greys, the chosen one stays a white pill */
 @media (hover: hover) {
   .ap-tabs button:hover { color: var(--text); }
+  .ap-tabs button[aria-selected='false']:hover:not(:disabled) { background: var(--line); }
+  .ap-tabs button[aria-selected='true']:hover:not(:disabled) { background: var(--surface); }
 }
 
 /* Room for the tallest tab, so switching doesn't make the page jump */

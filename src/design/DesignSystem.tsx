@@ -356,7 +356,7 @@ export function DesignSystem() {
           />
         </Section>
 
-        <Section id="tabs" title="Tabs 分頁切換" note="年／月切換（.segmented）。白色滑塊移到已選的那一頁；分頁本身從不塗底色，所以 hover 不會讓已選的那頁變灰。狀態標在右邊那一頁。">
+        <Section id="tabs" title="Tabs 分頁切換" note="年／月切換（.segmented）。白色滑塊移到已選的那一頁；未選的那頁 hover 時塗上淺灰底（--line），已選的那頁不塗底色，滑塊才看得見。狀態標在右邊那一頁。">
           <StateTable
             states={[
               { label: 'Inactive' },

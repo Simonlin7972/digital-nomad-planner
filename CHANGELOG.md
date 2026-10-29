@@ -9,6 +9,10 @@
 
 ## 2026-10-29
 
+- 行程列表的季度篩選：滑鼠移到已選的那顆（例如 Q1）時字不會再消失，改成更深的黑底
+  EN: The quarter filter in the stay list: hovering the selected chip (say Q1) no longer hides its label; it turns a deeper black instead
+- 分頁切換（年／月、分享圖的橫式／直式、設定頁角色的分頁）：滑鼠移到沒選的那一頁時會出現淺灰底，比較看得出可以點
+  EN: Tab switches (Year / Month, the share image's landscape / portrait, the character tabs in Settings) now show a light grey background on the tab you hover, so it's clearer they can be clicked
 - 摘要卡有了最大寬度：簽證那行很長時改成換行，行程列表不會再被擠到下面
   EN: The summary card has a maximum width, so a long visa line wraps instead of pushing the itinerary below it
 
