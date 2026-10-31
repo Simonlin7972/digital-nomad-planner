@@ -417,6 +417,7 @@ MVP.md                  Product spec and decision log (Chinese)
 CLAUDE.md               Project notes for Claude Code
 .claude/                Claude Code settings: preview launch, docs-sync hook
 .github/workflows/      Deploys to GitHub Pages on push to main
+ios/                    Skeleton of a native iOS app (SwiftUI, read-only): signs in with the same Google account, reads the plan straight from the cloud and shows now / next and every stay. project.yml generates the project with XcodeGen; NotWFHCore is the data model and day-count rules ported from src/lib (a Swift package, with tests). Not part of the site's build; see ios/README.md
 ```
 
 Built with Vite, React 19 and TypeScript. There is no router, state library, UI framework, CSS preprocessor or drag-and-drop library; interactions use native pointer events and the styles are plain CSS.
@@ -509,6 +510,7 @@ Not scheduled; discussion welcome.
 - Dragging whole stays in the month view
 - Several flights per stay, accommodation, budget
 - Account deletion
+- The native iOS app (`ios/`, a skeleton so far: sign-in, cloud read, now / next and the stay list): lock-screen and home-screen widgets, Sign in with Apple, an export of the city list's Chinese names and the season data
 
 The full product spec and decision history are in [MVP.md](MVP.md) (Chinese).
 

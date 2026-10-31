@@ -413,6 +413,7 @@ MVP.md                  產品規格與決策紀錄
 CLAUDE.md               給 Claude Code 的專案須知
 .claude/                Claude Code 設定：預覽啟動、文件同步檢查 hook
 .github/workflows/      推到 main 時自動部署到 GitHub Pages
+ios/                    iOS 原生 app 的骨架（SwiftUI，唯讀）：用同一個 Google 帳號登入，直接讀雲端的行程，顯示現在／下一站與每段行程。project.yml 用 XcodeGen 產生專案；NotWFHCore 是從 src/lib 移植的資料模型與天數規則（Swift package，附測試）。不在網站的 build 裡；見 ios/README.md
 ```
 
 技術組成：Vite、React 19、TypeScript。沒有路由、狀態管理庫、UI 框架、CSS 預處理器或拖拉套件；互動用原生 pointer events 實作，樣式是純 CSS。
@@ -505,6 +506,7 @@ CLAUDE.md               給 Claude Code 的專案須知
 - 月檢視支援整條拖曳
 - 一段行程多張機票、住宿與預算
 - 刪除帳號
+- iOS 原生 app（`ios/`，目前是骨架：登入、讀雲端、現在／下一站與行程列表）：鎖定畫面與桌面 Widget、Sign in with Apple、城市中文名與季節資料的匯出
 
 完整的產品規格與歷次決策見 [MVP.md](MVP.md)。
 
