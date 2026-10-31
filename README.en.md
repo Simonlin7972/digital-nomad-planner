@@ -75,6 +75,7 @@ The interface is available in Traditional Chinese, English and Japanese; choose 
 - **Summary**: weeks planned and free, countries and cities visited, an estimate of flights and hours in the air, and weeks and days per country and city
 - **Days of stay**: the summary works out the most days spent in the Schengen area within any 180 days (the limit is 90; when exceeded it says from which date), and the days planned in your tax-residence country that year (Taiwan unless changed in settings; 183 days is the usual tax-residency line). The Schengen count looks back into the previous year's plan; unplanned days don't count
 - **Visas**: with a passport set on the settings page, each destination shows what entry takes on that passport (visa-free for how many days, visa on arrival, an ETA / e-visa / visa needed first) in the editor, the stay's hover card and the phone cards; back-to-back stays in one country that run past the visa-free days get a warning on the timeline and in the itinerary; the summary lists the countries that need something arranged first. Schengen countries are left to the 90/180 count. The data is the open-source passport-index-data (2026-02-17), loaded only once a passport is set (about 14 kB); official rules take precedence. With no passport set nothing shows
+- **Long-stay options**: under the visa line the editor has "Long-stay options (N)", which opens the country's digital nomad visas and similar programs (name, how long, main thresholds and fees, a link to the official page), 28 in all: Thailand's DTV, Malaysia's DE Rantau, Indonesia's E33G, Japan, Korea, Taiwan's Gold Card and nomad visa, Sri Lanka, the UAE, Portugal's D8, Spain, Italy, Greece, Croatia, Estonia, Hungary's White Card, Malta, Cyprus, Germany's freelance permit, Türkiye, Mexico, Colombia, Brazil, Argentina, Costa Rica, Panama, Uruguay and Ecuador. Also shown only with a passport set, and left out where the passport already moves freely (an EU passport in the EU) or doesn't qualify (Türkiye's list of nationalities). Compiled by hand (2026-10); official sources take precedence
 - **Itinerary**: one line per stay — dates, flag and country, city, weeks (days), companions, note; filter by Q1–Q4; stays with a flight show a ticket icon; stays that overrun the Schengen limit show a warning icon
 - **Seasons**: about 71 popular nomad bases (Chiang Mai, Bali, Lisbon, Mexico City…) carry a best / fine / avoid rating for each month, with reasons. The editor has a "When to go" button that opens the twelve months and reasons (it flags a poor season even when closed); stays that land in months to avoid (Chiang Mai's burning season in March–April, Dubai's summer) get a warning on the block, in the itinerary and on the hover card
 - **Free stretches**: unplanned days between stays are listed in the itinerary too; press `+` to add a stay in that gap
@@ -394,6 +395,7 @@ src/
     airlines.ts         Built-in list of common airlines (code, Chinese and English names, home country) and search
     holidays.ts         Taiwan's and Australia's 2026 and 2027 holidays, and the sets that can be switched on
     worldHolidays.ts    Other countries' public holidays (date-holidays, loaded lazily)
+    longStay.ts         Long-stay programs (digital nomad visas and the like), hand-written in three languages with sources
     visa.ts             Entry rules by passport and destination, and whether a run of stays outlasts the visa-free days (src/data/visa.json, loaded lazily)
     geocode.ts          Nominatim lookups, rate limiting, cache
     exportPng.ts        Draws the PNG on a canvas (landscape and portrait)
@@ -461,6 +463,7 @@ Knowing these before reading the code will save time.
 
 ## Known limits
 
+- **Long-stay options are compiled by hand** (2026-10) and amounts and rules change often; some fees and renewal rules only come from secondary sources; the Philippines' and Peru's nomad visas are law but not open yet, Montenegro's and Albania's details are too uncertain, and Vietnam and Georgia have no dedicated program, so none of these is listed
 - **The visa data is a snapshot** (2026-02-17) and rules change, so check the official sources; only a single continuous visit is checked, not "N days in any 180" rules outside Schengen; the only special document added by hand is the permit Taiwanese passports need for China; there is one passport, so dual nationals can't compare
 - **Settings aren't exported or sent to other devices**: set them again in another browser or on another device, unless you sign in (then they sync)
 - **Cloud sync is one person on several devices**: two devices changing the same year at once means the later change wins, with no merging; only a first sign-in that finds two different plans asks

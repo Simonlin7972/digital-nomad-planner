@@ -1,0 +1,17 @@
+/* Long-stay programs under the visa line: the season guide's fold, holding one short card per program */
+.long-stay-list { display: flex; flex-direction: column; gap: 8px; }
+.long-stay-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--subtle);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.long-stay-list strong { font-size: 13px; font-weight: 600; }
+.long-stay-list .only { color: var(--muted); }
+.long-stay-list a { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; margin-top: 2px; color: var(--text); font-weight: 600; }
+.long-stay-note { font-size: 11px; font-weight: 400; color: var(--muted); }

@@ -9,6 +9,8 @@
 
 ## 2026-10-29
 
+- 編輯行程時多了「長住選項」：泰國 DTV、葡萄牙 D8、日本、韓國等 28 個數位遊牧與長住方案，寫出可以待多久、收入門檻和費用，並附官方連結（需在設定頁填護照）
+  EN: The editor now shows long-stay options for the destination: 28 digital nomad and long-stay programs such as Thailand's DTV, Portugal's D8, Japan and Korea, with how long they last, income thresholds, fees and a link to the official page (with a passport set in settings)
 - 摘要卡有了最大寬度：簽證那行很長時改成換行，行程列表不會再被擠到下面
   EN: The summary card has a maximum width, so a long visa line wraps instead of pushing the itinerary below it
 

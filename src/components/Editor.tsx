@@ -11,6 +11,7 @@ import { CityCombobox, CountryCombobox, AirlineCombobox, FlightNoCombobox } from
 import { DatePicker } from './DatePicker';
 import { SeasonStrip } from './SeasonStrip';
 import { VisaLine } from './VisaLine';
+import { LongStayOptions } from './LongStayOptions';
 import { visaOverstays } from '../lib/visa';
 import './Dialog.css';
 import './Editor.css';
@@ -206,6 +207,7 @@ export function Editor(props: {
           )}
           <SeasonStrip place={place} range={range} />
           {place.country && <VisaLine country={place.country} over={visaOver} source />}
+          {place.country && <LongStayOptions country={place.country} />}
           <label>
             {t('editor.companions')}
             <input
