@@ -697,3 +697,4 @@
 - 摘要卡在電腦上最寬 400px，長的規則行換行，行程列表保持在旁邊
 - 簽證第二階段：編輯視窗可展開各國長住選項（28 個數位遊牧與長住方案）
 - iOS 原生 app 骨架（`ios/`）：SwiftUI 唯讀版，Google 登入、讀 `nomad.plans` 與 `nomad.settings`、現在／下一站卡片、行程列表、申根 90/180；資料模型與天數規則移植成 NotWFHCore package 並附測試
+- 內部測試頁 /bento/：12 格功能動畫的 bento，隨網站發佈但不放任何連結、noindex、不載入 GA

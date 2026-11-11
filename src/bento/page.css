@@ -1,0 +1,4 @@
+/* The page around the bento: the bento draws its own dotted ground and padding, so this only fills the window. */
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #faf9f6; }
+.bento-page > .notwfh-bento { min-height: 100vh; }

@@ -304,6 +304,7 @@ profile/index.html      Settings page entry (/profile/)
 design/index.html       Design system page entry (/design/; served by `npm run dev` only, not built)
 pixel/index.html        Pixel style guide entry (/pixel/; dev only as well)
 demo/index.html         Demo canvases entry (/demo/; dev only as well)
+bento/index.html        Feature bento test page entry (/bento/; published but linked from nowhere, noindex, no GA; for internal testing)
 CHANGELOG.md            The user-facing release notes, source of the changelog page (format in the file's header comment)
 public/favicon.svg      16×16 pixel-art globe
 public/apple-touch-icon.png, icon-192.png, icon-512.png  Home-screen icons (the favicon scaled up with a margin)
@@ -325,6 +326,7 @@ src/
   profile/              The settings page (AvatarPicker is the character picker)
   pixel/                Pixel style guide: the rules behind the avatar and the mascot (grid, palette, layers, crops, motion, scaling, brand use), every picture drawn live by lib/avatar.ts; scenes.ts holds the 21:9 city scenes (Sydney, Tokyo, Taipei)
   demo/                 Demo canvases: a row of canvases, switchable in the header between 9:16 (540×960, half a 1080×1920 reel) and 4:5 (540×675, half a 1080×1350 post), each holding one real app component at its own size, centred, for recording reels; currently the editor's country search list, its start / end dates, the country and city pair, the airline and flight number pair, the colour swatches, the season strip, the header's ⋯ menu, the settings page's avatar picker, and the year select
+  bento/                Feature bento test page: twelve auto-looping feature animations (timeline, Schengen, search, ticket, seasons, calendar, colours, visas, cross-year, avatar, phone, share) drawn with the Stageshow kit; kit/ holds the parts of it copied from the stageshow skill, and the avatar uses lib/avatar.ts and components/Avatar directly; reads neither the plan nor the settings
   design/               Design system page: colour, type, spacing, layout, radius and shadow, plus every state of the buttons, toggles, tabs, dropdowns, inputs and other base components; uses the app's own CSS, and forceStates copies :hover / :focus / :active rules to classes so states sit side by side
   landing/              Landing page: Landing (layout), sandbox (the sample plan and the real components wired to it), motion (scroll triggers)
   App.tsx               Wires the pieces together; owns the plan and page-level state
@@ -534,6 +536,7 @@ The full product spec and decision history are in [MVP.md](MVP.md) (Chinese).
 | [DotGothic16](https://fonts.google.com/specimen/DotGothic16) (via Google Fonts) | Japanese tagline typeface | OFL-1.1 |
 | [Cubic 11 (俐方體 11 號)](https://github.com/ACh-K/Cubic-11) | Chinese tagline typeface (only the tagline's characters, in `src/assets/`) | OFL-1.1 |
 | [uqr](https://github.com/unjs/uqr) | QR code generation | MIT |
+| Stageshow kit (the stageshow skill's `kit/`, partly copied into `src/bento/kit/`) | Stage, cursor and motion parts of the /bento/ test page | MIT |
 | [passport-index-data](https://github.com/imorte/passport-index-data) | Entry rules for each destination by passport (converted to `src/data/visa.json`, bundled with the site, loaded once a passport is set, nothing fetched elsewhere) | MIT |
 | [date-holidays](https://github.com/commenthol/date-holidays) | Public holidays for the other countries in the plan (bundled with the site, loaded when needed, nothing fetched elsewhere) | Code ISC; holiday data CC-BY-3.0 |
 | [Supabase](https://supabase.com/) ([supabase-js](https://github.com/supabase/supabase-js)) | Google sign-in and cloud sync (optional) | Service under its terms; supabase-js MIT |

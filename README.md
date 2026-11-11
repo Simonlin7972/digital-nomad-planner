@@ -301,6 +301,7 @@ profile/index.html      設定頁的入口（/profile/）
 design/index.html       設計系統頁的入口（/design/，只在 `npm run dev` 時有，不進 build）
 pixel/index.html        像素風格指南的入口（/pixel/，同樣只在 dev 時有）
 demo/index.html         Demo 畫布頁的入口（/demo/，同樣只在 dev 時有）
+bento/index.html        功能 bento 測試頁的入口（/bento/，會發佈但沒有任何連結、noindex、不載入 GA，內部測試用）
 CHANGELOG.md            給使用者看的更新紀錄，更新日誌頁的內容來源（格式見檔案開頭的註解）
 public/favicon.svg      16×16 像素風地球圖示
 public/apple-touch-icon.png, icon-192.png, icon-512.png  加入主畫面用的圖示（由 favicon 放大、加邊距產生）
@@ -322,6 +323,7 @@ src/
   profile/              設定頁（AvatarPicker 是角色選擇器）
   pixel/                像素風格指南：角色與品牌小人背後的規則（網格、調色盤、圖層、裁切、動態、縮放、品牌用法），圖都由 lib/avatar.ts 即時畫出；scenes.ts 是 21:9 的城市場景（雪梨、東京、台北）
   demo/                 Demo 畫布頁：一排畫布，頁首可切 9:16（540×960，Reels 1080×1920 的一半）或 4:5（540×675，貼文 1080×1350 的一半），每格放一個原尺寸、置中的真 app 元件，用來錄 Reels；目前是編輯視窗的國家搜尋選單、開始／結束日期、國家與城市、航空公司與航班編號、顏色色票、季節、頁首的 ⋯ 選單、設定頁的角色選擇器、年份選單
+  bento/                功能 bento 測試頁：12 格自動循環的功能動畫（時間軸、申根、搜尋、機票、季節、月曆、顏色、簽證、跨年、角色、手機、分享），用 Stageshow kit 畫；kit/ 是從 stageshow skill 複製來的部分元件，角色直接用 lib/avatar.ts 與 components/Avatar；不讀行程、不讀設定
   design/               設計系統頁：顏色、字體、間距、版面、圓角、陰影，以及按鈕、開關、分頁、下拉選單、輸入框等元件的各種狀態；直接套用 app 的 CSS，forceStates 把 :hover／:focus／:active 規則複製成 class 好並排呈現
   landing/              產品介紹頁：Landing（版面）、sandbox（範例行程與接上真元件的沙盒）、motion（捲動觸發）
   App.tsx               組裝各元件，持有行程與頁面層級的狀態
@@ -530,6 +532,7 @@ ios/                    iOS 原生 app 的骨架（SwiftUI，唯讀）：用同�
 | [DotGothic16](https://fonts.google.com/specimen/DotGothic16)（經 Google Fonts） | 日文副標字體 | OFL-1.1 |
 | [俐方體 11 號 Cubic 11](https://github.com/ACh-K/Cubic-11) | 繁中副標字體（只含副標用到的字，`src/assets/`） | OFL-1.1 |
 | [uqr](https://github.com/unjs/uqr) | 產生 QR code | MIT |
+| Stageshow kit（stageshow skill 的 `kit/`，複製部分到 `src/bento/kit/`） | /bento/ 測試頁的舞台、游標與動態元件 | MIT |
 | [passport-index-data](https://github.com/imorte/passport-index-data) | 依護照查各目的地的入境條件（轉成 `src/data/visa.json` 打包在網站裡，填了護照才載入，不連外） | MIT |
 | [date-holidays](https://github.com/commenthol/date-holidays) | 行程中其他國家的國定假日（打包在網站裡，需要時才載入，不連外） | 程式 ISC；假日資料 CC-BY-3.0 |
 | [Supabase](https://supabase.com/)（[supabase-js](https://github.com/supabase/supabase-js)） | Google 登入與雲端同步（選用） | 服務依其條款；supabase-js MIT |
