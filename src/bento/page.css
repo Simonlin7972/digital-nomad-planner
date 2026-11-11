@@ -1,4 +1,12 @@
-/* The page around the bento: the bento draws its own dotted ground and padding, so this only fills the window. */
+/* The page around the bento: the bento draws its own dotted ground and padding, so this only fills the window and
+   centres the grid in it both ways (when the window is taller than the grid; otherwise it scrolls as usual). */
 * { box-sizing: border-box; }
 html, body { margin: 0; background: #faf9f6; }
-.bento-page > .notwfh-bento { min-height: 100vh; }
+.bento-page > .notwfh-bento {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+/* A flex item with auto side margins shrinks to its content; keep the grid full width up to its own max-width. */
+.bento-page > .notwfh-bento .nwb-grid { width: 100%; }
