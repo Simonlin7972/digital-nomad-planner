@@ -49,6 +49,21 @@
     }
   }
 
+  /* Five columns on wide screens: nine singles and three doubles fill three rows exactly. The doubles step one
+     column right per row (timeline, calendar, cross-year), and the grid grows so a column keeps the three-column
+     width (about 318px). */
+  @container (min-width: 1500px) {
+    & .nwb-grid {
+      max-width: 1650px;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-rows: 380px 340px 380px;
+      grid-template-areas:
+        'hero hero stat search ticket'
+        'season cal cal swatch visa'
+        'avatar phone year year share';
+    }
+  }
+
   /* ---- The tile ---- */
 
   & .nwb-tile {
